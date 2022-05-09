@@ -9,9 +9,21 @@ public class Coastlines {
     private static int[] startID;
     private static int[] endID;
 
+    //for every coastline way, the length is stored to speed up some operations
+    private static double[] length;
+
     //for every node (ID is the index in these two arrays), longitude and latitude.
     private static double[] nodeLongitude;
     private static double[] nodeLatitude;
+
+    /**
+     * gets the length of a given coastline way.
+     * @param coastlineID the ID of the coastline way.
+     * @return the length of the requested coastline way.
+     */
+    public static double getLength(int coastlineID) {
+        return 0.0;
+    }
 
     /**
      * gets the longitude of the start node of a given coastline way.
