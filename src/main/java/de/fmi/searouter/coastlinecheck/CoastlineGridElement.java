@@ -1,4 +1,4 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.coastlinecheck;
 
 /**
  * an element of the grid used to partition the map for a coastline check.

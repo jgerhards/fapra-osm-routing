@@ -1,4 +1,6 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.coastlinecheck;
+
+import de.fmi.searouter.coastlinecheck.CoastlineGridElement;
 
 import java.util.List;
 
@@ -6,7 +8,7 @@ import java.util.List;
  * Inner node of the grid for a coastline check. This type of sub-node contains an array of other nodes which partition
  * the area of this node. Also, it contains a level in order to find to which sub-node a given point belongs to.
  */
-public class CoastlineGridNode extends CoastlineGridElement{
+public class CoastlineGridNode extends CoastlineGridElement {
 
     //nodes in the next lower level
     private CoastlineGridElement[][] subNodes;

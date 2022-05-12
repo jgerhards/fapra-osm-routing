@@ -1,10 +1,13 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.coastlinecheck;
 
 /**
  * class used to store longitudes and latitudes of start and end points of coastline ways. Stored as
  * an array of primitives due to lookup being faster this way.
  */
 public class Coastlines {
+    //the number of coastline ways
+    private static int numbersOfCoastlineWays;
+
     //for every coastline way (ID is the index in these two arrays), the start and end node.
     private static int[] startID;
     private static int[] endID;
@@ -15,6 +18,14 @@ public class Coastlines {
     //for every node (ID is the index in these two arrays), longitude and latitude.
     private static double[] nodeLongitude;
     private static double[] nodeLatitude;
+
+    /**
+     * gets the number of coastline ways
+     * @return the number of coastline ways
+     */
+    public static int getNumberOfWays() {
+        return numbersOfCoastlineWays;
+    }
 
     /**
      * gets the length of a given coastline way.
