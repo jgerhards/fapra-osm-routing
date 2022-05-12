@@ -3,6 +3,7 @@ package de.fmi.searouter.domain;
 public class IntersectionHelper {
     //earths radius is required for distance calculation
     private static final double EARTH_RADIUS = 6371000.0;
+    private static final double THRESHOLD = 0.0000001;
 
     /**
      * Checks if two arcs of a great circle intersect each other. Arcs are given using start and end point coordinates.
@@ -83,7 +84,6 @@ public class IntersectionHelper {
 
         //check if the two planes are equal. If that is the case, they are not considered to intersect each other
         //todo: is this a good idea to proceed (not considering this an intersection)?
-        double THRESHOLD = 0.000001;
         boolean planesEqual = true;
         for(int i = 0; i < firstPlane.length; i++) {
             if(Math.abs(firstPlane[i] - secondPlane[i]) < THRESHOLD) {
@@ -179,9 +179,23 @@ public class IntersectionHelper {
         return distanceInMeters;
     }
 
-    public static boolean pointOnLine() {
-        //todo: implement check if a given point is on a given (coast)line
-        return false;
+    /**
+     * Checks if a given point is loacted on a given line.
+     * @param pointLat the latitude of the point
+     * @param pointLong the longitude of the point
+     * @param lineStartLat the latitude of the start point of the line
+     * @param lineStartLong the longitude of the start point of the line
+     * @param lineEndLat the latitude of the end point of the line
+     * @param lineEndLong the longitude of the end point of the line
+     * @return true if the given point is located on the line, else false
+     */
+    public static boolean pointOnLine(double pointLat, double pointLong, double lineStartLat, double lineStartLong,
+                                      double lineEndLat, double lineEndLong) {
+        double lineLength = getDistance(lineStartLat, lineStartLong, lineEndLat, lineEndLong);
+        double firstPartialLen = getDistance(lineStartLat, lineStartLong, pointLat, pointLong);
+        double secondPartialLen = getDistance(pointLat, pointLong, lineEndLat, lineEndLong);
+
+        return (Math.abs((lineLength) - (firstPartialLen + secondPartialLen)) <= THRESHOLD);
     }
 
     /**
