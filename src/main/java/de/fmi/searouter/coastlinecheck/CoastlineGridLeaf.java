@@ -62,6 +62,7 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
     @Override
     public boolean pointIsInWater(double latitude, double longitude) {
         //start of the same as the local reference point, negate on intersecting a coastline
+        //todo: implement special case where a start/end point is on the line --> add random point y and test x->y->ref
         boolean pointInWater = refPointIsInWater;
         for(int i : coastlineWayIDs) {
             double coastlineStartLat = Coastlines.getStartLatitude(i);

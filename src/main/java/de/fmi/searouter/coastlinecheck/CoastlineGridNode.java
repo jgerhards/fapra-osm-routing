@@ -157,7 +157,49 @@ public class CoastlineGridNode extends CoastlineGridElement {
 
     @Override
     public boolean pointIsInWater(double latitude, double longitude) {
-        //todo: implement correct version --> call this function on correct sub-node
-        return false;
+        int latIdx;
+        int longIdx;
+
+        //first, check for special cases which would lead to problems. Else use default method
+        if(latitude == -90) {
+            latIdx = 0;
+        } else if(latitude == 90) {
+            latIdx = 9;
+        } else {
+            latIdx = getDefaultIdx(latitude);
+        }
+
+        if(longitude == -180) {
+            longIdx = 0;
+        } else if(longitude == 180) {
+            longIdx = 9;
+        } else {
+            longIdx = getDefaultIdx(longitude);
+        }
+        return subNodes[latIdx][longIdx].pointIsInWater(latitude, longitude);
+    }
+
+    private int getDefaultIdx(double coordinate) {
+        boolean coordinateNegative = false;
+        int idx;
+
+        //work only with positive numbers to make sure modulo operator works as intended
+        if(coordinate < 0) {
+            coordinate = coordinate * (-1);
+            coordinateNegative = true;
+        }
+
+        //remove more significant digits
+        double relevantPart = coordinate % Math.pow(10, ((-1) * level) + 1);
+
+        //remove less significant digits
+        relevantPart = relevantPart * Math.pow(10, level);
+        idx = (int) Math.floor(relevantPart);
+
+        //correct for negative coordinates
+        if(coordinateNegative) {
+            idx = 9 - idx;
+        }
+        return idx;
     }
 }
