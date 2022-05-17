@@ -1,6 +1,5 @@
 package de.fmi.searouter.coastlinecheck;
 
-import de.fmi.searouter.coastlinecheck.CoastlineGridElement;
 import de.fmi.searouter.domain.IntersectionHelper;
 
 import java.util.ArrayList;
@@ -157,7 +156,8 @@ public class CoastlineGridNode extends CoastlineGridElement {
     }
 
     @Override
-    public boolean pointIsInWater(double longitude, double latitude) {
+    public boolean pointIsInWater(double latitude, double longitude) {
+        //todo: implement correct version --> call this function on correct sub-node
         return false;
     }
 }

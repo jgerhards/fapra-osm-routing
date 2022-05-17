@@ -14,9 +14,9 @@ public abstract class CoastlineGridElement {
 
     /**
      * check if a given point is loacated on land or in water.
-     * @param longitude of the point
      * @param latitude of the point
+     * @param longitude of the point
      * @return true if the point is in water, else false
      */
-    public abstract boolean pointIsInWater(double longitude, double latitude);
+    public abstract boolean pointIsInWater(double latitude, double longitude);
 }
