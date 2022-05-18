@@ -30,6 +30,15 @@ public class CoastlineWay extends Way {
                 wayToTransform.getWayNodes());
     }
 
+    /**
+     * Overwrites the current id with a new one.
+     *
+     * @param id The new id for this {@link CoastlineWay}
+     */
+    public void setId(long id) {
+        super.setId(id);
+    }
+
     public CoastlineWay(CommonEntityData entityData) {
         super(entityData);
     }
@@ -143,6 +152,28 @@ public class CoastlineWay extends Way {
         }
 
         return null;
+    }
+
+    /**
+     * Calculates the overall length of this {@link CoastlineWay} (=perimeter of polygon).
+     *
+     * @return The length (or perimeter) of this CoastlineWay (or coastline polygon)
+     */
+    public double getLength() {
+        double length = 0.;
+
+        for (int i = 1; i < this.getWayNodes().size(); i++) {
+            WayNode startNode = this.getWayNodes().get(i - 1);
+            WayNode destinationNode = this.getWayNodes().get(i);
+
+            // Cumulate the length of the current edge looked at
+            length += IntersectionHelper.getDistance(
+                    startNode.getLatitude(), startNode.getLongitude(),
+                    destinationNode.getLatitude(), destinationNode.getLatitude()
+            );
+        }
+
+        return length;
     }
 }
 
