@@ -19,6 +19,12 @@ public class Coastlines {
     private static double[] nodeLongitude;
     private static double[] nodeLatitude;
 
+    //global reference point for checking if other points are in water or on land
+    //todo: find an appropriate point
+    public static final double GLOBAL_REFERENCE_LATITUDE = 0.0;
+    public static final double GLOBAL_REFERENCE_LONGITUDE = 0.0;
+    public static final boolean GLOBAL_REFERENCE_IN_WATER = true;
+
     /**
      * gets the number of coastline ways
      * @return the number of coastline ways

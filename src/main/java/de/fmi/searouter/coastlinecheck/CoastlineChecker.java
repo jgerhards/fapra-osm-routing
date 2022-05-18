@@ -5,10 +5,72 @@ import de.fmi.searouter.domain.IntersectionHelper;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * class used to check if a given point is in water or on land. Contains the top level of a grid used in
+ * this check. This grid is generated within the constructor of this class.
+ */
 public class CoastlineChecker {
 
     //grid containing the top level of CoastlineGridElements. index depends on coordinates rounded up to the next 10
     private CoastlineGridElement[][] topLevelGrid;
+
+    /**
+     * check if a given point is located on land or in water.
+     * @param latitude of the point
+     * @param longitude of the point
+     * @return true if the point is in water, else false
+     */
+    public boolean pointIsInWater(double latitude, double longitude) {
+        //extract relevant (for this level) parts of coordinates
+        int relevantLatitude = (int) Math.floor(latitude);
+        int relevantLongitude = (int) Math.floor(longitude);
+
+        int latIdx;
+        int longIdx;
+
+        //determine latitude index
+        if(relevantLatitude >= 0) {
+            relevantLatitude = (relevantLatitude - (relevantLatitude % 10)) / 10;
+            latIdx = relevantLatitude + 9;  //there are 9 indices for negative latitude areas
+
+            //latitude 90 is a special case, handle this here
+            if(latIdx == 18) {
+                latIdx = 17;
+            }
+        } else {
+            relevantLatitude = relevantLatitude * (-1);
+            relevantLatitude = (relevantLatitude - (relevantLatitude % 10)) / 10;
+            latIdx = 8 - relevantLatitude; //invert due to negative sign
+
+            //latitude -90 is a special case, handle this here
+            if(latIdx == -1) {
+                latIdx = 0;
+            }
+        }
+        relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
+
+        //determine longitude index
+        if(relevantLongitude >= 0) {
+            relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
+            longIdx = relevantLongitude + 18;  //there are 18 indices for negative latitude areas
+
+            //longitude 180 is a special case, handle this here
+            if(longIdx == 36) {
+                longIdx = 35;
+            }
+        } else {
+            relevantLongitude = relevantLongitude * (-1);
+            relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
+            longIdx = 17 - relevantLongitude; //invert due to negative sign
+
+            //longitude -180 is a special case, handle this here
+            if(longIdx == -1) {
+                longIdx = 0;
+            }
+        }
+
+        return topLevelGrid[latIdx][longIdx].pointIsInWater(latitude, longitude);
+    }
 
     CoastlineChecker() {
         topLevelGrid = new CoastlineGridElement[18][36];

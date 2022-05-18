@@ -10,13 +10,14 @@ public abstract class CoastlineGridElement {
      * check if this CoastlineGridElement is a leaf node or an inner node.
      * @return true if this is a leaf node, else false
      */
+    //todo: can this function be removed?
     public abstract boolean isLeafNode();
 
     /**
-     * check if a given point is loacated on land or in water.
-     * @param longitude of the point
+     * check if a given point is located on land or in water.
      * @param latitude of the point
+     * @param longitude of the point
      * @return true if the point is in water, else false
      */
-    public abstract boolean pointIsInWater(double longitude, double latitude);
+    public abstract boolean pointIsInWater(double latitude, double longitude);
 }
