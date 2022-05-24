@@ -1,6 +1,7 @@
 package de.fmi.searouter.coastlinecheck;
 
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.domain.IntersectionHelper;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
 import java.util.ArrayList;
@@ -91,46 +92,77 @@ public class Coastlines {
      *
      * @param coastlinesToImport The coastlines which should be transformed to the data structures in this class.
      */
-    public void initCoastlines(List<CoastlineWay> coastlinesToImport) {
-        // Set the number of all coastlines
-        numbersOfCoastlineWays = coastlinesToImport.size();
+    public static void initCoastlines(List<CoastlineWay> coastlinesToImport) {
 
-        startID = new int[numbersOfCoastlineWays];
-        endID = new int[numbersOfCoastlineWays];
-
-        length = new double[numbersOfCoastlineWays];
-
-        // As we yet do not know the array sizes of the nodeLongitude and nodeLatitude array, we
+        // As we yet do not know the array sizes of the array data structures we
         // first add all data to dynamic data structures and then make an array in the end out of it
-        List<Double> nodeLongitudes = new ArrayList<>();
-        List<Double> nodeLatitudes = new ArrayList<>();
+        List<Integer> dynamicStartIds = new ArrayList<>();
+        List<Integer> dynamicEndIds = new ArrayList<>();
+
+        List<Double> dynamicLength = new ArrayList<>();
+
+        List<Double> dynamicNodeLongitude = new ArrayList<>();
+        List<Double> dynamicNodeLatitude = new ArrayList<>();
+
+        // Number of all coastline ways
+        numbersOfCoastlineWays = 0;
+        // Counter to keep track of the start and end ids of a way
+        int coastLineWayIdCounter = 0;
 
         for (int coastlineIdx = 0; coastlineIdx < coastlinesToImport.size(); coastlineIdx++) {
             CoastlineWay currCoastline = coastlinesToImport.get(coastlineIdx);
             List<WayNode> currWayNodes = currCoastline.getWayNodes();
 
-            // Setup length
-            length[coastlineIdx] = currCoastline.getLength();
+            for (int wayNodeIdx = 1; wayNodeIdx < currWayNodes.size(); wayNodeIdx++) {
+                // Add each edge of the CoastlineWayPolygon as a single way to the dynamic data structures
 
+                // Start point of edge
+                dynamicStartIds.add(coastLineWayIdCounter);
+                double pointALatitude = currWayNodes.get(wayNodeIdx-1).getLatitude();
+                double pointALongitude = currWayNodes.get(wayNodeIdx-1).getLongitude();
 
-            // Setup startID and endID as well as preparing temporary dynamic data structures for the latitude and longitude arrays
-            startID[coastlineIdx] = nodeLongitudes.size();
-            // Add way nodes to lists
-            for (int wayNodeIdx = 0; wayNodeIdx < currWayNodes.size(); wayNodeIdx++) {
-                WayNode currWayNode = currWayNodes.get(wayNodeIdx);
+                dynamicNodeLatitude.add(pointALatitude);
+                dynamicNodeLongitude.add(pointALongitude);
 
-                nodeLongitudes.add(currWayNode.getLongitude());
-                nodeLatitudes.add(currWayNode.getLatitude());
+                coastLineWayIdCounter += 1;
+                dynamicEndIds.add(coastLineWayIdCounter);
+
+                // End point of edge
+                double pointBLatitude = currWayNodes.get(wayNodeIdx).getLatitude();
+                double pointBLongitude = currWayNodes.get(wayNodeIdx-1).getLongitude();
+
+                dynamicNodeLatitude.add(pointBLatitude);
+                dynamicNodeLongitude.add(pointBLongitude);
+
+                // Length of edge
+                dynamicLength.add(IntersectionHelper.getDistance(
+                        pointALatitude, pointALongitude,
+                        pointBLatitude, pointBLongitude)
+                );
+
+                numbersOfCoastlineWays++;
             }
-            endID[coastlineIdx] = nodeLongitudes.size() - 1;
+            // A new polygon begins in the next iteration, therefore the next start id should not be equal to the last end id
+            coastLineWayIdCounter++;
         }
 
+
         // Copy the latitude and longitude info to the more efficient array data structures
-        nodeLongitude = new double[nodeLongitudes.size()];
-        nodeLatitude = new double[nodeLatitudes.size()];
-        for (int i = 0; i < nodeLatitudes.size(); i++) {
-            nodeLongitude[i] = nodeLongitudes.get(i);
-            nodeLatitude[i] = nodeLatitudes.get(i);
+        nodeLongitude = new double[dynamicNodeLatitude.size()];
+        nodeLatitude = new double[dynamicNodeLongitude.size()];
+        for (int i = 0; i < dynamicNodeLatitude.size(); i++) {
+            nodeLongitude[i] = dynamicNodeLatitude.get(i);
+            nodeLatitude[i] = dynamicNodeLongitude.get(i);
+        }
+
+        // Copy all dynamic list structures which have the size of numbersOfCoastlineWays to arrays
+        length = new double[numbersOfCoastlineWays];
+        startID = new int[numbersOfCoastlineWays];
+        endID = new int[numbersOfCoastlineWays];
+        for (int i = 0; i < numbersOfCoastlineWays; i++) {
+            length[i] = dynamicLength.get(i);
+            startID[i] = dynamicStartIds.get(i);
+            endID[i] = dynamicEndIds.get(i);
         }
     }
 }
