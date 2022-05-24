@@ -48,7 +48,7 @@ public class Coastlines {
      * @return the length of the requested coastline way.
      */
     public static double getLength(int coastlineID) {
-        return 0.0;
+        return length[coastlineID];
     }
 
     /**
@@ -58,7 +58,8 @@ public class Coastlines {
      * @return the longitude of the start point of the requested coastline way.
      */
     public static double getStartLongitude(int coastlineID) {
-        return 0.0;
+        int longArrayID = startID[coastlineID];
+        return nodeLongitude[longArrayID];
     }
 
     /**
@@ -68,7 +69,8 @@ public class Coastlines {
      * @return the latitude of the start point of the requested coastline way.
      */
     public static double getStartLatitude(int coastlineID) {
-        return 0.0;
+        int latArrayID = startID[coastlineID];
+        return nodeLatitude[latArrayID];
     }
 
     /**
@@ -78,7 +80,8 @@ public class Coastlines {
      * @return the longitude of the end point of the requested coastline way.
      */
     public static double getEndLongitude(int coastlineID) {
-        return 0.0;
+        int longArrayID = endID[coastlineID];
+        return nodeLongitude[longArrayID];
     }
 
     /**
@@ -88,7 +91,8 @@ public class Coastlines {
      * @return the latitude of the end point of the requested coastline way.
      */
     public static double getEndLatitude(int coastlineID) {
-        return 0.0;
+        int latArrayID = endID[coastlineID];
+        return nodeLatitude[latArrayID];
     }
 
 
