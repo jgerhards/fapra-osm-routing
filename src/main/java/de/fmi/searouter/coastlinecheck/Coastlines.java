@@ -34,6 +34,7 @@ public class Coastlines {
 
     /**
      * gets the number of coastline ways
+     *
      * @return the number of coastline ways
      */
     public static int getNumberOfWays() {
@@ -42,6 +43,7 @@ public class Coastlines {
 
     /**
      * gets the length of a given coastline way.
+     *
      * @param coastlineID the ID of the coastline way.
      * @return the length of the requested coastline way.
      */
@@ -51,6 +53,7 @@ public class Coastlines {
 
     /**
      * gets the longitude of the start node of a given coastline way.
+     *
      * @param coastlineID the ID of the coastline way.
      * @return the longitude of the start point of the requested coastline way.
      */
@@ -60,6 +63,7 @@ public class Coastlines {
 
     /**
      * gets the latitude of the start node of a given coastline way.
+     *
      * @param coastlineID the ID of the coastline way.
      * @return the latitude of the start point of the requested coastline way.
      */
@@ -69,6 +73,7 @@ public class Coastlines {
 
     /**
      * gets the longitude of the end node of a given coastline way.
+     *
      * @param coastlineID the ID of the coastline way.
      * @return the longitude of the end point of the requested coastline way.
      */
@@ -78,6 +83,7 @@ public class Coastlines {
 
     /**
      * gets the latitude of the end node of a given coastline way.
+     *
      * @param coastlineID the ID of the coastline way.
      * @return the latitude of the end point of the requested coastline way.
      */
@@ -113,16 +119,20 @@ public class Coastlines {
             CoastlineWay currCoastline = coastlinesToImport.get(coastlineIdx);
             List<WayNode> currWayNodes = currCoastline.getWayNodes();
 
+
             for (int wayNodeIdx = 1; wayNodeIdx < currWayNodes.size(); wayNodeIdx++) {
                 // Add each edge of the CoastlineWayPolygon as a single way to the dynamic data structures
 
+
                 // Start point of edge
                 dynamicStartIds.add(coastLineWayIdCounter);
-                double pointALatitude = currWayNodes.get(wayNodeIdx-1).getLatitude();
-                double pointALongitude = currWayNodes.get(wayNodeIdx-1).getLongitude();
+                double pointALatitude = currWayNodes.get(wayNodeIdx - 1).getLatitude();
+                double pointALongitude = currWayNodes.get(wayNodeIdx - 1).getLongitude();
+                if (wayNodeIdx == 1) {
+                    dynamicNodeLatitude.add(pointALatitude);
+                    dynamicNodeLongitude.add(pointALongitude);
+                }
 
-                dynamicNodeLatitude.add(pointALatitude);
-                dynamicNodeLongitude.add(pointALongitude);
 
                 coastLineWayIdCounter += 1;
                 dynamicEndIds.add(coastLineWayIdCounter);
