@@ -80,6 +80,8 @@ public class CoastlineImporter implements Sink {
             this.coastLineWays.add(new CoastlineWay(currWay));
         }
         this.coastLineWays = mergeTouchingCoastlines(this.coastLineWays);
+
+        assignNewIdsToCoastlines(this.coastLineWays);
     }
 
     private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
@@ -120,8 +122,10 @@ public class CoastlineImporter implements Sink {
             CoastlineWay mergeResult = allCoastlinesToMerge.get(idxOfCurrEl).mergeCoastlinesIfPossible(allCoastlinesToMerge.get(i));
 
             if (mergeResult != null) {
-                List<CoastlineWay> retList = new ArrayList<>(allCoastlinesToMerge);
+                // If a merge was performed
 
+                // Remove the merged coastline, but keep the bigger new coast line
+                List<CoastlineWay> retList = new ArrayList<>(allCoastlinesToMerge);
                 retList.set(idxOfCurrEl, mergeResult);
                 retList.remove(allCoastlinesToMerge.get(i));
 
@@ -168,15 +172,26 @@ public class CoastlineImporter implements Sink {
         return this.coastLineWays;
     }
 
+    /**
+     * Iterates over a given list of coastlines and assigns IDs from 0 to coastlines.size().
+     *
+     * @param coastlinesThatNeedNewIDs The coastlines that should get new ids.
+     */
+    private void assignNewIdsToCoastlines(List<CoastlineWay> coastlinesThatNeedNewIDs) {
+        for (int currCoastlineIdx = 0; currCoastlineIdx < coastlinesThatNeedNewIDs.size(); currCoastlineIdx++) {
+            coastlinesThatNeedNewIDs.get(currCoastlineIdx).setId(currCoastlineIdx);
+        }
+    }
+
     public static void main(String[] args) throws IOException {
+        // Import coastlines
         CoastlineImporter importer = new CoastlineImporter();
         List<CoastlineWay> coastlines = importer.importPBF("antarctica-latest.osm.pbf");
 
+        // Write a geo json file for test visualization reasons
         String json = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString();
-
         BufferedWriter writer = new BufferedWriter(new FileWriter("antarctica_geoJson.json"));
         writer.write(json);
-
         writer.close();
 
         System.out.println(coastlines.size());
