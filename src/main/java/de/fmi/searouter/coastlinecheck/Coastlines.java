@@ -129,7 +129,7 @@ public class Coastlines {
 
                 // End point of edge
                 double pointBLatitude = currWayNodes.get(wayNodeIdx).getLatitude();
-                double pointBLongitude = currWayNodes.get(wayNodeIdx-1).getLongitude();
+                double pointBLongitude = currWayNodes.get(wayNodeIdx).getLongitude();
 
                 dynamicNodeLatitude.add(pointBLatitude);
                 dynamicNodeLongitude.add(pointBLongitude);
