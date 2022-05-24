@@ -40,4 +40,5 @@ class SearouterApplicationTests {
 		Way way = new Way(data, wayNodes);
 	}
 
+
 }
