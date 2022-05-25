@@ -1,5 +1,11 @@
 package de.fmi.searouter.grid;
 
+import java.math.BigDecimal;
+
+/**
+ * This is an temporary object used for building up the final adjaceny array structure
+ * when self-generating the graph grid structure.
+ */
 public class GridNode {
 
     private double latitude;
@@ -13,47 +19,57 @@ public class GridNode {
     }
 
     public GridNode calcNorthernNode(double latitudeOffset) {
-        double nLatitude = latitude + latitudeOffset;
+        BigDecimal offset = BigDecimal.valueOf(latitudeOffset);
 
-        if (nLatitude > 90.0) {
+        BigDecimal nLatitude = BigDecimal.valueOf(latitude).add(offset);
+
+        if (nLatitude.doubleValue() > 90.0) {
             return null;
         }
 
-        return new GridNode(nLatitude, longitude);
+        return new GridNode(nLatitude.doubleValue(), longitude);
     }
 
     public GridNode calcSouthernNode(double latitudeOffset) {
-        double nLatitude = latitude - latitudeOffset;
+        BigDecimal offset = BigDecimal.valueOf(latitudeOffset);
 
-        if (nLatitude < -90.0) {
+        BigDecimal nLatitude = BigDecimal.valueOf(latitude).subtract(offset);
+
+        if (nLatitude.doubleValue() > 90.0) {
             return null;
         }
 
-        return new GridNode(nLatitude, longitude);
+        return new GridNode(nLatitude.doubleValue(), longitude);
     }
 
     public GridNode calcEasternNode(double longitudeOffset) {
-        double nLongitude = longitude + longitudeOffset;
+        BigDecimal offset = BigDecimal.valueOf(longitudeOffset);
 
-        if (nLongitude < -180.0) {
-            nLongitude = nLongitude % 180;
-        } else if (nLongitude > 180) {
-            nLongitude = nLongitude % (-180);
+        BigDecimal nLongitude = BigDecimal.valueOf(longitude).add(offset);
+
+        if (nLongitude.doubleValue() < -180.0) {
+           // nLongitude = nLongitude % 180;
+           nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
+        } else if (nLongitude.doubleValue() > 180) {
+            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180));
         }
 
-        return new GridNode(latitude, nLongitude);
+        return new GridNode(latitude, nLongitude.doubleValue());
     }
 
     public GridNode calcWesternNode(double longitudeOffset) {
-        double nLongitude = longitude - longitudeOffset;
+        BigDecimal offset = BigDecimal.valueOf(longitudeOffset);
 
-        if (nLongitude < -180.0) {
-            nLongitude = nLongitude % 180;
-        } else if (nLongitude > 180) {
-            nLongitude = nLongitude % (-180);
+        BigDecimal nLongitude = BigDecimal.valueOf(longitude).subtract(offset);
+
+        if (nLongitude.doubleValue() < -180.0) {
+            // nLongitude = nLongitude % 180;
+            nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
+        } else if (nLongitude.doubleValue() > 180) {
+            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180));
         }
 
-        return new GridNode(latitude, nLongitude);
+        return new GridNode(latitude, nLongitude.doubleValue());
     }
 
     public double getLatitude() {
