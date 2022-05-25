@@ -1,6 +1,8 @@
 package de.fmi.searouter.osmimport;
 
 import crosby.binary.osmosis.OsmosisReader;
+import de.fmi.searouter.coastlinecheck.CoastlineChecker;
+import de.fmi.searouter.coastlinecheck.Coastlines;
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -194,6 +196,9 @@ public class CoastlineImporter implements Sink {
         writer.write(json);
         writer.close();
 
-        System.out.println(coastlines.size());
+
+        Coastlines.initCoastlines(coastlines);
+        CoastlineChecker coastlineChecker = new CoastlineChecker();
+        System.out.println(Coastlines.getNumberOfWays());
     }
 }

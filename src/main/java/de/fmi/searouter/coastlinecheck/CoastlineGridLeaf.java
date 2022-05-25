@@ -18,6 +18,7 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
     private int[] coastlineWayIDs;
 
     CoastlineGridLeaf(double refPointLatitude, double refPointLongitude, List<Integer> coastlineIDs) {
+        System.out.println("constructor of grid leaf called, list size = " + coastlineIDs.size());
         this.refPointLatitude = refPointLatitude;
         this.refPointLongitude = refPointLongitude;
 

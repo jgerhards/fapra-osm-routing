@@ -29,6 +29,9 @@ public class IntersectionHelper {
                 (secondLineStartLat == secondLineEndLat && secondLineStartLong == secondLineEndLong)) {
             return false;
         }
+        //todo: this is only for testing quicker, but makes results invalid
+        if(false)
+        return false;
 
         //convert to radian representation
         double radianFirstStartLat = convertToRadian(firstLineStartLat);
