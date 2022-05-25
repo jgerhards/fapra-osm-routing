@@ -63,8 +63,8 @@ public class GeoJsonConverter {
         JSONObject geometry = new JSONObject();
         geometry.put("type", "Point");
         JSONArray arr = new JSONArray();
-        arr.put(node.getLatitude());
         arr.put(node.getLongitude());
+        arr.put(node.getLatitude());
 
         geometry.put("coordinates", arr);
 
