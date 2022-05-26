@@ -1,9 +1,11 @@
 package de.fmi.searouter.domain;
 
+import java.util.Arrays;
+
 public class IntersectionHelper {
     //earths radius is required for distance calculation
     private static final double EARTH_RADIUS = 6371000.0;
-    private static final double THRESHOLD = 0.0000001;
+    private static final double THRESHOLD = 0.000000000001;
 
     /**
      * Checks if two arcs of a great circle intersect each other. Arcs are given using start and end point coordinates.
@@ -23,26 +25,29 @@ public class IntersectionHelper {
     public static boolean linesIntersect(double firstLineStartLat, double firstLineStartLong, double firstLineEndLat,
                                          double firstLineEndLong, double secondLineStartLat, double secondLineStartLong,
                                          double secondLineEndLat, double secondLineEndLong) {
+        //System.out.println("ttt: lines intersect called");
         //check to make sure no line has´the same start and end point
         //todo: maybe use equals function instead of "==" ?
         if((firstLineStartLat == firstLineEndLat && firstLineStartLong == firstLineEndLong) ||
                 (secondLineStartLat == secondLineEndLat && secondLineStartLong == secondLineEndLong)) {
+            System.out.println("ttt: ret 1");
             return false;
         }
-        //todo: this is only for testing quicker, but makes results invalid
-        if(false)
-        return false;
 
         //convert to radian representation
         double radianFirstStartLat = convertToRadian(firstLineStartLat);
         double radianFirstStartLong = convertToRadian(firstLineStartLong);
         double radianFirstEndLat = convertToRadian(firstLineEndLat);
         double radianFirstEndLong = convertToRadian(firstLineEndLong);
+        //System.out.println("ttt: radian values 1: " + radianFirstStartLat + " " + radianFirstStartLong + " "
+        //        + radianFirstEndLat + " " + radianFirstEndLong);
 
         double radianSecondStartLat = convertToRadian(secondLineStartLat);
         double radianSecondStartLong = convertToRadian(secondLineStartLong);
         double radianSecondEndLat = convertToRadian(secondLineEndLat);
         double radianSecondEndLong = convertToRadian(secondLineEndLong);
+        //System.out.println("ttt: radian values 2: " + radianSecondStartLat + " " + radianSecondStartLong + " "
+        //        + radianSecondEndLat + " " + radianSecondEndLong);
 
         //convert to cartesian representation
         //todo: maybe a separate function? Not sure if useful...
@@ -58,6 +63,9 @@ public class IntersectionHelper {
         double[] cartesianSecondEnd = {Math.cos(radianSecondEndLat) * Math.cos(radianSecondEndLong),
                 Math.cos(radianSecondEndLat) * Math.sin(radianSecondEndLong),
                 Math.sin(radianSecondEndLat)};
+        //System.out.println("ttt: cartesian values: " + Arrays.toString(cartesianFirstStart) + " " +
+        //        Arrays.toString(cartesianFirstEnd) + " "
+        //        + Arrays.toString(cartesianSecondStart) + " " + Arrays.toString(cartesianSecondEnd));
 
         //calculate equation of the planes
         double[] firstPlane = {cartesianFirstStart[1]*cartesianFirstEnd[2] -
@@ -72,6 +80,7 @@ public class IntersectionHelper {
                         cartesianSecondStart[0]*cartesianSecondEnd[2],
                 cartesianSecondStart[0]*cartesianSecondEnd[1] -
                         cartesianSecondStart[1]*cartesianSecondEnd[0]};
+        //System.out.println("ttt: plane values: " + Arrays.toString(firstPlane) + " " + Arrays.toString(secondPlane));
 
         //change to unit vector
         double firstLength = Math.sqrt(Math.pow(firstPlane[0], 2) + Math.pow(firstPlane[1], 2) +
@@ -84,17 +93,19 @@ public class IntersectionHelper {
         for(int i = 0; i < secondPlane.length; i++) {
             secondPlane[i] = secondPlane[i] / secondLength;
         }
+        //System.out.println("ttt: normalized plane values: " + Arrays.toString(firstPlane) + " " + Arrays.toString(secondPlane));
 
         //check if the two planes are equal. If that is the case, they are not considered to intersect each other
         //todo: is this a good idea to proceed (not considering this an intersection)?
         boolean planesEqual = true;
         for(int i = 0; i < firstPlane.length; i++) {
-            if(Math.abs(firstPlane[i] - secondPlane[i]) < THRESHOLD) {
+            if(Math.abs(firstPlane[i] - secondPlane[i]) > THRESHOLD) {
                 planesEqual = false;
                 break;
             }
         }
         if(planesEqual) {
+            System.out.println("ttt: ret 2");
             return false;
         }
 
@@ -115,10 +126,14 @@ public class IntersectionHelper {
         double sign = Math.asin(firstIntersection[1] / temp);
         double firstIntersectLong = Math.acos(firstIntersection[0] / temp) * sign;
 
+        System.out.println("ttt: first intersect " + firstIntersectLat + " " + firstIntersectLong);
+
         double secondIntersectLat = Math.asin(secondIntersection[2]);
         temp = Math.cos(secondIntersectLat);
         sign = Math.asin(secondIntersection[1] / temp);
         double secondIntersectLong = Math.acos(secondIntersection[0] / temp) * sign;
+
+        System.out.println("ttt: second intersect " + secondIntersectLat + " " + secondIntersectLong);
 
         //use length to check if and if yes which of the points are on both lines
         double firstFullLength = getDistance(firstLineStartLat, firstLineStartLong, firstLineEndLat, firstLineEndLong);
@@ -149,6 +164,7 @@ public class IntersectionHelper {
 
         //use XOR since if lines intersect twice it cancels out (and should not happen anyway)
         boolean linesIntersect = firstIntersectOnLines ^ secondIntersectOnLines;
+        System.out.println("ttt: ret 3 " + linesIntersect + " first bool: " + firstIntersectOnLines + " 2nd " + secondIntersectOnLines);
         return linesIntersect;
     }
 
@@ -207,6 +223,6 @@ public class IntersectionHelper {
      * @return
      */
     private static double convertToRadian(double coordinate) {
-        return coordinate * (Math.PI / 180);
+        return coordinate * (Math.PI / 180.0);
     }
 }

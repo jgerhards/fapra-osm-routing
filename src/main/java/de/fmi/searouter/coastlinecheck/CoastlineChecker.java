@@ -3,7 +3,9 @@ package de.fmi.searouter.coastlinecheck;
 import de.fmi.searouter.domain.IntersectionHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * class used to check if a given point is in water or on land. Contains the top level of a grid used in
@@ -102,6 +104,7 @@ public class CoastlineChecker {
                             coastLineStartLongitude, coastLineEndLatitude, coastLineEndLongitude, lineLatitude,
                             lineStartLongitude, lineLatitude, lineEndLongitude);
                     if (coastlineIntersects) {
+                        //System.out.println("ttt: lines intersect");
                         coastlineIntersectionsLatitude[listLatIdx][listLongIdx].add(i);
                     }
                 }
@@ -119,7 +122,7 @@ public class CoastlineChecker {
                 System.out.println("ttt: loop 2");
                 //todo: check if indices of coastlineIntersectionsLatitude are given correctly
                 coastlineIntersectionsLongitude[listLatIdx][listLongIdx] = new ArrayList<Integer>();
-                System.out.println("ttt: number of coastlines: " + numberOfCoastlines);
+                //System.out.println("ttt: number of coastlines: " + numberOfCoastlines);
                 for (int i = 0; i < numberOfCoastlines; i++) {
                     double lineStartLatitude = iteratingLatitude;
                     double lineEndLatitude = iteratingLatitude + 10;
@@ -150,7 +153,7 @@ public class CoastlineChecker {
             int arrayLongIdx = 0;
             for (double lowLongBound = -180.0; lowLongBound <= 170; lowLongBound += 10) {
                 double highLongBound = lowLongBound + 10.0;
-                List<Integer> coastlinesInArea = new ArrayList<>();
+                Set<Integer> coastlinesInArea = new LinkedHashSet<>();
                 System.out.println("test: "+lowLongBound + " " + arrayLongIdx + " lat:" + lowLatBound+" "+arrayLatIdx);
                 //add coastlines by intersection with longitudinal lines
                 coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx]);

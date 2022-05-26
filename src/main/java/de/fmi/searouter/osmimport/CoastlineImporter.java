@@ -2,8 +2,10 @@ package de.fmi.searouter.osmimport;
 
 import crosby.binary.osmosis.OsmosisReader;
 import de.fmi.searouter.coastlinecheck.CoastlineChecker;
+import de.fmi.searouter.coastlinecheck.CoastlineGridLeaf;
 import de.fmi.searouter.coastlinecheck.Coastlines;
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.domain.IntersectionHelper;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
@@ -196,9 +198,24 @@ public class CoastlineImporter implements Sink {
         writer.write(json);
         writer.close();
 
+        boolean test = IntersectionHelper.linesIntersect(1.0, 100.2, 1.32, 110.3,
+                -2.0, 105.123, 10.0, 105.321);
+        System.out.println("ttt: testbool " + test);
 
-        Coastlines.initCoastlines(coastlines);
+        /*Coastlines.initCoastlines(coastlines);
+
+        Set<Integer> testSet = new LinkedHashSet<>();
+        CoastlineGridLeaf leaf = new CoastlineGridLeaf(-82.2, 50.3, testSet);
+
         CoastlineChecker coastlineChecker = new CoastlineChecker();
         System.out.println(Coastlines.getNumberOfWays());
+
+        //test some points
+        //false
+        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
+        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(-70.591921, -64.172278));
+        //true
+        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-19.34, -41));
+        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));*/
     }
 }

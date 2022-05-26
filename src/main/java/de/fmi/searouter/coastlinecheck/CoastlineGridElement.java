@@ -4,7 +4,7 @@ package de.fmi.searouter.coastlinecheck;
  * an element of the grid used to partition the map for a coastline check.
  */
 public abstract class CoastlineGridElement {
-    public static final int MAX_COASTLINES_IN_GRID = 500;
+    public static final int MAX_COASTLINES_IN_GRID = 50000;
 
     /**
      * check if this CoastlineGridElement is a leaf node or an inner node.

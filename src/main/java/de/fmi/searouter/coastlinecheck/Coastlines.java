@@ -28,8 +28,8 @@ public class Coastlines {
 
     //global reference point for checking if other points are in water or on land
     //todo: find an appropriate point
-    public static final double GLOBAL_REFERENCE_LATITUDE = 0.0;
-    public static final double GLOBAL_REFERENCE_LONGITUDE = 0.0;
+    public static final double GLOBAL_REFERENCE_LATITUDE = 1.0;
+    public static final double GLOBAL_REFERENCE_LONGITUDE = 2.0;
     public static final boolean GLOBAL_REFERENCE_IN_WATER = true;
 
     /**

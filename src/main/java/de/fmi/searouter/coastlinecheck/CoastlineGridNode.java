@@ -3,7 +3,9 @@ package de.fmi.searouter.coastlinecheck;
 import de.fmi.searouter.domain.IntersectionHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Inner node of the grid for a coastline check. This type of sub-node contains an array of other nodes which partition
@@ -24,7 +26,7 @@ public class CoastlineGridNode extends CoastlineGridElement {
      * @param lowLongBound the low bound for the latitude of this area.
      * @param coastlineIDs a list of all coastlines within this area
      */
-    CoastlineGridNode(int level, double lowLatBound, double lowLongBound, List<Integer> coastlineIDs) {
+    CoastlineGridNode(int level, double lowLatBound, double lowLongBound, Set<Integer> coastlineIDs) {
         System.out.println("constructor of grid node called, list size = " + coastlineIDs.size());
         this.level = level;
         subNodes = new CoastlineGridElement[10][10];  //todo: check these dimensions
@@ -44,7 +46,7 @@ public class CoastlineGridNode extends CoastlineGridElement {
             int listLongIdx = 0;
             for (double iteratingLongitude = lowLongBound; iteratingLongitude < highLongBound;
                  iteratingLongitude += stepSize) {
-                System.out.println("ttt: node loop values lat: "+iteratingLongitude+" "+highLongBound+" "+stepSize);
+                //System.out.println("ttt: node loop values lat: "+iteratingLongitude+" "+highLongBound+" "+stepSize);
                 //todo: check if indices of coastlineIntersectionsLatitude are given correctly
                 coastlineIntersectionsLatitude[listLatIdx][listLongIdx] = new ArrayList<Integer>();
                 for (int i : coastlineIDs) {
@@ -61,6 +63,7 @@ public class CoastlineGridNode extends CoastlineGridElement {
                             coastLineStartLongitude, coastLineEndLatitude, coastLineEndLongitude, lineLatitude,
                             lineStartLongitude, lineLatitude, lineEndLongitude);
                     if (coastlineIntersects) {
+                        //System.out.println("ttt: lines intersect");
                         coastlineIntersectionsLatitude[listLatIdx][listLongIdx].add(i);
                     }
                 }
@@ -80,7 +83,7 @@ public class CoastlineGridNode extends CoastlineGridElement {
             int listLongIdx = 0;
             for (double iteratingLongitude = lowLongBound; iteratingLongitude <= highLongBound;
                  iteratingLongitude += stepSize) {
-                System.out.println("ttt: node loop values long: "+iteratingLongitude+" "+highLongBound+" "+stepSize);
+                //System.out.println("ttt: node loop values long: "+iteratingLongitude+" "+highLongBound+" "+stepSize);
                 //todo: check if indices of coastlineIntersectionsLatitude are given correctly
                 coastlineIntersectionsLongitude[listLatIdx][listLongIdx] = new ArrayList<Integer>();
                 for (int i : coastlineIDs) {
@@ -106,6 +109,18 @@ public class CoastlineGridNode extends CoastlineGridElement {
             listLatIdx++;
         }
 
+        //check if lengths of lists is different
+        for(int i = 0; i < coastlineIntersectionsLatitude.length; i++) {
+            for(int j = 0; j < coastlineIntersectionsLatitude[i].length; j++) {
+                //System.out.println("ttt: latListLengths " + coastlineIntersectionsLatitude[i][j].size()+" "+i+" "+j);
+            }
+        }
+        for(int i = 0; i < coastlineIntersectionsLongitude.length; i++) {
+            for(int j = 0; j < coastlineIntersectionsLongitude[i].length; j++) {
+                //System.out.println("ttt: longListLengths " + coastlineIntersectionsLongitude[i][j].size()+" "+i+" "+j);
+            }
+        }
+
         //now back to rounding down for both values
         highLongBound = highLongBound - 2*THRESHOLD;
         //fill array with new grid elements
@@ -116,9 +131,10 @@ public class CoastlineGridNode extends CoastlineGridElement {
             for (double lowLongBoundLoop = lowLongBound; lowLongBoundLoop < highLongBound;
                  lowLongBoundLoop += stepSize) {
                 double highLongBoundLoop = lowLongBoundLoop + stepSize;  //todo: can this variable be removed?
-                System.out.println("ttt: low bound"+lowLatBoundLoop+" high bound: "+highLatBoundLoop);
-                System.out.println("ttt: latIdx: "+arrayLatIdx+" longIdx: "+arrayLongIdx);
-                List<Integer> coastlinesInArea = new ArrayList<>();
+                //System.out.println("ttt: low bound"+lowLatBoundLoop+" high bound: "+highLatBoundLoop);
+                //System.out.println("ttt: latIdx: "+arrayLatIdx+" longIdx: "+arrayLongIdx);
+                Set<Integer> coastlinesInArea = new LinkedHashSet<>();
+                //System.out.println("ttt: set reset, size = " + coastlinesInArea.size());
                 //add coastlines by intersection with longitudinal lines
                 coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx]);
                 coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx + 1]);
@@ -141,8 +157,8 @@ public class CoastlineGridNode extends CoastlineGridElement {
                     //only one point has to be checked, if only one is in area intersection will find the coastline
                     double coastlineStartLat = Coastlines.getStartLatitude(i);
                     double coastlineStartLong = Coastlines.getStartLongitude(i);
-                    if(coastlineStartLat >= lowLatBound && coastlineStartLat <= highLatBound &&
-                            coastlineStartLong >= lowLongBound && coastlineStartLong <= highLongBound) {
+                    if(coastlineStartLat >= lowLatBoundLoop && coastlineStartLat <= highLatBoundLoop &&
+                            coastlineStartLong >= lowLongBoundLoop && coastlineStartLong <= highLongBoundLoop) {
                         coastlinesInArea.add(i);
                     }
                 }
