@@ -1,19 +1,69 @@
 package de.fmi.searouter.grid;
 
+import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.router.DijkstraRouter;
+import de.fmi.searouter.router.Router;
+import de.fmi.searouter.router.RoutingResult;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
  * Contains the offset data structure which connects the {@link Edge}s with the {@link Node}s to
- * a graph representation.
+ * a graph representation. Provides in addition methods for grid operations.
  */
 public class Grid {
 
     // Stores for each node id the position in the Edge array where the edges for the respective nodes start.
     public static int[] offset;
+
+    /**
+     *
+     * @param latitude (0 to 90°)
+     * @param longitude (-180 to 180°)
+     * @return The index within the {@link Node} data structure that points to the nearest grid node. -1 if no node exists
+     * in the requested plane of integer degrees.
+     */
+    public static int getNearestGridNodeByCoordinates(double latitude, double longitude) {
+        // Strategy: Get all grid nodes on the plane of integer grid numbers and then check manually the distance
+
+        // Integer coordinate degrees to search for
+        int iLat = (int) latitude;
+        int iLong = (int) longitude;
+
+        List<Integer> candidateNodes = new ArrayList<>();
+
+        // Add all node indices to the candidate node list that are within the integer degree plane
+        for (int i = 0; i < Node.getSize(); i++) {
+            if (iLat == (int) Node.getLatitude(i) && iLong == (int) Node.getLongitude(i)) {
+                candidateNodes.add(i);
+            }
+        }
+
+        if (candidateNodes.size() <= 0) {
+            return -1;
+        }
+
+        // For all candidates, calculate the distances to the requested coordinates
+        double minDistance = Double.MAX_VALUE;
+        int minNodeIdx = 0;
+        for (Integer nodeIdx : candidateNodes) {
+            double currDistance = IntersectionHelper.getDistance(
+                    latitude, longitude,
+                    Node.getLatitude(nodeIdx), Node.getLongitude(nodeIdx)
+                    );
+            if (currDistance < minDistance) {
+                minDistance = currDistance;
+                minNodeIdx = nodeIdx;
+            }
+        }
+
+        return minNodeIdx;
+    }
+
 
     /**
      * Only temporary during the import of fmi files needed (for sorting).
@@ -45,6 +95,12 @@ public class Grid {
         }
     }
 
+    /**
+     * Imports a grid graph of a .fmi file format.
+     *
+     * @param filePath The path within the resources folder where the file to import is placed.
+     * @throws IOException If I/O fails.
+     */
     public static void importFmiFile(String filePath) throws IOException {
         Resource fmiResource = new ClassPathResource(filePath);
         InputStream inputStream = fmiResource.getInputStream();
@@ -79,7 +135,7 @@ public class Grid {
             nodeList.sort(new Comparator<TmpNode>() {
                 @Override
                 public int compare(TmpNode o1, TmpNode o2) {
-                    return Integer.compare(o1.id, o2.id);
+                    return Integer.compare(fileNodeIdToInternalUsedId.get(o1.id), fileNodeIdToInternalUsedId.get(o2.id));
                 }
             });
 
@@ -146,14 +202,18 @@ public class Grid {
                 offset[i] += offset[i - 1];
             }
 
-            System.out.println("test");
-
             br.close();
 
 
         }
     }
 
+    /**
+     * Exports the current grid graph representation (contents of {@link Edge} and {@link Node}).
+     *
+     * @param filePath The export path (relative to the main directory of this project).
+     * @throws IOException If I/O fails.
+     */
     public static void exportToFmiFile(String filePath) throws IOException {
         // Get an input stream for the pbf file located in the resources directory
 
@@ -184,6 +244,14 @@ public class Grid {
 
     public static void main(String[] args) {
 
+        System.out.println(-180 + (580 % (-180)));
+
+        BigDecimal noA = BigDecimal.valueOf(580);
+        System.out.println(BigDecimal.valueOf(-180).add(noA.remainder(BigDecimal.valueOf(180))));
+
+        BigDecimal noB = BigDecimal.valueOf(-500);
+        System.out.println(noB.remainder(BigDecimal.valueOf(180)));
+
         try {
             importFmiFile("testImport.fmi");
 
@@ -192,9 +260,16 @@ public class Grid {
             e.printStackTrace();
         }
 
+        int startNode = Grid.getNearestGridNodeByCoordinates(0.0, -0.2);
+        System.out.println("ID: " + startNode + " Lat: " + "Node.getLatitude(startNode)" +  " Long: " + "");
+
+        int destNode = Grid.getNearestGridNodeByCoordinates(-0.6, 0.0);
+        System.out.println("ID: " + destNode + " Lat: " + Node.getLatitude(destNode) +  " Long: " + Node.getLongitude(destNode));
 
 
-
+        Router router = new DijkstraRouter();
+        RoutingResult res = router.route(startNode, destNode);
+        System.out.println(res);
     }
 
 

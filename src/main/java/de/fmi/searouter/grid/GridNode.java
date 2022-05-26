@@ -23,7 +23,7 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).add(offset);
 
-        if (nLatitude.doubleValue() > 90.0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
             return null;
         }
 
@@ -35,7 +35,7 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).subtract(offset);
 
-        if (nLatitude.doubleValue() > 90.0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
             return null;
         }
 
@@ -51,7 +51,7 @@ public class GridNode {
            // nLongitude = nLongitude % 180;
            nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
         } else if (nLongitude.doubleValue() > 180) {
-            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180));
+            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180).add(BigDecimal.valueOf(180)));
         }
 
         return new GridNode(latitude, nLongitude.doubleValue());
@@ -66,7 +66,7 @@ public class GridNode {
             // nLongitude = nLongitude % 180;
             nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
         } else if (nLongitude.doubleValue() > 180) {
-            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180));
+            nLongitude = nLongitude.remainder(BigDecimal.valueOf(-180).add(BigDecimal.valueOf(180)));
         }
 
         return new GridNode(latitude, nLongitude.doubleValue());
