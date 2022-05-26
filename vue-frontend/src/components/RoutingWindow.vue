@@ -156,25 +156,26 @@ export default {
               "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
           );
 
+
           this.startPoint = response.data.pathCoordinates[0][0] + " " + response.data.pathCoordinates[0][1];
           console.log(this.startPoint);
           this.targetPoint = response.data.pathCoordinates[response.data.pathCoordinates.length-1][0] + " " + response.data.pathCoordinates[response.data.pathCoordinates.length-1][1];
           console.log(this.targetPoint);
 
-          this.addRoute(response.data.pathCoordinates);
+          this.addRoute(response.data.pathCoordinates, response.data.overallDistance);
         })
         .catch((error) => {
-          alert(error.data);
+          alert("Please choose only start/destination points on the ocean!\n" + error);
         });
     },
 
-    addRoute(latLongsArray) {
+    addRoute(latLongsArray, distance) {
       if (this.route != null) {
         this.route.remove();
       }
 
       this.route = L.polyline(latLongsArray, { color: "red" })
-        .bindPopup("Distance: XY km")
+        .bindPopup("Distance: " + distance + "m")
         .addTo(this.map);
     },
   },
