@@ -59,6 +59,11 @@ public class DijkstraRouter implements Router {
             currDistanceToNode[nodeToHandle.node] = nodeToHandle.dist;
             previousNode[nodeToHandle.node] = nodeToHandle.previousNode;
 
+            // Break early if target node reached
+            if (nodeToHandle.node == destNodeIdx) {
+                break;
+            }
+
             for (int neighbourEdgeId = Grid.offset[nodeToHandle.node]; neighbourEdgeId < Grid.offset[nodeToHandle.node + 1]; ++neighbourEdgeId) {
 
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
