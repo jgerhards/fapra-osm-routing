@@ -39,7 +39,9 @@
         </tr>
         <tr>
           <td>
-            <b-button @click="calcRoute(startPoint, targetPoint)">Calculate route</b-button>
+            <b-button @click="calcRoute(startPoint, targetPoint)"
+              >Calculate route</b-button
+            >
           </td>
         </tr>
       </table>
@@ -53,6 +55,7 @@
 <script>
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import axios from "axios";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -101,7 +104,6 @@ export default {
 
       this.markers = [];
     },
-    
 
     // Let the user choose a point on the map by clicking on it
     choosePointOnMap(isStart) {
@@ -115,18 +117,55 @@ export default {
       }
     },
 
+    sanitizeLongitude: function (longitude) {
+      if (longitude < -180) {
+        return longitude % 180;
+      } else if (longitude > 180) {
+        return -180 + (longitude % 180);
+      }
+      return longitude;
+    },
+
     // Calculate the route
     calcRoute(startPoint, targetPoint) {
-      alert("Not implemented yet. Would try to calculate a route from " + startPoint + " to " + targetPoint + ".\n\n Instead as a demo a random polygon will be displayed.");
-        var latlong = startPoint.split(' ');
-        var latOne = parseFloat(latlong[0]);
-        var longOne = parseFloat(latlong[1]);
+      var latlong = startPoint.split(" ");
+      var latOne = parseFloat(latlong[0]);
+      var longOne = this.sanitizeLongitude(latlong[1]);
 
-        latlong = targetPoint.split(' ');
-        var latTwo = parseFloat(latlong[0]);
-        var longTwo = parseFloat(latlong[1]);
+      latlong = targetPoint.split(" ");
+      var latTwo = parseFloat(latlong[0]);
+      var longTwo = this.sanitizeLongitude(parseFloat(latlong[1]));
 
-        this.addRoute([[latOne, longOne], [latTwo, longTwo]]);
+      let reqObj = {
+        startPoint: {
+          latitude: latOne,
+          longitude: longOne,
+        },
+        endPoint: {
+          latitude: latTwo,
+          longitude: longTwo,
+        },
+      };
+
+      axios
+        .post("http://localhost:8080/route", reqObj)
+        .then((response) => {
+          this.responseData = response.data;
+
+          alert(
+              "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
+          );
+
+          this.startPoint = response.data.pathCoordinates[0][0] + " " + response.data.pathCoordinates[0][1];
+          console.log(this.startPoint);
+          this.targetPoint = response.data.pathCoordinates[response.data.pathCoordinates.length-1][0] + " " + response.data.pathCoordinates[response.data.pathCoordinates.length-1][1];
+          console.log(this.targetPoint);
+
+          this.addRoute(response.data.pathCoordinates);
+        })
+        .catch((error) => {
+          alert(error.data);
+        });
     },
 
     addRoute(latLongsArray) {
@@ -134,48 +173,48 @@ export default {
         this.route.remove();
       }
 
-      this.route = L.polyline(latLongsArray, {color: 'red'}).bindPopup('Distance: XY km').addTo(this.map);
-    }
+      this.route = L.polyline(latLongsArray, { color: "red" })
+        .bindPopup("Distance: XY km")
+        .addTo(this.map);
+    },
   },
   watch: {
-      startPoint: function(val) {
-            if (!val) {
-            return;
-          }
-          var latlong = val.split(' ');
-          var lat = parseFloat(latlong[0]);
-          var long = parseFloat(latlong[1]);
-
-         if (this.startMarker != null) {
-            this.startMarker.remove();
-          }
-          this.startMarker = L.marker([lat, long]).bindTooltip("Start", 
-                    {
-                permanent: true, 
-                direction: 'right'
-            }).addTo(
-            this.map
-          );
-      },
-      targetPoint: function(val) {
-          if (!val) {
-            return;
-          }
-          var latlong = val.split(' ');
-          var lat = parseFloat(latlong[0]);
-          var long = parseFloat(latlong[1]);
-
-         if (this.targetMarker != null) {
-            this.targetMarker.remove();
-          }
-          this.targetMarker = L.marker([lat, long]).bindTooltip("Target", 
-                    {
-                permanent: true, 
-                direction: 'right'
-            }).addTo(
-            this.map
-          );
+    startPoint: function (val) {
+      if (!val) {
+        return;
       }
+      var latlong = val.split(" ");
+      var lat = parseFloat(latlong[0]);
+      var long = parseFloat(latlong[1]);
+
+      if (this.startMarker != null) {
+        this.startMarker.remove();
+      }
+      this.startMarker = L.marker([lat, long])
+        .bindTooltip("Start", {
+          permanent: true,
+          direction: "right",
+        })
+        .addTo(this.map);
+    },
+    targetPoint: function (val) {
+      if (!val) {
+        return;
+      }
+      var latlong = val.split(" ");
+      var lat = parseFloat(latlong[0]);
+      var long = parseFloat(latlong[1]);
+
+      if (this.targetMarker != null) {
+        this.targetMarker.remove();
+      }
+      this.targetMarker = L.marker([lat, long])
+        .bindTooltip("Target", {
+          permanent: true,
+          direction: "right",
+        })
+        .addTo(this.map);
+    },
   },
   mounted() {
     // This will be called every time this component will be called

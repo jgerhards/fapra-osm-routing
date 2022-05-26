@@ -1,17 +1,43 @@
 package de.fmi.searouter.rest;
 
+import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 import de.fmi.searouter.domain.RoutingRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import de.fmi.searouter.grid.Grid;
+import de.fmi.searouter.router.DijkstraRouter;
+import de.fmi.searouter.router.RoutingResult;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
 
 @RestController
+@RequestMapping("/route")
 public class RoutingController {
 
-    @GetMapping("/route")
-    public String getRoute(@RequestBody RoutingRequest routingRequest) {
-        return "success, lat_end_point: " + routingRequest.getEndPoint().getLatitude() ;
+    @Autowired
+    DijkstraRouter router;
+
+    @PostMapping("")
+    public ResponseEntity getRoute(@RequestBody RoutingRequest routingRequest) {
+
+       int startNodeId = Grid.getNearestGridNodeByCoordinates(routingRequest.getStartPoint().getLatitude(), routingRequest.getStartPoint().getLongitude());
+       int destNodeId = Grid.getNearestGridNodeByCoordinates(routingRequest.getEndPoint().getLatitude(), routingRequest.getEndPoint().getLongitude());
+
+       System.out.println(startNodeId);
+
+        if (startNodeId < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Start position is not on the ocean!");
+        }
+
+        if (destNodeId < 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Destination position is not on the ocean!");
+        }
+
+        RoutingResult res = router.route(startNodeId, destNodeId);
+
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/test")
