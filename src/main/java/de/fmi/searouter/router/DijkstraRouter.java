@@ -10,33 +10,56 @@ public class DijkstraRouter implements Router {
 
     private int[] currDistanceToNode;
     private int[] previousNode;
-    private Set<Integer> vertexSetQ;
+    private PriorityQueue<HeapElement> vertexHeapQ;
+
+    private class HeapElement implements Comparable {
+        public int dist;
+        public int node;
+        public int previousNode;
+
+        @Override
+        public int compareTo(Object o) {
+            HeapElement toCompare = (HeapElement) o;
+            return Integer.compare(dist, toCompare.dist);
+        }
+
+        public HeapElement(int dist, int node, int previousNode) {
+            this.dist = dist;
+            this.node = node;
+            this.previousNode = previousNode;
+        }
+    }
 
     private void init(int startNodeIdx) {
         currDistanceToNode = new int[Node.getSize()];
         previousNode = new int[Node.getSize()];
-        vertexSetQ = new HashSet<>();
+        vertexHeapQ = new PriorityQueue<HeapElement>();
 
         for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
             currDistanceToNode[nodeIdx] = Integer.MAX_VALUE;
             previousNode[nodeIdx] = -1;
         }
 
-        vertexSetQ.add(startNodeIdx);
-        currDistanceToNode[startNodeIdx] = 0;
+        vertexHeapQ.add(new HeapElement(0, startNodeIdx, startNodeIdx));
+
     }
 
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
         init(startNodeIdx);
 
-        while (!vertexSetQ.isEmpty()) {
-            int nodeToHandle = getVertexWithMinimalDistance(vertexSetQ, currDistanceToNode);
+        while (!vertexHeapQ.isEmpty()) {
 
-            // Remove the min distance node from the Q-Set
-            vertexSetQ.remove(nodeToHandle);
+            HeapElement nodeToHandle = vertexHeapQ.poll();
 
-            for (int neighbourEdgeId = Grid.offset[nodeToHandle]; neighbourEdgeId < Grid.offset[nodeToHandle + 1]; ++neighbourEdgeId) {
+            if (nodeToHandle.dist >= currDistanceToNode[nodeToHandle.node]) {
+                continue;
+            }
+
+            currDistanceToNode[nodeToHandle.node] = nodeToHandle.dist;
+            previousNode[nodeToHandle.node] = nodeToHandle.previousNode;
+
+            for (int neighbourEdgeId = Grid.offset[nodeToHandle.node]; neighbourEdgeId < Grid.offset[nodeToHandle.node + 1]; ++neighbourEdgeId) {
 
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
 
@@ -46,13 +69,11 @@ public class DijkstraRouter implements Router {
                 //}
 
                 // Calculate the distance to the destination vertex using the current edge
-                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandle] + Edge.getDist(neighbourEdgeId);
+                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandle.node] + Edge.getDist(neighbourEdgeId);
 
                 // If the new calculated distance to the destination vertex is lower as the previously known, update the corresponding data stucutres
                 if (newDistanceOverThisEdgeToDestVertex < currDistanceToNode[destinationVertexId]) {
-                        currDistanceToNode[destinationVertexId] = newDistanceOverThisEdgeToDestVertex;
-                        previousNode[destinationVertexId] = nodeToHandle;
-                        vertexSetQ.add(destinationVertexId);
+                        vertexHeapQ.add(new HeapElement(newDistanceOverThisEdgeToDestVertex, destinationVertexId, nodeToHandle.node));
                 }
 
             }
