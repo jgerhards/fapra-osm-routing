@@ -270,6 +270,9 @@ public class Grid {
         Router router = new DijkstraRouter();
         RoutingResult res = router.route(startNode, destNode);
         System.out.println(res);
+
+        RoutingResult rest = router.route(startNode, destNode);
+        System.out.println(rest);
     }
 
 
