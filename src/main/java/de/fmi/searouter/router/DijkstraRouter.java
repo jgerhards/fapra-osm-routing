@@ -3,9 +3,11 @@ package de.fmi.searouter.router;
 import de.fmi.searouter.grid.Edge;
 import de.fmi.searouter.grid.Grid;
 import de.fmi.searouter.grid.Node;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Component
 public class DijkstraRouter implements Router {
 
     private int[] currDistanceToNode;
