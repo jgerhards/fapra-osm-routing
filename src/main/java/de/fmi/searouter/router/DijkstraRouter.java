@@ -11,6 +11,7 @@ public class DijkstraRouter implements Router {
     private int[] currDistanceToNode;
     private int[] previousNode;
     private PriorityQueue<HeapElement> vertexHeapQ;
+    private List<Integer> nodeTouched;
 
     private class HeapElement implements Comparable {
         public int dist;
@@ -30,23 +31,34 @@ public class DijkstraRouter implements Router {
         }
     }
 
-    private void init(int startNodeIdx) {
-        currDistanceToNode = new int[Node.getSize()];
-        previousNode = new int[Node.getSize()];
-        vertexHeapQ = new PriorityQueue<HeapElement>();
+    public DijkstraRouter() {
+        this.currDistanceToNode = new int[Node.getSize()];
+        this.previousNode = new int[Node.getSize()];
+        this.vertexHeapQ = new PriorityQueue<HeapElement>();
+        this.nodeTouched = new ArrayList<>();
 
         for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
             currDistanceToNode[nodeIdx] = Integer.MAX_VALUE;
             previousNode[nodeIdx] = -1;
         }
 
-        vertexHeapQ.add(new HeapElement(0, startNodeIdx, startNodeIdx));
+    }
 
+    private void resetState() {
+        for (Integer nodeId : nodeTouched) {
+            currDistanceToNode[nodeId] = Integer.MAX_VALUE;
+            previousNode[nodeId] = -1;
+        }
+        vertexHeapQ.clear();
+        nodeTouched.clear();
     }
 
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
-        init(startNodeIdx);
+        long startTime = System.nanoTime();
+        resetState();
+
+        vertexHeapQ.add(new HeapElement(0, startNodeIdx, startNodeIdx));
 
         while (!vertexHeapQ.isEmpty()) {
 
@@ -58,6 +70,7 @@ public class DijkstraRouter implements Router {
 
             currDistanceToNode[nodeToHandle.node] = nodeToHandle.dist;
             previousNode[nodeToHandle.node] = nodeToHandle.previousNode;
+            nodeTouched.add(nodeToHandle.node);
 
             // Break early if target node reached
             if (nodeToHandle.node == destNodeIdx) {
@@ -96,8 +109,9 @@ public class DijkstraRouter implements Router {
 
         // Reverse order of path and save it to array
         Collections.reverse(path);
+        long stopTime = System.nanoTime();
 
-        return new RoutingResult(path, currDistanceToNode[destNodeIdx]);
+        return new RoutingResult(path, currDistanceToNode[destNodeIdx], (double) (stopTime - startTime) / 1000000);
     }
 
     public int getVertexWithMinimalDistance(Set<Integer> vertexSet, int[] currentDistancesToNode) {
