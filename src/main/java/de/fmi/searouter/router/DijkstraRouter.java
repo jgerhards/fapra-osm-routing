@@ -20,9 +20,9 @@ public class DijkstraRouter implements Router {
         for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
             currDistanceToNode[nodeIdx] = Integer.MAX_VALUE;
             previousNode[nodeIdx] = -1;
-            vertexSetQ.add(nodeIdx);
         }
 
+        vertexSetQ.add(startNodeIdx);
         currDistanceToNode[startNodeIdx] = 0;
     }
 
@@ -41,9 +41,9 @@ public class DijkstraRouter implements Router {
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
 
                 // If the edge destination vertex is not in the vertexSetQ
-                if (!vertexSetQ.contains(destinationVertexId)) {
-                    continue;
-                }
+                //if (!vertexSetQ.contains(destinationVertexId)) {
+                //    continue;
+                //}
 
                 // Calculate the distance to the destination vertex using the current edge
                 int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandle] + Edge.getDist(neighbourEdgeId);
@@ -52,6 +52,7 @@ public class DijkstraRouter implements Router {
                 if (newDistanceOverThisEdgeToDestVertex < currDistanceToNode[destinationVertexId]) {
                         currDistanceToNode[destinationVertexId] = newDistanceOverThisEdgeToDestVertex;
                         previousNode[destinationVertexId] = nodeToHandle;
+                        vertexSetQ.add(destinationVertexId);
                 }
 
             }
