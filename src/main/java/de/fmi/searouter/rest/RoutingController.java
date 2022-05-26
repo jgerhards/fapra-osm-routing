@@ -25,8 +25,6 @@ public class RoutingController {
        int startNodeId = Grid.getNearestGridNodeByCoordinates(routingRequest.getStartPoint().getLatitude(), routingRequest.getStartPoint().getLongitude());
        int destNodeId = Grid.getNearestGridNodeByCoordinates(routingRequest.getEndPoint().getLatitude(), routingRequest.getEndPoint().getLongitude());
 
-       System.out.println(startNodeId);
-
         if (startNodeId < 0) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Start position is not on the ocean!");
         }

@@ -10,12 +10,12 @@ import java.util.*;
 @Component
 public class DijkstraRouter implements Router {
 
-    private int[] currDistanceToNode;
-    private int[] previousNode;
-    private PriorityQueue<HeapElement> vertexHeapQ;
-    private List<Integer> nodeTouched;
+    private final int[] currDistanceToNode;
+    private final int[] previousNode;
+    private final PriorityQueue<HeapElement> vertexHeapQ;
+    private final List<Integer> nodeTouched;
 
-    private class HeapElement implements Comparable {
+    private static class HeapElement implements Comparable {
         public int dist;
         public int node;
         public int previousNode;
@@ -36,7 +36,7 @@ public class DijkstraRouter implements Router {
     public DijkstraRouter() {
         this.currDistanceToNode = new int[Node.getSize()];
         this.previousNode = new int[Node.getSize()];
-        this.vertexHeapQ = new PriorityQueue<HeapElement>();
+        this.vertexHeapQ = new PriorityQueue<>();
         this.nodeTouched = new ArrayList<>();
 
         for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
@@ -65,21 +65,23 @@ public class DijkstraRouter implements Router {
         while (!vertexHeapQ.isEmpty()) {
 
             HeapElement nodeToHandle = vertexHeapQ.poll();
+            int nodeToHandleId = nodeToHandle.node;
 
-            if (nodeToHandle.dist >= currDistanceToNode[nodeToHandle.node]) {
+
+            if (nodeToHandle.dist >= currDistanceToNode[nodeToHandleId]) {
                 continue;
             }
 
-            currDistanceToNode[nodeToHandle.node] = nodeToHandle.dist;
-            previousNode[nodeToHandle.node] = nodeToHandle.previousNode;
-            nodeTouched.add(nodeToHandle.node);
+            currDistanceToNode[nodeToHandleId] = nodeToHandle.dist;
+            previousNode[nodeToHandleId] = nodeToHandle.previousNode;
+            nodeTouched.add(nodeToHandleId);
 
             // Break early if target node reached
-            if (nodeToHandle.node == destNodeIdx) {
+            if (nodeToHandleId == destNodeIdx) {
                 break;
             }
 
-            for (int neighbourEdgeId = Grid.offset[nodeToHandle.node]; neighbourEdgeId < Grid.offset[nodeToHandle.node + 1]; ++neighbourEdgeId) {
+            for (int neighbourEdgeId = Grid.offset[nodeToHandleId]; neighbourEdgeId < Grid.offset[nodeToHandleId + 1]; ++neighbourEdgeId) {
 
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
 
@@ -89,16 +91,17 @@ public class DijkstraRouter implements Router {
                 //}
 
                 // Calculate the distance to the destination vertex using the current edge
-                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandle.node] + Edge.getDist(neighbourEdgeId);
+                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandleId] + Edge.getDist(neighbourEdgeId);
 
                 // If the new calculated distance to the destination vertex is lower as the previously known, update the corresponding data stucutres
                 if (newDistanceOverThisEdgeToDestVertex < currDistanceToNode[destinationVertexId]) {
-                        vertexHeapQ.add(new HeapElement(newDistanceOverThisEdgeToDestVertex, destinationVertexId, nodeToHandle.node));
+                        vertexHeapQ.add(new HeapElement(newDistanceOverThisEdgeToDestVertex, destinationVertexId, nodeToHandleId));
                 }
 
             }
         }
 
+        // Here, we are done with dijkstra but need to gather all relevant data from the resulting data structures
         List<Integer> path = new ArrayList<>();
         int currNodeUnderInvestigation = destNodeIdx;
 
