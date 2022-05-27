@@ -19,7 +19,7 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
     private int[] coastlineWayIDs;
 
     public CoastlineGridLeaf(double refPointLatitude, double refPointLongitude, Set<Integer> coastlineIDs) {
-        System.out.println("ttt: constructor of grid leaf called, list size = " + coastlineIDs.size());
+        //System.out.println("ttt: constructor of grid leaf called, list size = " + coastlineIDs.size());
         this.refPointLatitude = refPointLatitude;
         this.refPointLongitude = refPointLongitude;
 
@@ -39,23 +39,29 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
      * but public as it may be called from another source later on (using a more efficient implementation).
      */
     public void initializeReferencePoint() {
+        if(refPointLatitude == -75.0 && refPointLongitude == -75.0) {
+            System.out.println("ttt: a");
+        }
         //todo: naive algorithm used --> currently much more work-intensive than necessary
         int numberOfCoastlines = Coastlines.getNumberOfWays();
         //start of the same as the global reference, negate on intersecting a coastline
         refPointIsInWater = Coastlines.GLOBAL_REFERENCE_IN_WATER;
         for(int i = 0; i < numberOfCoastlines; i++) {
             //System.out.println("ttt: loop entered");
+            if(i == 789) {
+                //System.out.println("a");
+            }
             double coastlineStartLat = Coastlines.getStartLatitude(i);
-            double coastlineStartLong = Coastlines.getStartLatitude(i);
+            double coastlineStartLong = Coastlines.getStartLongitude(i);
             double coastlineEndLat = Coastlines.getEndLatitude(i);
-            double coastlineEndLong = Coastlines.getEndLatitude(i);
+            double coastlineEndLong = Coastlines.getEndLongitude(i);
             //System.out.println("ttt: values " + i +" " + coastlineStartLat + " " + coastlineStartLong + " " + coastlineEndLat + " " + coastlineEndLong);
 
             boolean linesIntersect = IntersectionHelper.linesIntersect(refPointLatitude, refPointLongitude,
                     Coastlines.GLOBAL_REFERENCE_LATITUDE, Coastlines.GLOBAL_REFERENCE_LONGITUDE,
                     coastlineStartLat, coastlineStartLong, coastlineEndLat, coastlineEndLong);
             if(linesIntersect) {
-                System.out.println("ttt: lines intersect reference point init");
+                System.out.println("ttt: lines intersect reference point init, id: " + i);
                 refPointIsInWater = !refPointIsInWater;
             }
         }
@@ -75,9 +81,9 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
         boolean pointInWater = refPointIsInWater;
         for(int i : coastlineWayIDs) {
             double coastlineStartLat = Coastlines.getStartLatitude(i);
-            double coastlineStartLong = Coastlines.getStartLatitude(i);
-            double coastlineEndLat = Coastlines.getStartLatitude(i);
-            double coastlineEndLong = Coastlines.getStartLatitude(i);
+            double coastlineStartLong = Coastlines.getStartLongitude(i);
+            double coastlineEndLat = Coastlines.getEndLatitude(i);
+            double coastlineEndLong = Coastlines.getEndLongitude(i);
 
             boolean linesIntersect = IntersectionHelper.linesIntersect(latitude, longitude, refPointLatitude,
                     refPointLongitude, coastlineStartLat, coastlineStartLong, coastlineEndLat, coastlineEndLong);

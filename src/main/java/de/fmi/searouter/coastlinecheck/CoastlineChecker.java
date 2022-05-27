@@ -42,6 +42,7 @@ public class CoastlineChecker {
         } else {
             relevantLatitude = relevantLatitude * (-1);
             relevantLatitude = (relevantLatitude - (relevantLatitude % 10)) / 10;
+            relevantLatitude--; // previous floor makes this index one larger than it should be
             latIdx = 8 - relevantLatitude; //invert due to negative sign
 
             //latitude -90 is a special case, handle this here
@@ -49,7 +50,6 @@ public class CoastlineChecker {
                 latIdx = 0;
             }
         }
-        relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
 
         //determine longitude index
         if(relevantLongitude >= 0) {
@@ -63,6 +63,7 @@ public class CoastlineChecker {
         } else {
             relevantLongitude = relevantLongitude * (-1);
             relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
+            relevantLongitude--; // previous floor makes this index one larger than it should be
             longIdx = 17 - relevantLongitude; //invert due to negative sign
 
             //longitude -180 is a special case, handle this here
@@ -154,7 +155,7 @@ public class CoastlineChecker {
             for (double lowLongBound = -180.0; lowLongBound <= 170; lowLongBound += 10) {
                 double highLongBound = lowLongBound + 10.0;
                 Set<Integer> coastlinesInArea = new LinkedHashSet<>();
-                System.out.println("test: "+lowLongBound + " " + arrayLongIdx + " lat:" + lowLatBound+" "+arrayLatIdx);
+                //System.out.println("ttt: test: "+lowLongBound + " " + arrayLongIdx + " lat:" + lowLatBound+" "+arrayLatIdx);
                 //add coastlines by intersection with longitudinal lines
                 coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx]);
                 if(arrayLongIdx == 35) {

@@ -27,7 +27,7 @@ public class CoastlineGridNode extends CoastlineGridElement {
      * @param coastlineIDs a list of all coastlines within this area
      */
     CoastlineGridNode(int level, double lowLatBound, double lowLongBound, Set<Integer> coastlineIDs) {
-        System.out.println("constructor of grid node called, list size = " + coastlineIDs.size());
+        //System.out.println("constructor of grid node called, list size = " + coastlineIDs.size());
         this.level = level;
         subNodes = new CoastlineGridElement[10][10];  //todo: check these dimensions
 

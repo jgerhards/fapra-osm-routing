@@ -202,20 +202,36 @@ public class CoastlineImporter implements Sink {
                 -2.0, 105.123, 10.0, 105.321);
         System.out.println("ttt: testbool " + test);
 
-        /*Coastlines.initCoastlines(coastlines);
+        Coastlines.initCoastlines(coastlines);
+        //Coastlines.testSetValues();
+        //Coastlines.correctValues();
 
-        Set<Integer> testSet = new LinkedHashSet<>();
+        /*Set<Integer> testSet = new LinkedHashSet<>();
         CoastlineGridLeaf leaf = new CoastlineGridLeaf(-82.2, 50.3, testSet);
+        leaf = new CoastlineGridLeaf(1.32, 110.3, testSet);
+        leaf = new CoastlineGridLeaf(-64.217508, -59.390335, testSet);
+        leaf = new CoastlineGridLeaf(-76.6654, -45.327835, testSet);
+        /*System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314346)+" "+
+                Coastlines.getStartLongitude(314346)+" "+Coastlines.getEndLatitude(314346)+" "+
+                Coastlines.getEndLongitude(314346)+" ");*/
+        System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314353)+" "+
+                Coastlines.getStartLongitude(314353)+" "+Coastlines.getEndLatitude(314353)+" "+
+                Coastlines.getEndLongitude(314353)+" ");
 
-        CoastlineChecker coastlineChecker = new CoastlineChecker();
+        //CoastlineChecker coastlineChecker = new CoastlineChecker();
         System.out.println(Coastlines.getNumberOfWays());
 
         //test some points
         //false
-        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
+        /*System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
         System.out.println("third point in water: " + coastlineChecker.pointIsInWater(-70.591921, -64.172278));
         //true
         System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-19.34, -41));
-        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));*/
+        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));
+
+        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(82.229, -58.34));
+        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(70.591921, -64.172278));
+        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-0.34, -41));
+        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(0.6, -39.299));*/
     }
 }

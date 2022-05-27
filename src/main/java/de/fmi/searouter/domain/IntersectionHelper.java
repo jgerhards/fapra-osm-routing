@@ -5,7 +5,7 @@ import java.util.Arrays;
 public class IntersectionHelper {
     //earths radius is required for distance calculation
     private static final double EARTH_RADIUS = 6371000.0;
-    private static final double THRESHOLD = 0.000000000001;
+    private static final double THRESHOLD = 0.0000001;
 
     /**
      * Checks if two arcs of a great circle intersect each other. Arcs are given using start and end point coordinates.
@@ -30,7 +30,9 @@ public class IntersectionHelper {
         //todo: maybe use equals function instead of "==" ?
         if((firstLineStartLat == firstLineEndLat && firstLineStartLong == firstLineEndLong) ||
                 (secondLineStartLat == secondLineEndLat && secondLineStartLong == secondLineEndLong)) {
-            System.out.println("ttt: ret 1");
+            System.out.println("ttt: ret 1 "+ firstLineStartLat + " " + firstLineStartLong + " " +  firstLineEndLat
+                    + " " + firstLineEndLong + " " + secondLineStartLat + " " + secondLineStartLong
+                    + " " + secondLineEndLat + " " + secondLineEndLong);
             return false;
         }
 
@@ -122,18 +124,33 @@ public class IntersectionHelper {
 
         //calculate geographical location of intersections
         double firstIntersectLat = Math.asin(firstIntersection[2]);
+        /*double firstIntersectLong;
+        if(firstIntersection[0] > 0) {
+            firstIntersectLong = Math.atan(firstIntersection[1] / firstIntersection[0]) * (180 / Math.PI);
+        } else if(firstIntersection[1] > 0) {
+            firstIntersectLong = (Math.atan(firstIntersection[1] / firstIntersection[0]) * (180 / Math.PI)) + 180.0;
+        } else {
+            firstIntersectLong = (Math.atan(firstIntersection[1] / firstIntersection[0]) * (180 / Math.PI)) - 180.0;
+        }*/
         double temp = Math.cos(firstIntersectLat);
-        double sign = Math.asin(firstIntersection[1] / temp);
+        double sign = Math.asin(firstIntersection[1] / temp) < 0 ? -1.0 : 1.0;
         double firstIntersectLong = Math.acos(firstIntersection[0] / temp) * sign;
 
-        System.out.println("ttt: first intersect " + firstIntersectLat + " " + firstIntersectLong);
+        firstIntersectLat = (firstIntersectLat * 180.0) / Math.PI;
+        firstIntersectLong = (firstIntersectLong * 180.0) / Math.PI;
+
+        //System.out.println("ttt: first intersect " + firstIntersectLat + " " + firstIntersectLong);
 
         double secondIntersectLat = Math.asin(secondIntersection[2]);
         temp = Math.cos(secondIntersectLat);
-        sign = Math.asin(secondIntersection[1] / temp);
+        sign = Math.asin(secondIntersection[1] / temp) < 0 ? -1.0 : 1.0;
+        //sign = Math.asin(secondIntersection[1] / temp);
         double secondIntersectLong = Math.acos(secondIntersection[0] / temp) * sign;
 
-        System.out.println("ttt: second intersect " + secondIntersectLat + " " + secondIntersectLong);
+        secondIntersectLat = (secondIntersectLat * 90.0) / (Math.PI / 2);
+        secondIntersectLong = (secondIntersectLong * 180.0) / Math.PI;
+
+        //System.out.println("ttt: second intersect " + secondIntersectLat + " " + secondIntersectLong);
 
         //use length to check if and if yes which of the points are on both lines
         double firstFullLength = getDistance(firstLineStartLat, firstLineStartLong, firstLineEndLat, firstLineEndLong);
@@ -147,8 +164,13 @@ public class IntersectionHelper {
                 firstIntersectLat, firstIntersectLong);
         double secondPartialLength2 = getDistance(secondLineEndLat, secondLineEndLong,
                 firstIntersectLat, firstIntersectLong);
-        boolean firstIntersectOnLines = (firstFullLength - firstPartialLength1 - firstPartialLength2 < THRESHOLD &&
-                secondFullLength - secondPartialLength1 - secondPartialLength2 < THRESHOLD);
+        boolean firstIntersectOnLines = (
+                Math.abs((firstFullLength - firstPartialLength1) - firstPartialLength2) < THRESHOLD &&
+                        Math.abs((secondFullLength - secondPartialLength1) - secondPartialLength2) < THRESHOLD);
+        /*System.out.println("ttt: full distances: "+firstFullLength+" "+secondFullLength);
+        System.out.println("ttt: first partial distances: "+firstPartialLength1+" "+firstPartialLength2+" "+secondPartialLength1+" "+secondPartialLength2);
+        System.out.println("ttt: calculation 1: " + ((firstFullLength - firstPartialLength1) - firstPartialLength2));
+        System.out.println("ttt: calculation 2: " + ((secondFullLength - secondPartialLength1) - secondPartialLength2));*/
 
         //check for the second intersection
         firstPartialLength1 = getDistance(firstLineStartLat, firstLineStartLong,
@@ -159,12 +181,22 @@ public class IntersectionHelper {
                 secondIntersectLat, secondIntersectLong);
         secondPartialLength2 = getDistance(secondLineEndLat, secondLineEndLong,
                 secondIntersectLat, secondIntersectLong);
-        boolean secondIntersectOnLines = (firstFullLength - firstPartialLength1 - firstPartialLength2 < THRESHOLD &&
-                secondFullLength - secondPartialLength1 - secondPartialLength2 < THRESHOLD);
+        boolean secondIntersectOnLines = (
+                Math.abs((firstFullLength - firstPartialLength1) - firstPartialLength2) < THRESHOLD &&
+                        Math.abs((secondFullLength - secondPartialLength1) - secondPartialLength2) < THRESHOLD);
+        //System.out.println("ttt: second partial distances: "+firstPartialLength1+" "+firstPartialLength2+" "+secondPartialLength1+" "+secondPartialLength2);
+        //System.out.println("ttt: calculation 1: " + ((firstFullLength - firstPartialLength1) - firstPartialLength2));
+        //System.out.println("ttt: calculation 2: " + ((secondFullLength - secondPartialLength1) - secondPartialLength2));
+
+        double testLen = getDistance(firstIntersectLat, firstIntersectLong, secondIntersectLat, secondIntersectLong);
+        //System.out.println("ttt: total Distance " + testLen);
 
         //use XOR since if lines intersect twice it cancels out (and should not happen anyway)
         boolean linesIntersect = firstIntersectOnLines ^ secondIntersectOnLines;
-        System.out.println("ttt: ret 3 " + linesIntersect + " first bool: " + firstIntersectOnLines + " 2nd " + secondIntersectOnLines);
+        //System.out.println("ttt: ret 3 " + linesIntersect + " first bool: " + firstIntersectOnLines + " 2nd " + secondIntersectOnLines);
+        if(linesIntersect) {
+            System.out.println("ttt: lines intersect. points: "+firstIntersectLat+" "+firstIntersectLong+" "+secondIntersectLat+" "+secondIntersectLong);
+        }
         return linesIntersect;
     }
 
