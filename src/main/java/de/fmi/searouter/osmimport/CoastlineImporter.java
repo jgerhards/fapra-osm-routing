@@ -6,6 +6,7 @@ import de.fmi.searouter.coastlinecheck.CoastlineGridLeaf;
 import de.fmi.searouter.coastlinecheck.Coastlines;
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.domain.TimIntersectionCheck;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
@@ -202,7 +203,61 @@ public class CoastlineImporter implements Sink {
                 -2.0, 105.123, 10.0, 105.321);
         System.out.println("ttt: testbool " + test);
 
-        Coastlines.initCoastlines(coastlines);
+        //Coastlines.initCoastlines(coastlines);
+
+        // land
+        double latToCheck = 	-61.9983;
+        double longToCheck = 	-58.3704;
+
+        boolean land = false;
+        for (CoastlineWay polygon : coastlines) {
+            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
+                    continue;
+                }
+                land = true;
+                break;
+            }
+        }
+
+        System.out.println("Is on land: " + land);
+        // water
+        latToCheck = 		-62.3878;
+        longToCheck = 		-58.4637;
+
+        land = false;
+        for (CoastlineWay polygon : coastlines) {
+            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
+                    continue;
+                }
+                land = true;
+                break;
+            }
+        }
+        System.out.println("Is on land: " + land);
+
+
+        // water
+        latToCheck = 			-61.2094;
+        longToCheck = 			-57.4146;
+
+        land = false;
+        for (CoastlineWay polygon : coastlines) {
+            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
+                    continue;
+                }
+                land = true;
+                break;
+            }
+        }
+
+        System.out.println("Is on land: " + land);
+
         //Coastlines.testSetValues();
         //Coastlines.correctValues();
 
@@ -214,12 +269,12 @@ public class CoastlineImporter implements Sink {
         /*System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314346)+" "+
                 Coastlines.getStartLongitude(314346)+" "+Coastlines.getEndLatitude(314346)+" "+
                 Coastlines.getEndLongitude(314346)+" ");*/
-        System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314353)+" "+
-                Coastlines.getStartLongitude(314353)+" "+Coastlines.getEndLatitude(314353)+" "+
-                Coastlines.getEndLongitude(314353)+" ");
+        //System.out.println("ttt: coastline: " + Coastlines.getStartLatitude(314353) + " " +
+        //        Coastlines.getStartLongitude(314353) + " " + Coastlines.getEndLatitude(314353) + " " +
+        //        Coastlines.getEndLongitude(314353) + " ");
 
         //CoastlineChecker coastlineChecker = new CoastlineChecker();
-        System.out.println(Coastlines.getNumberOfWays());
+        //System.out.println(Coastlines.getNumberOfWays());
 
         //test some points
         //false
