@@ -3,6 +3,7 @@ package de.fmi.searouter.coastlinecheck;
 import de.fmi.searouter.domain.IntersectionHelper;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * leaf node of the grid for a coastline check. Due to being a leaf node, no further partition of this node is done.
@@ -17,14 +18,17 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
     //array containing IDs of all coastline ways to be considered in this area
     private int[] coastlineWayIDs;
 
-    CoastlineGridLeaf(double refPointLatitude, double refPointLongitude, List<Integer> coastlineIDs) {
+    public CoastlineGridLeaf(double refPointLatitude, double refPointLongitude, Set<Integer> coastlineIDs) {
+        //System.out.println("ttt: constructor of grid leaf called, list size = " + coastlineIDs.size());
         this.refPointLatitude = refPointLatitude;
         this.refPointLongitude = refPointLongitude;
 
         coastlineWayIDs = new int[coastlineIDs.size()];
         //move list to array manually to ensure only primitives are used in the array
-        for(int i = 0; i < coastlineIDs.size(); i++) {
-            coastlineWayIDs[i] = coastlineIDs.get(i);
+        int i = 0;
+        for(int id : coastlineIDs) {
+            coastlineWayIDs[i] = id;
+            i++;
         }
         //todo: below is a very suboptimal implementation. May be a good idea to look over this again if it is too slow
         initializeReferencePoint();
@@ -35,23 +39,34 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
      * but public as it may be called from another source later on (using a more efficient implementation).
      */
     public void initializeReferencePoint() {
+        if(refPointLatitude == -75.0 && refPointLongitude == -75.0) {
+            System.out.println("ttt: a");
+        }
         //todo: naive algorithm used --> currently much more work-intensive than necessary
         int numberOfCoastlines = Coastlines.getNumberOfWays();
         //start of the same as the global reference, negate on intersecting a coastline
         refPointIsInWater = Coastlines.GLOBAL_REFERENCE_IN_WATER;
         for(int i = 0; i < numberOfCoastlines; i++) {
+            //System.out.println("ttt: loop entered");
+            if(i == 789) {
+                //System.out.println("a");
+            }
             double coastlineStartLat = Coastlines.getStartLatitude(i);
-            double coastlineStartLong = Coastlines.getStartLatitude(i);
-            double coastlineEndLat = Coastlines.getStartLatitude(i);
-            double coastlineEndLong = Coastlines.getStartLatitude(i);
+            double coastlineStartLong = Coastlines.getStartLongitude(i);
+            double coastlineEndLat = Coastlines.getEndLatitude(i);
+            double coastlineEndLong = Coastlines.getEndLongitude(i);
+            //System.out.println("ttt: values " + i +" " + coastlineStartLat + " " + coastlineStartLong + " " + coastlineEndLat + " " + coastlineEndLong);
 
             boolean linesIntersect = IntersectionHelper.linesIntersect(refPointLatitude, refPointLongitude,
                     Coastlines.GLOBAL_REFERENCE_LATITUDE, Coastlines.GLOBAL_REFERENCE_LONGITUDE,
                     coastlineStartLat, coastlineStartLong, coastlineEndLat, coastlineEndLong);
             if(linesIntersect) {
+                System.out.println("ttt: lines intersect reference point init, id: " + i);
                 refPointIsInWater = !refPointIsInWater;
             }
         }
+        System.out.println("ttt: point initialized: " + refPointLatitude + ", " + refPointLongitude +
+                " in water: " + refPointIsInWater);
     }
 
     @Override
@@ -66,9 +81,9 @@ public class CoastlineGridLeaf extends CoastlineGridElement {
         boolean pointInWater = refPointIsInWater;
         for(int i : coastlineWayIDs) {
             double coastlineStartLat = Coastlines.getStartLatitude(i);
-            double coastlineStartLong = Coastlines.getStartLatitude(i);
-            double coastlineEndLat = Coastlines.getStartLatitude(i);
-            double coastlineEndLong = Coastlines.getStartLatitude(i);
+            double coastlineStartLong = Coastlines.getStartLongitude(i);
+            double coastlineEndLat = Coastlines.getEndLatitude(i);
+            double coastlineEndLong = Coastlines.getEndLongitude(i);
 
             boolean linesIntersect = IntersectionHelper.linesIntersect(latitude, longitude, refPointLatitude,
                     refPointLongitude, coastlineStartLat, coastlineStartLong, coastlineEndLat, coastlineEndLong);

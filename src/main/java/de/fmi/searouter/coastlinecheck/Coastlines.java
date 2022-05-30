@@ -28,9 +28,22 @@ public class Coastlines {
 
     //global reference point for checking if other points are in water or on land
     //todo: find an appropriate point
-    public static final double GLOBAL_REFERENCE_LATITUDE = 0.0;
-    public static final double GLOBAL_REFERENCE_LONGITUDE = 0.0;
+    public static final double GLOBAL_REFERENCE_LATITUDE = 46.0;
+    public static final double GLOBAL_REFERENCE_LONGITUDE = -36.0;
     public static final boolean GLOBAL_REFERENCE_IN_WATER = true;
+
+    public static void correctValues() {
+        endID[314346] = startID[314346];
+    }
+
+
+    public static void testSetValues() {
+        startID = new int[]{0, 1, 2};
+        endID = new int[]{1, 2, 3};
+        nodeLatitude = new double[]{0.0001, 0.0001, 0.0001, 0.0001};
+        nodeLongitude = new double[]{-180.0, -1.0, 160.0, -180.0};
+        numbersOfCoastlineWays = 3;
+    }
 
     /**
      * gets the number of coastline ways
@@ -48,7 +61,7 @@ public class Coastlines {
      * @return the length of the requested coastline way.
      */
     public static double getLength(int coastlineID) {
-        return 0.0;
+        return length[coastlineID];
     }
 
     /**
@@ -58,7 +71,8 @@ public class Coastlines {
      * @return the longitude of the start point of the requested coastline way.
      */
     public static double getStartLongitude(int coastlineID) {
-        return 0.0;
+        int longArrayID = startID[coastlineID];
+        return nodeLongitude[longArrayID];
     }
 
     /**
@@ -68,7 +82,8 @@ public class Coastlines {
      * @return the latitude of the start point of the requested coastline way.
      */
     public static double getStartLatitude(int coastlineID) {
-        return 0.0;
+        int latArrayID = startID[coastlineID];
+        return nodeLatitude[latArrayID];
     }
 
     /**
@@ -78,7 +93,8 @@ public class Coastlines {
      * @return the longitude of the end point of the requested coastline way.
      */
     public static double getEndLongitude(int coastlineID) {
-        return 0.0;
+        int longArrayID = endID[coastlineID];
+        return nodeLongitude[longArrayID];
     }
 
     /**
@@ -88,7 +104,8 @@ public class Coastlines {
      * @return the latitude of the end point of the requested coastline way.
      */
     public static double getEndLatitude(int coastlineID) {
-        return 0.0;
+        int latArrayID = endID[coastlineID];
+        return nodeLatitude[latArrayID];
     }
 
 

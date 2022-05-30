@@ -2,6 +2,8 @@ package de.fmi.searouter.osmimport;
 
 import crosby.binary.osmosis.OsmosisReader;
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
@@ -194,6 +196,88 @@ public class CoastlineImporter implements Sink {
         writer.write(json);
         writer.close();
 
-        System.out.println(coastlines.size());
+        boolean test = IntersectionHelper.linesIntersect(1.0, 100.2, 1.32, 110.3,
+                -2.0, 105.123, 10.0, 105.321);
+        System.out.println("ttt: testbool " + test);
+
+        //Coastlines.initCoastlines(coastlines);
+
+        // land
+        double latToCheck = 	-61.9983;
+        double longToCheck = 	-58.3704;
+
+        boolean land = false;
+        for (CoastlineWay polygon : coastlines) {
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+
+                land = true;
+                break;
+            }
+        }
+
+        System.out.println("Is on land: " + land);
+        // water
+        latToCheck = 		-62.3878;
+        longToCheck = 		-58.4637;
+
+        land = false;
+        for (CoastlineWay polygon : coastlines) {
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+
+                land = true;
+                break;
+            }
+        }
+        System.out.println("Is on land: " + land);
+
+
+        // water
+        latToCheck = 			-61.2094;
+        longToCheck = 			-57.4146;
+
+        land = false;
+        for (CoastlineWay polygon : coastlines) {
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            if (!check.isPointInWater(latToCheck, longToCheck)) {
+
+                land = true;
+                break;
+            }
+        }
+
+        System.out.println("Is on land: " + land);
+
+        //Coastlines.testSetValues();
+        //Coastlines.correctValues();
+
+        /*Set<Integer> testSet = new LinkedHashSet<>();
+        CoastlineGridLeaf leaf = new CoastlineGridLeaf(-82.2, 50.3, testSet);
+        leaf = new CoastlineGridLeaf(1.32, 110.3, testSet);
+        leaf = new CoastlineGridLeaf(-64.217508, -59.390335, testSet);
+        leaf = new CoastlineGridLeaf(-76.6654, -45.327835, testSet);
+        /*System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314346)+" "+
+                Coastlines.getStartLongitude(314346)+" "+Coastlines.getEndLatitude(314346)+" "+
+                Coastlines.getEndLongitude(314346)+" ");*/
+        //System.out.println("ttt: coastline: " + Coastlines.getStartLatitude(314353) + " " +
+        //        Coastlines.getStartLongitude(314353) + " " + Coastlines.getEndLatitude(314353) + " " +
+        //        Coastlines.getEndLongitude(314353) + " ");
+
+        //CoastlineChecker coastlineChecker = new CoastlineChecker();
+        //System.out.println(Coastlines.getNumberOfWays());
+
+        //test some points
+        //false
+        /*System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
+        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(-70.591921, -64.172278));
+        //true
+        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-19.34, -41));
+        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));
+
+        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(82.229, -58.34));
+        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(70.591921, -64.172278));
+        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-0.34, -41));
+        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(0.6, -39.299));*/
     }
 }
