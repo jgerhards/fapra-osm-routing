@@ -1,6 +1,7 @@
 package de.fmi.searouter.osmexport;
 
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.domain.Point;
 import de.fmi.searouter.grid.GridNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,7 +30,7 @@ public class GeoJsonConverter {
 
         // Features, each representing one LineString (one Way of the coast)
         JSONArray features = new JSONArray();
-        for (Way currWay : waysToConvert) {
+        for (CoastlineWay currWay : waysToConvert) {
             features.put(GeoJsonConverter.osmWayToGeoJSON(currWay));
         }
 
@@ -79,14 +80,14 @@ public class GeoJsonConverter {
      * @param wayToConvert The {@link Way} which should be parsed as GeoJSON of the type "Feature"
      * @return
      */
-    public static JSONObject osmWayToGeoJSON(Way wayToConvert) {
-        List<WayNode> wayNodes = wayToConvert.getWayNodes();
+    public static JSONObject osmWayToGeoJSON(CoastlineWay wayToConvert) {
+        List<Point> wayNodes = wayToConvert.getPoints();
         // Build an json array of coordinate pairs (longitude-latitude pairs)
         JSONArray longLatArray = new JSONArray();
-        for (WayNode currNode : wayNodes) {
+        for (Point currNode : wayNodes) {
             JSONArray longLatPair = new JSONArray()
-                    .put(currNode.getLongitude())
-                    .put(currNode.getLatitude());
+                    .put(currNode.getLon())
+                    .put(currNode.getLat());
             longLatArray.put(longLatPair);
         }
 

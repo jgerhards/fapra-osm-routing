@@ -5,6 +5,7 @@ import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import de.fmi.searouter.osmimport.CoastlineImporter;
+import de.fmi.searouter.osmimport.CoastlineImporterMoreEfficient;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -236,7 +237,7 @@ public class GridCreator {
 
 
         // Import coastlines
-        CoastlineImporter importer = new CoastlineImporter();
+        CoastlineImporterMoreEfficient importer = new CoastlineImporterMoreEfficient();
         List<CoastlineWay> coastlines = new ArrayList<>();
 
 

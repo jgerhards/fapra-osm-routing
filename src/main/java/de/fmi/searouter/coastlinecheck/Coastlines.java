@@ -2,6 +2,7 @@ package de.fmi.searouter.coastlinecheck;
 
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.domain.Point;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
 import java.util.ArrayList;
@@ -134,7 +135,7 @@ public class Coastlines {
 
         for (int coastlineIdx = 0; coastlineIdx < coastlinesToImport.size(); coastlineIdx++) {
             CoastlineWay currCoastline = coastlinesToImport.get(coastlineIdx);
-            List<WayNode> currWayNodes = currCoastline.getWayNodes();
+            List<Point> currWayNodes = currCoastline.getPoints();
 
 
             for (int wayNodeIdx = 1; wayNodeIdx < currWayNodes.size(); wayNodeIdx++) {
@@ -143,8 +144,8 @@ public class Coastlines {
 
                 // Start point of edge
                 dynamicStartIds.add(coastLineWayIdCounter);
-                double pointALatitude = currWayNodes.get(wayNodeIdx - 1).getLatitude();
-                double pointALongitude = currWayNodes.get(wayNodeIdx - 1).getLongitude();
+                double pointALatitude = currWayNodes.get(wayNodeIdx - 1).getLat();
+                double pointALongitude = currWayNodes.get(wayNodeIdx - 1).getLon();
                 if (wayNodeIdx == 1) {
                     dynamicNodeLatitude.add(pointALatitude);
                     dynamicNodeLongitude.add(pointALongitude);
@@ -155,8 +156,8 @@ public class Coastlines {
                 dynamicEndIds.add(coastLineWayIdCounter);
 
                 // End point of edge
-                double pointBLatitude = currWayNodes.get(wayNodeIdx).getLatitude();
-                double pointBLongitude = currWayNodes.get(wayNodeIdx).getLongitude();
+                double pointBLatitude = currWayNodes.get(wayNodeIdx).getLat();
+                double pointBLongitude = currWayNodes.get(wayNodeIdx).getLon();
 
                 dynamicNodeLatitude.add(pointBLatitude);
                 dynamicNodeLongitude.add(pointBLongitude);

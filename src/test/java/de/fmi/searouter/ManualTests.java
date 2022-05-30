@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 public class ManualTests {
-
+/*
     public static void testA() {
         CommonEntityData data = new CommonEntityData(0, 0, new Date(), new OsmUser(0, ""), 0);
         List<WayNode> wayNodes = new ArrayList<>();
@@ -80,4 +80,6 @@ public class ManualTests {
 
 
     }
+    */
+
 }

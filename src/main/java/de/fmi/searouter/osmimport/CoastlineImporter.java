@@ -63,7 +63,7 @@ public class CoastlineImporter implements Sink {
             System.out.println("add node " + node.getId());
         }
     }
-
+/*
     @Override
     public void complete() {
         // Map nodes to WayNodes to retrieve and save the coordinates of each WayNode
@@ -87,6 +87,7 @@ public class CoastlineImporter implements Sink {
 
         assignNewIdsToCoastlines(this.coastLineWays);
     }
+    */
 
     private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
 
@@ -281,5 +282,10 @@ public class CoastlineImporter implements Sink {
         System.out.println("third point in water: " + coastlineChecker.pointIsInWater(70.591921, -64.172278));
         System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-0.34, -41));
         System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(0.6, -39.299));*/
+    }
+
+    @Override
+    public void complete() {
+
     }
 }

@@ -24,14 +24,14 @@ public class BevisChatelainCoastlineCheck {
     int ibndry;
 
     public BevisChatelainCoastlineCheck(CoastlineWay polygonToCheck) {
-        List<WayNode> wayNodes = polygonToCheck.getWayNodes();
+        List<Point> wayNodes = polygonToCheck.getPoints();
 
         double lats[] = new double[wayNodes.size()];
         double longs[] = new double[wayNodes.size()];
 
         for (int i = 0; i < wayNodes.size(); i++) {
-            lats[i] = wayNodes.get(i).getLatitude();
-            longs[i] = wayNodes.get(i).getLongitude();
+            lats[i] = wayNodes.get(i).getLat();
+            longs[i] = wayNodes.get(i).getLon();
         }
 
 

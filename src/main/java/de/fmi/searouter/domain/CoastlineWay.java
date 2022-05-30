@@ -1,6 +1,7 @@
 package de.fmi.searouter.domain;
 
 import org.openstreetmap.osmosis.core.domain.v0_6.CommonEntityData;
+import org.openstreetmap.osmosis.core.domain.v0_6.OsmUser;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.store.StoreClassRegister;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -16,18 +18,34 @@ import java.util.List;
  * is only used for the import mechanism and will be transformed into a
  * more efficient data structure after the import process took place.
  */
-public class CoastlineWay extends Way {
+public class CoastlineWay {
 
     private Logger logger = LoggerFactory.getLogger(CoastlineWay.class);
 
-    public CoastlineWay(Way wayToTransform) {
-        super(new CommonEntityData(
-                        wayToTransform.getId(),
-                        wayToTransform.getVersion(),
-                        wayToTransform.getTimestamp(),
-                        wayToTransform.getUser(),
-                        wayToTransform.getChangesetId()),
-                wayToTransform.getWayNodes());
+    private List<Point> points;
+    private long id;
+
+
+    public CoastlineWay(com.wolt.osm.parallelpbf.entity.Way wayToTransform) {
+        this.id = wayToTransform.getId();
+        points = new ArrayList<>();
+    }
+
+    public CoastlineWay(long id, List<Point> points) {
+        this.id = id;
+        this.points = points;
+    }
+
+    public List<Point> getPoints() {
+        return points;
+    }
+
+    public void setPoints(List<Point> points) {
+        this.points = points;
+    }
+
+    public long getId() {
+        return id;
     }
 
     /**
@@ -36,20 +54,10 @@ public class CoastlineWay extends Way {
      * @param id The new id for this {@link CoastlineWay}
      */
     public void setId(long id) {
-        super.setId(id);
+        this.id = id;
     }
 
-    public CoastlineWay(CommonEntityData entityData) {
-        super(entityData);
-    }
 
-    public CoastlineWay(CommonEntityData entityData, List<WayNode> wayNodes) {
-        super(entityData, wayNodes);
-    }
-
-    public CoastlineWay(StoreReader sr, StoreClassRegister scr) {
-        super(sr, scr);
-    }
 
     public Logger getLogger() {
         return logger;
@@ -60,11 +68,11 @@ public class CoastlineWay extends Way {
     }
 
     public long getStartNodeID() {
-        return this.getWayNodes().get(0).getNodeId();
+        return this.points.get(0).getId();
     }
 
     public long getEndNodeID() {
-        return this.getWayNodes().get(this.getWayNodes().size() - 1).getNodeId();
+        return this.points.get(this.points.size() - 1).getId();
     }
 
     /**
@@ -120,17 +128,16 @@ public class CoastlineWay extends Way {
             System.out.println("Will perform merge");
 
             // Begin by adding the nodes of this CoastlineWay to the new list
-            List<WayNode> newWayNodesOrder = new ArrayList<>(this.getWayNodes());
+            List<Point> newWayNodesOrder = new ArrayList<>(this.points);
 
             // Add the other coastline by concatenating its nodes in reverse order and skipping the first one (the end node)
-            List<WayNode> wayNodesOfSecondCoastline = coastlineToMergeWith.getWayNodes();
+            List<Point> wayNodesOfSecondCoastline = coastlineToMergeWith.points;
             for (int i = wayNodesOfSecondCoastline.size() - 2; i >= 0; i--) {
                 newWayNodesOrder.add(wayNodesOfSecondCoastline.get(i));
             }
 
             // Return a new CoastlineWay object with the metadata (id, user, ...) of this object
-            CommonEntityData newEntityData = new CommonEntityData(this.getId(), this.getVersion(), this.getTimestamp(), this.getUser(), this.getChangesetId());
-            return new CoastlineWay(newEntityData, newWayNodesOrder);
+            return new CoastlineWay(this.id, newWayNodesOrder);
         }
 
         if (endNodeIsOthersStartNode(coastlineToMergeWith)) {
@@ -138,17 +145,16 @@ public class CoastlineWay extends Way {
             logger.info("Merge coast lines " + this.getId() + " and " + coastlineToMergeWith.getId());
 
             // Begin by adding the nodes of this CoastlineWay to the new list
-            List<WayNode> newWayNodesOrder = new ArrayList<>(this.getWayNodes());
+            List<Point> newWayNodesOrder = new ArrayList<>(this.points);
 
             // Add the other coastline by concatenating its nodes in reverse order and skipping the first one (the end node)
-            List<WayNode> wayNodesOfSecondCoastline = coastlineToMergeWith.getWayNodes();
+            List<Point> wayNodesOfSecondCoastline = coastlineToMergeWith.getPoints();
             for (int i = 1; i < wayNodesOfSecondCoastline.size(); i++) {
                 newWayNodesOrder.add(wayNodesOfSecondCoastline.get(i));
             }
 
             // Return a new CoastlineWay object with the metadata (id, user, ...) of this object
-            CommonEntityData newEntityData = new CommonEntityData(this.getId(), this.getVersion(), this.getTimestamp(), this.getUser(), this.getChangesetId());
-            return new CoastlineWay(newEntityData, newWayNodesOrder);
+            return new CoastlineWay(this.id, newWayNodesOrder);
         }
 
         return null;
@@ -162,14 +168,14 @@ public class CoastlineWay extends Way {
     public double getLength() {
         double length = 0.;
 
-        for (int i = 1; i < this.getWayNodes().size(); i++) {
-            WayNode startNode = this.getWayNodes().get(i - 1);
-            WayNode destinationNode = this.getWayNodes().get(i);
+        for (int i = 1; i < this.points.size(); i++) {
+            Point startNode = this.points.get(i - 1);
+            Point destinationNode = this.points.get(i);
 
             // Cumulate the length of the current edge looked at
             length += IntersectionHelper.getDistance(
-                    startNode.getLatitude(), startNode.getLongitude(),
-                    destinationNode.getLatitude(), destinationNode.getLatitude()
+                    startNode.getLat(), startNode.getLon(),
+                    destinationNode.getLat(), destinationNode.getLon()
             );
         }
 

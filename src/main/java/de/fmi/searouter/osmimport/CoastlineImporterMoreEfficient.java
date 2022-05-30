@@ -1,9 +1,12 @@
 package de.fmi.searouter.osmimport;
 
+import com.wolt.osm.parallelpbf.ParallelBinaryParser;
+import com.wolt.osm.parallelpbf.entity.Header;
 import crosby.binary.osmosis.OsmosisReader;
 import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.domain.Point;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
@@ -24,7 +27,7 @@ import java.util.*;
  * Uses the Osmosis pipeline to parse a PBF file. Imports and merges
  * coast lines.
  */
-public class CoastlineImporterMoreEfficient implements Sink {
+public class CoastlineImporterMoreEfficient  {
 
     private Logger logger = LoggerFactory.getLogger(CoastlineImporterMoreEfficient.class);
 
@@ -34,7 +37,7 @@ public class CoastlineImporterMoreEfficient implements Sink {
 
     private List<CoastlineWay> coastLineWays;
 
-    private Map<Long, Node> allNodes;
+    private Map<Long, Point> allNodes;
 
     public CoastlineImporterMoreEfficient() {
         this.coastLines = new ArrayList<>();
@@ -42,50 +45,6 @@ public class CoastlineImporterMoreEfficient implements Sink {
         this.coastLineWays = new ArrayList<>();
     }
 
-    @Override
-    public void initialize(Map<String, Object> arg0) {
-    }
-
-    @Override
-    public void process(EntityContainer entityContainer) {
-        if (entityContainer instanceof WayContainer) {
-            Way currentWay = ((WayContainer) entityContainer).getEntity();
-            for (Tag currTagOfWay : currentWay.getTags()) {
-                if ("natural".equalsIgnoreCase(currTagOfWay.getKey()) && "coastline".equalsIgnoreCase(currTagOfWay.getValue())) {
-                    this.coastLines.add(currentWay);
-                    System.out.println("Add way " + currentWay.getId());
-                }
-            }
-        } else if (entityContainer.getEntity() instanceof Node) {
-            Node node = (Node) entityContainer.getEntity();
-            allNodes.put(node.getId(), node);
-            System.out.println("add node " + node.getId());
-        }
-    }
-
-    @Override
-    public void complete() {
-        // Map nodes to WayNodes to retrieve and save the coordinates of each WayNode
-        for (Way currWay : this.coastLines) {
-            for (int i = 0; i < currWay.getWayNodes().size(); i++) {
-                Node node = this.allNodes.get(currWay.getWayNodes().get(i).getNodeId());
-                if (node != null) {
-                    currWay.getWayNodes().set(i, new WayNode(node.getId(), node.getLatitude(), node.getLongitude()));
-                }
-            }
-        }
-
-        // Empty the nodes list to save memory
-        this.allNodes = new HashMap<>();
-
-        // Transform all ways to coast line object and then merge
-        for (Way currWay : this.coastLines) {
-            this.coastLineWays.add(new CoastlineWay(currWay));
-        }
-        this.coastLineWays = mergeTouchingCoastlines(this.coastLineWays);
-
-        assignNewIdsToCoastlines(this.coastLineWays);
-    }
 
     private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
 
@@ -143,7 +102,6 @@ public class CoastlineImporterMoreEfficient implements Sink {
 
     }
 
-    @Override
     public void close() {
         try {
             this.inputStream.close();
@@ -167,118 +125,59 @@ public class CoastlineImporterMoreEfficient implements Sink {
         Resource pbfResource = new ClassPathResource(pbfCoastlineFilePath);
         this.inputStream = pbfResource.getInputStream();
 
-        // Import the pbf file contents
-        OsmosisReader reader = new OsmosisReader(inputStream);
-        reader.setSink(this);
-        reader.run();
+        long time = System.currentTimeMillis();
+        System.out.println("Start");
+
+        new ParallelBinaryParser(this.inputStream, 1)
+                .onHeader(this::processHeader)
+                .onNode(this::processNode)
+                .onWay(this::processWay)
+                .onComplete(this::onCompletion)
+                .parse();
+
+        System.out.println(System.currentTimeMillis() - time);
+        System.out.println("aaa");
 
         return this.coastLineWays;
     }
 
-    /**
-     * Iterates over a given list of coastlines and assigns IDs from 0 to coastlines.size().
-     *
-     * @param coastlinesThatNeedNewIDs The coastlines that should get new ids.
-     */
-    private void assignNewIdsToCoastlines(List<CoastlineWay> coastlinesThatNeedNewIDs) {
-        for (int currCoastlineIdx = 0; currCoastlineIdx < coastlinesThatNeedNewIDs.size(); currCoastlineIdx++) {
-            coastlinesThatNeedNewIDs.get(currCoastlineIdx).setId(currCoastlineIdx);
-        }
+    private static boolean isCoastline(com.wolt.osm.parallelpbf.entity.Way way) {
+        return "coastline".equals(way.getTags().get("natural"));
     }
 
-    public static void main(String[] args) throws IOException {
-        // Import coastlines
-        CoastlineImporterMoreEfficient importer = new CoastlineImporterMoreEfficient();
-        List<CoastlineWay> coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+    private void onCompletion() {
+        System.out.println("# points: " + allNodes.size());
+        System.out.println("# coastlines: " + coastLineWays.size());
+        System.out.println("Complete.");
 
-        // Write a geo json file for test visualization reasons
-        String json = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString();
-        BufferedWriter writer = new BufferedWriter(new FileWriter("antarctica_geoJson.json"));
-        writer.write(json);
-        writer.close();
+        // Empty the nodes list to save memory
+        this.allNodes = new HashMap<>();
 
-        boolean test = IntersectionHelper.linesIntersect(1.0, 100.2, 1.32, 110.3,
-                -2.0, 105.123, 10.0, 105.321);
-        System.out.println("ttt: testbool " + test);
-
-        //Coastlines.initCoastlines(coastlines);
-
-        // land
-        double latToCheck = 	-61.9983;
-        double longToCheck = 	-58.3704;
-
-        boolean land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-
-        System.out.println("Is on land: " + land);
-        // water
-        latToCheck = 		-62.3878;
-        longToCheck = 		-58.4637;
-
-        land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-        System.out.println("Is on land: " + land);
-
-
-        // water
-        latToCheck = 			-61.2094;
-        longToCheck = 			-57.4146;
-
-        land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-
-        System.out.println("Is on land: " + land);
-
-        //Coastlines.testSetValues();
-        //Coastlines.correctValues();
-
-        /*Set<Integer> testSet = new LinkedHashSet<>();
-        CoastlineGridLeaf leaf = new CoastlineGridLeaf(-82.2, 50.3, testSet);
-        leaf = new CoastlineGridLeaf(1.32, 110.3, testSet);
-        leaf = new CoastlineGridLeaf(-64.217508, -59.390335, testSet);
-        leaf = new CoastlineGridLeaf(-76.6654, -45.327835, testSet);
-        /*System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314346)+" "+
-                Coastlines.getStartLongitude(314346)+" "+Coastlines.getEndLatitude(314346)+" "+
-                Coastlines.getEndLongitude(314346)+" ");*/
-        //System.out.println("ttt: coastline: " + Coastlines.getStartLatitude(314353) + " " +
-        //        Coastlines.getStartLongitude(314353) + " " + Coastlines.getEndLatitude(314353) + " " +
-        //        Coastlines.getEndLongitude(314353) + " ");
-
-        //CoastlineChecker coastlineChecker = new CoastlineChecker();
-        //System.out.println(Coastlines.getNumberOfWays());
-
-        //test some points
-        //false
-        /*System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
-        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(-70.591921, -64.172278));
-        //true
-        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-19.34, -41));
-        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));
-
-        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(82.229, -58.34));
-        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(70.591921, -64.172278));
-        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-0.34, -41));
-        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(0.6, -39.299));*/
+        this.coastLineWays = mergeTouchingCoastlines(this.coastLineWays);
     }
+
+    private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
+        if (isCoastline(way)) {
+            CoastlineWay cWay = new CoastlineWay(way);
+            for (int i = 0; i < way.getNodes().size(); i++) {
+                Point node = this.allNodes.get(way.getNodes().get(i));
+                if (node != null) {
+                    cWay.getPoints().add(node);
+                }
+
+            }
+            this.coastLineWays.add(cWay);
+        }
+
+    }
+
+    private void processNode(com.wolt.osm.parallelpbf.entity.Node node) {
+        allNodes.put(node.getId(), new Point(node.getId(), (float) node.getLat(), (float) node.getLon()));
+    }
+
+    private void processHeader(Header header) { }
+
+
+
+
 }
