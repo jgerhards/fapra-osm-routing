@@ -24,10 +24,18 @@ public class GridCreator {
     public static double coordinate_step_latitude;
     public static double coordinate_step_longitude;
 
-    public static boolean isPointOnWater(double latitude, double longitude, List<CoastlineWay> coastlinePolygons) {
+    private static List<BevisChatelainCoastlineCheck> checkerObjects;
+
+    public static void initCheckObjs(List<CoastlineWay> coastlinePolygons) {
+        checkerObjects = new ArrayList<>();
         for (CoastlineWay polygon : coastlinePolygons) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latitude, longitude)) {
+            checkerObjects.add(new BevisChatelainCoastlineCheck(polygon));
+        }
+    }
+
+    public static boolean isPointOnWater(double latitude, double longitude) {
+        for (BevisChatelainCoastlineCheck checkerObj : checkerObjects) {
+            if (!checkerObj.isPointInWater(latitude, longitude)) {
                 System.out.println(latitude + " " + longitude + " is on land");
                 return false;
             }
@@ -56,6 +64,8 @@ public class GridCreator {
         }
         */
 
+        initCheckObjs(coastlinePolygons);
+
         BigDecimal coordinateStepLat = BigDecimal.valueOf(coordinate_step_latitude);
         BigDecimal coordinateStepLong = BigDecimal.valueOf(coordinate_step_longitude);
 
@@ -64,7 +74,7 @@ public class GridCreator {
         for (BigDecimal lat = BigDecimal.valueOf(90.0); lat.compareTo(latEnd) >= 0; lat = lat.subtract(coordinateStepLat)) {
             for (BigDecimal longitude = BigDecimal.valueOf(180); longitude.compareTo(longEnd) > 0; longitude = longitude.subtract(coordinateStepLong)) {
 
-                if (isPointOnWater(lat.doubleValue(), longitude.doubleValue(), coastlinePolygons)) {
+                if (!isPointOnWater(lat.doubleValue(), longitude.doubleValue())) {
                     continue;
                 }
 
