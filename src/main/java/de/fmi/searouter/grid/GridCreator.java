@@ -204,6 +204,7 @@ public class GridCreator {
         Edge.setDist(dist);
 
         // TEST DATA
+        /*
         GridNode center = coordinateNodeStore.get(0.0).get(0.0);
         GridNode east = coordinateNodeStore.get(0.0).get(0.0).calcEasternNode(coordinate_step_longitude);
         GridNode west = coordinateNodeStore.get(0.0).get(0.0).calcWesternNode(coordinate_step_longitude);
@@ -216,9 +217,10 @@ public class GridCreator {
 
 
         System.out.println(gridNodes.size());
+        */
 
         try {
-            Grid.exportToFmiFile("testFile.fmi");
+            Grid.exportToFmiFile("exported_grid.fmi");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -243,6 +245,7 @@ public class GridCreator {
 
         try {
             coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
