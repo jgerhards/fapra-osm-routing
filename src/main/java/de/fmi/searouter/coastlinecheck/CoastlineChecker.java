@@ -3,7 +3,9 @@ package de.fmi.searouter.coastlinecheck;
 import de.fmi.searouter.domain.IntersectionHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * class used to check if a given point is in water or on land. Contains the top level of a grid used in
@@ -40,6 +42,7 @@ public class CoastlineChecker {
         } else {
             relevantLatitude = relevantLatitude * (-1);
             relevantLatitude = (relevantLatitude - (relevantLatitude % 10)) / 10;
+            relevantLatitude--; // previous floor makes this index one larger than it should be
             latIdx = 8 - relevantLatitude; //invert due to negative sign
 
             //latitude -90 is a special case, handle this here
@@ -47,7 +50,6 @@ public class CoastlineChecker {
                 latIdx = 0;
             }
         }
-        relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
 
         //determine longitude index
         if(relevantLongitude >= 0) {
@@ -61,6 +63,7 @@ public class CoastlineChecker {
         } else {
             relevantLongitude = relevantLongitude * (-1);
             relevantLongitude = (relevantLongitude - (relevantLongitude % 10)) / 10;
+            relevantLongitude--; // previous floor makes this index one larger than it should be
             longIdx = 17 - relevantLongitude; //invert due to negative sign
 
             //longitude -180 is a special case, handle this here
@@ -72,7 +75,7 @@ public class CoastlineChecker {
         return topLevelGrid[latIdx][longIdx].pointIsInWater(latitude, longitude);
     }
 
-    CoastlineChecker() {
+    public CoastlineChecker() {
         topLevelGrid = new CoastlineGridElement[18][36];
         int numberOfCoastlines = Coastlines.getNumberOfWays();
 
@@ -85,6 +88,7 @@ public class CoastlineChecker {
         for (double iteratingLatitude = -80.0; iteratingLatitude <= 80; iteratingLatitude += 10) {
             int listLongIdx = 0;
             for (double iteratingLongitude = -180.0; iteratingLongitude <= 170; iteratingLongitude += 10) {
+                System.out.println("ttt: loop 1");
                 //todo: check if indices of coastlineIntersectionsLatitude are given correctly
                 coastlineIntersectionsLatitude[listLatIdx][listLongIdx] = new ArrayList<Integer>();
                 for (int i = 0; i < numberOfCoastlines; i++) {
@@ -101,6 +105,7 @@ public class CoastlineChecker {
                             coastLineStartLongitude, coastLineEndLatitude, coastLineEndLongitude, lineLatitude,
                             lineStartLongitude, lineLatitude, lineEndLongitude);
                     if (coastlineIntersects) {
+                        //System.out.println("ttt: lines intersect");
                         coastlineIntersectionsLatitude[listLatIdx][listLongIdx].add(i);
                     }
                 }
@@ -115,8 +120,10 @@ public class CoastlineChecker {
         for (double iteratingLatitude = -90.0; iteratingLatitude <= 80; iteratingLatitude += 10) {
             int listLongIdx = 0;
             for (double iteratingLongitude = -180.0; iteratingLongitude <= 170; iteratingLongitude += 10) {
+                System.out.println("ttt: loop 2");
                 //todo: check if indices of coastlineIntersectionsLatitude are given correctly
                 coastlineIntersectionsLongitude[listLatIdx][listLongIdx] = new ArrayList<Integer>();
+                //System.out.println("ttt: number of coastlines: " + numberOfCoastlines);
                 for (int i = 0; i < numberOfCoastlines; i++) {
                     double lineStartLatitude = iteratingLatitude;
                     double lineEndLatitude = iteratingLatitude + 10;
@@ -147,10 +154,11 @@ public class CoastlineChecker {
             int arrayLongIdx = 0;
             for (double lowLongBound = -180.0; lowLongBound <= 170; lowLongBound += 10) {
                 double highLongBound = lowLongBound + 10.0;
-                List<Integer> coastlinesInArea = new ArrayList<>();
+                Set<Integer> coastlinesInArea = new LinkedHashSet<>();
+                //System.out.println("ttt: test: "+lowLongBound + " " + arrayLongIdx + " lat:" + lowLatBound+" "+arrayLatIdx);
                 //add coastlines by intersection with longitudinal lines
                 coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx]);
-                if(arrayLongIdx == 36) {
+                if(arrayLongIdx == 35) {
                     coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][0]);
                 } else {
                     coastlinesInArea.addAll(coastlineIntersectionsLongitude[arrayLatIdx][arrayLongIdx + 1]);
@@ -159,9 +167,9 @@ public class CoastlineChecker {
                 if(arrayLatIdx == 0) {
                     //only north of area relevant
                     coastlinesInArea.addAll(coastlineIntersectionsLatitude[arrayLatIdx][arrayLongIdx]);
-                } else if(arrayLatIdx == 18){
+                } else if(arrayLatIdx == 17){
                     //only south of area relevant
-                    coastlinesInArea.addAll(coastlineIntersectionsLatitude[17][arrayLongIdx]);
+                    coastlinesInArea.addAll(coastlineIntersectionsLatitude[arrayLatIdx - 1][arrayLongIdx]);
                 } else {
                     coastlinesInArea.addAll(coastlineIntersectionsLatitude[arrayLatIdx - 1][arrayLongIdx]);
                     coastlinesInArea.addAll(coastlineIntersectionsLatitude[arrayLatIdx][arrayLongIdx]);
