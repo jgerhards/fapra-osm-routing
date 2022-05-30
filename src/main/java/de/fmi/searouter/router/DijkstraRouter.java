@@ -10,71 +10,67 @@ import java.util.*;
 @Component
 public class DijkstraRouter implements Router {
 
-    private final int[] currDistanceToNode;
+    //protected final int[] currDistanceToNode;
+    protected int[] currDistanceToNode;
     private final int[] previousNode;
-    private final PriorityQueue<HeapElement> vertexHeapQ;
-    private final List<Integer> nodeTouched;
-
-    private static class HeapElement implements Comparable {
-        public int dist;
-        public int node;
-        public int previousNode;
-
-        @Override
-        public int compareTo(Object o) {
-            HeapElement toCompare = (HeapElement) o;
-            return Integer.compare(dist, toCompare.dist);
-        }
-
-        public HeapElement(int dist, int node, int previousNode) {
-            this.dist = dist;
-            this.node = node;
-            this.previousNode = previousNode;
-        }
-    }
+    private final DijkstraHeap vertexHeap;
+    private final boolean[] nodeTouched;
 
     public DijkstraRouter() {
         this.currDistanceToNode = new int[Node.getSize()];
         this.previousNode = new int[Node.getSize()];
-        this.vertexHeapQ = new PriorityQueue<>();
-        this.nodeTouched = new ArrayList<>();
+        this.nodeTouched = new boolean[Node.getSize()];
+        this.vertexHeap = new DijkstraHeap(this);
 
         for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
             currDistanceToNode[nodeIdx] = Integer.MAX_VALUE;
             previousNode[nodeIdx] = -1;
+            nodeTouched[nodeIdx] = false;
         }
 
     }
 
     private void resetState() {
-        for (Integer nodeId : nodeTouched) {
-            currDistanceToNode[nodeId] = Integer.MAX_VALUE;
-            previousNode[nodeId] = -1;
-        }
-        vertexHeapQ.clear();
-        nodeTouched.clear();
+        Arrays.fill(currDistanceToNode, Integer.MAX_VALUE);
+        Arrays.fill(previousNode, -1);
+        Arrays.fill(nodeTouched, false);
+
+        vertexHeap.resetState();
     }
 
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
+
+        /*resetState();
+        currDistanceToNode = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        vertexHeap.add(2);
+        vertexHeap.add(3);
+        vertexHeap.add(0);
+        vertexHeap.add(1);
+        vertexHeap.print();
+
+        currDistanceToNode[3] = -1;
+        vertexHeap.add(3);
+        vertexHeap.print();
+
+        vertexHeap.getNext();
+        vertexHeap.print();
+        vertexHeap.getNext();
+        vertexHeap.print();
+
+        if(true)
+            return null;*/
+
         long startTime = System.nanoTime();
         resetState();
 
-        vertexHeapQ.add(new HeapElement(0, startNodeIdx, startNodeIdx));
+        currDistanceToNode[startNodeIdx] = 0;
+        previousNode[startNodeIdx] = startNodeIdx;
+        vertexHeap.add(startNodeIdx);
 
-        while (!vertexHeapQ.isEmpty()) {
-
-            HeapElement nodeToHandle = vertexHeapQ.poll();
-            int nodeToHandleId = nodeToHandle.node;
-
-
-            if (nodeToHandle.dist >= currDistanceToNode[nodeToHandleId]) {
-                continue;
-            }
-
-            currDistanceToNode[nodeToHandleId] = nodeToHandle.dist;
-            previousNode[nodeToHandleId] = nodeToHandle.previousNode;
-            nodeTouched.add(nodeToHandleId);
+        while (!vertexHeap.isEmpty()) {
+            int nodeToHandleId = vertexHeap.getNext();
+            nodeTouched[nodeToHandleId] = true;
 
             // Break early if target node reached
             if (nodeToHandleId == destNodeIdx) {
@@ -95,7 +91,9 @@ public class DijkstraRouter implements Router {
 
                 // If the new calculated distance to the destination vertex is lower as the previously known, update the corresponding data stucutres
                 if (newDistanceOverThisEdgeToDestVertex < currDistanceToNode[destinationVertexId]) {
-                        vertexHeapQ.add(new HeapElement(newDistanceOverThisEdgeToDestVertex, destinationVertexId, nodeToHandleId));
+                    currDistanceToNode[destinationVertexId] = newDistanceOverThisEdgeToDestVertex;
+                    previousNode[destinationVertexId] = nodeToHandleId;
+                    vertexHeap.add(destinationVertexId);
                 }
 
             }
@@ -108,7 +106,7 @@ public class DijkstraRouter implements Router {
         path.add(destNodeIdx);
         while (currNodeUnderInvestigation != startNodeIdx) {
             int previousNodeIdx = previousNode[currNodeUnderInvestigation];
-            path.add(previousNode[currNodeUnderInvestigation]);
+            path.add(previousNodeIdx);
             currNodeUnderInvestigation = previousNodeIdx;
         }
 
