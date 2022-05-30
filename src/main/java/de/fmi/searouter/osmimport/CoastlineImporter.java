@@ -1,12 +1,9 @@
 package de.fmi.searouter.osmimport;
 
 import crosby.binary.osmosis.OsmosisReader;
-import de.fmi.searouter.coastlinecheck.CoastlineChecker;
-import de.fmi.searouter.coastlinecheck.CoastlineGridLeaf;
-import de.fmi.searouter.coastlinecheck.Coastlines;
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
-import de.fmi.searouter.domain.TimIntersectionCheck;
+import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
@@ -211,11 +208,9 @@ public class CoastlineImporter implements Sink {
 
         boolean land = false;
         for (CoastlineWay polygon : coastlines) {
-            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
-                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
-                    continue;
-                }
+
                 land = true;
                 break;
             }
@@ -228,11 +223,9 @@ public class CoastlineImporter implements Sink {
 
         land = false;
         for (CoastlineWay polygon : coastlines) {
-            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
-                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
-                    continue;
-                }
+
                 land = true;
                 break;
             }
@@ -246,11 +239,9 @@ public class CoastlineImporter implements Sink {
 
         land = false;
         for (CoastlineWay polygon : coastlines) {
-            TimIntersectionCheck check = new TimIntersectionCheck(polygon);
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
-                if (polygon.getWayNodes().get(0).getNodeId() == 275496715) {
-                    continue;
-                }
+
                 land = true;
                 break;
             }

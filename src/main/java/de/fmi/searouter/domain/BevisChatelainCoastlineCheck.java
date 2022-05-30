@@ -3,13 +3,18 @@ package de.fmi.searouter.domain;
 import com.google.common.math.DoubleMath;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
+import java.math.BigDecimal;
 import java.util.List;
 
-public class TimIntersectionCheck {
+/**
+ * Analogeous implementation of the point-in-polygon test of Bevis in Chatelain in
+ * "Locating a Point on a Spherical Surface Relative to a
+ * Spherical Polygon of Arbitrary Shape" (Mathematical Geology, Vol. 21, No. 8, 1989).
+ */
+public class BevisChatelainCoastlineCheck {
 
     double epsilon = 0.000001d;
 
-    private double spolybndry;
     double[] vlat_c;
     double[] vlon_c;
     int nv_c;
@@ -18,7 +23,7 @@ public class TimIntersectionCheck {
     double[] tlonv;
     int ibndry;
 
-    public TimIntersectionCheck(CoastlineWay polygonToCheck) {
+    public BevisChatelainCoastlineCheck(CoastlineWay polygonToCheck) {
         List<WayNode> wayNodes = polygonToCheck.getWayNodes();
 
         double lats[] = new double[wayNodes.size()];
@@ -31,7 +36,10 @@ public class TimIntersectionCheck {
 
 
         //DefSPolyBndry(lats, longs, 90.0, 0.0);
-        DefSPolyBndry(lats, longs, 	-89.99996, 	0.0001);
+        //DefSPolyBndry(lats, longs, 	-89.99996, 	0.0001);
+        DefSPolyBndry(lats, longs, 83.15311098437887, 23.90625);
+        //DefSPolyBndry(lats, longs, 	-62.2328, 		-58.4599);
+        //DefSPolyBndry(lats, longs, 		-62.2327, 	-58.4603);
         //DefSPolyBndry(lats, longs, 		-75.4255, 	-42.7808);
     }
 
@@ -39,9 +47,6 @@ public class TimIntersectionCheck {
         int res = LetPtRelBndry(lat, longitude);
         return res == 1 || res == 2;
     }
-
-
-
 
     private double dsin(double x) {
         return Math.sin(x);
@@ -72,15 +77,19 @@ public class TimIntersectionCheck {
 
         tlonv = new double[vlat.length];
 
-        int ip;
+        int ip = 0;
 
         for (int i = 0; i < nv_c; i++) {
             vlat_c[i] = vlat[i];
             vlon_c[i] = vlon[i];
-            tlonv[i] = TransfmLon(xlat, xlat, vlat[i], vlon[i]);
+            tlonv[i] = TransfmLon(xlat, xlon, vlat[i], vlon[i]);
 
             /*
-            ip = i + 1;
+            if (i == nv_c-1) {
+                ip = 1;
+            } else {
+                ip = i + 1;
+            }
 
             if (DoubleMath.fuzzyEquals(vlat[i], vlat[ip], epsilon) && DoubleMath.fuzzyEquals(vlon[i], vlon[ip], epsilon)) {
                 System.out.println("DefSPolyBndry detects user error: vertices i and ip are not distinct");
@@ -103,8 +112,8 @@ public class TimIntersectionCheck {
             }
             */
 
-        }
 
+        }
 
 
     }
@@ -121,15 +130,14 @@ public class TimIntersectionCheck {
 
         if (DoubleMath.fuzzyEquals(plat, -xlat_c, epsilon)) {
             dellon = plon - xlon_c;
-            if (dellon < -180) dellon = dellon + 360;
-            if (dellon > 180) dellon = dellon - 360;
+            if (dellon < -180d) dellon = dellon + 360d;
+            if (dellon > 180d) dellon = dellon - 360d;
             if (DoubleMath.fuzzyEquals(dellon, 180d, epsilon) || DoubleMath.fuzzyEquals(dellon, -180d, epsilon)) {
                 System.out.println("Warning: LctPtRelBndry detects case P antipodal to X location of P relative to S is undetermined");
                 return 3;
             }
         }
 
-        int location = 0; // default: P is out side S
         int icross = 0; // init counter
 
         if (DoubleMath.fuzzyEquals(plat, xlat_c, epsilon) && DoubleMath.fuzzyEquals(plon, xlon_c, epsilon)) {
@@ -167,18 +175,19 @@ public class TimIntersectionCheck {
                 if (DoubleMath.fuzzyEquals(plat, vAlat, epsilon) && DoubleMath.fuzzyEquals(plon, vAlon, epsilon)) {
                     return 2; // P lies on a vertex of S
                 }
-            }
 
-            double tlon_X = TransfmLon(vAlat, vAlon, xlat_c, xlon_c);
-            double tlon_B = TransfmLon(vAlat, vAlon, vBlat, vBlon);
-            double tlon_P = TransfmLon(vAlat, vAlon, plat, plon);
 
-            if (DoubleMath.fuzzyEquals(tlon_P, tlon_B, epsilon)) {
-                return 2; // P lies on side of S
-            } else {
-                int ibrng_BX = EastOrWest(tlon_B, tlon_X);
-                int ibrng_BP = EastOrWest(tlon_B, tlon_P);
-                if (ibrng_BX == -ibrng_BP) icross = icross + 1;
+                double tlon_X = TransfmLon(vAlat, vAlon, xlat_c, xlon_c);
+                double tlon_B = TransfmLon(vAlat, vAlon, vBlat, vBlon);
+                double tlon_P = TransfmLon(vAlat, vAlon, plat, plon);
+
+                if (DoubleMath.fuzzyEquals(tlon_P, tlon_B, epsilon)) {
+                    return 2; // P lies on side of S
+                } else {
+                    int ibrng_BX = EastOrWest(tlon_B, tlon_X);
+                    int ibrng_BP = EastOrWest(tlon_B, tlon_P);
+                    if (ibrng_BX == (-ibrng_BP)) icross = icross + 1;
+                }
             }
         }
 
@@ -186,26 +195,21 @@ public class TimIntersectionCheck {
             return 1;
         }
 
-
+        // default P is outside of S
         return 0;
     }
 
     public double TransfmLon(double plat, double plon, double qlat, double qlon) {
-        double pi = Math.PI;
-        double dtr = pi / 180.0;
-        double tranlon, t, b;
+        double t, b;
 
         if (DoubleMath.fuzzyEquals(plat, 90d, epsilon)) {
-            tranlon = qlon;
+            return qlon;
         } else {
-            t = dsin((qlon - plon) * dtr) * dcos(qlat * dtr);
-            b = dsin(dtr * qlat) * dcos(plat * dtr) - dcos(qlat * dtr) * dsin(plat * dtr) * dcos((qlon - plon) * dtr);
-            tranlon = datan2(t, b) / dtr;
+            t = dsin(Math.toRadians((qlon - plon))) * dcos(Math.toRadians(qlat));
+            b = dsin(Math.toRadians(qlat)) * dcos(Math.toRadians(plat)) - dcos(Math.toRadians(qlat)) * dsin(Math.toRadians(plat)) * dcos(Math.toRadians(qlon - plon));
+            return Math.toDegrees(datan2(t, b));
         }
-
-        return tranlon;
     }
-
 
     public int EastOrWest(double clon, double dlon) {
         double del = dlon - clon;
@@ -213,9 +217,9 @@ public class TimIntersectionCheck {
         if (del > 180) del = del - 360;
         if (del < -180) del = del + 360;
         if (del > 0.0 && !DoubleMath.fuzzyEquals(del, +180d, epsilon)) {
-            return -1; // D is west of C
-        } else if (del < 0.0 && !DoubleMath.fuzzyEquals(del, -180d, epsilon)) {
             return +1; // D is east of C
+        } else if (del < 0.0 && !DoubleMath.fuzzyEquals(del, -180d, epsilon)) {
+            return -1; // D is west of C
         } else {
             return 0; //D north or south of C
         }

@@ -1,7 +1,7 @@
 package de.fmi.searouter;
 
 import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.TimIntersectionCheck;
+import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
 import org.openstreetmap.osmosis.core.domain.v0_6.CommonEntityData;
 import org.openstreetmap.osmosis.core.domain.v0_6.OsmUser;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
@@ -13,7 +13,7 @@ import java.util.List;
 
 public class ManualTests {
 
-    private void testA() {
+    public static void testA() {
         CommonEntityData data = new CommonEntityData(0, 0, new Date(), new OsmUser(0, ""), 0);
         List<WayNode> wayNodes = new ArrayList<>();
         WayNode startWayNode = new WayNode(0, -75.46134742913321, -43.011474609375);
@@ -39,17 +39,19 @@ public class ManualTests {
 
         CoastlineWay cWay = new CoastlineWay(way);
 
-        TimIntersectionCheck check = new TimIntersectionCheck(cWay);
-        System.out.println("Is on water: " + check.isPointInWater(-75.2167, -43.5498));
-        System.out.println("Is on water: " + check.isPointInWater(-75.3395, -41.6382));
-        System.out.println("Is on water: " + check.isPointInWater(-74.3815, -41.1218));
-        System.out.println("Is on water: " + check.isPointInWater(-75.6450, -41.6052));
-        System.out.println("Is on water: " + check.isPointInWater(-75.7319, -44.4507));
-        System.out.println("Is on water: " + check.isPointInWater(-75.4255, -43.5168));
+        BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(cWay);
+        System.out.println("Is on water: " + check.isPointInWater(-75.2167, -43.5498)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-75.3395, -41.6382)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-74.3815, -41.1218)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-75.6450, -41.6052)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-75.7319, -44.4507)); // land
+        System.out.println("Is on water: " + check.isPointInWater(-75.4255, -43.5168)); // land
 
     }
 
     public static void main(String[] args) {
+        testA();
+        System.out.println("TestB---------------");
         CommonEntityData data = new CommonEntityData(0, 0, new Date(), new OsmUser(0, ""), 0);
         List<WayNode> wayNodes = new ArrayList<>();
         WayNode startWayNode = new WayNode(0, -62.232584300000006, -58.460225400000006);
@@ -66,14 +68,15 @@ public class ManualTests {
 
         CoastlineWay cWay = new CoastlineWay(way);
 
-        TimIntersectionCheck check = new TimIntersectionCheck(cWay);
-        System.out.println("Is on water: " + check.isPointInWater(-61.9983, -58.3704));
-        System.out.println("Is on water: " + check.isPointInWater(-61.2094, -57.4146));
-        System.out.println("Is on water: " + check.isPointInWater(-74.3815, -41.1218));
-        System.out.println("Is on water: " + check.isPointInWater(-75.6450, -41.6052));
-        System.out.println("Is on water: " + check.isPointInWater(-75.7319, -44.4507));
+        BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(cWay);
+        System.out.println("Is on water: " + check.isPointInWater(-61.9983, -58.3704)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-61.2094, -57.4146)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-74.3815, -41.1218)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-75.6450, -41.6052)); // water
+        System.out.println("Is on water: " + check.isPointInWater(-75.7319, -44.4507)); // water
         System.out.println("Is on water: " + check.isPointInWater(-62.2328, -58.4601)); // land
         System.out.println("Is on water: " + check.isPointInWater(-62.2329, -58.4597)); // water
+        System.out.println("Is on water: " + check.isPointInWater(	-62.2326, 	-58.4600)); // water
 
 
     }
