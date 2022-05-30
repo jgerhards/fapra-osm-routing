@@ -1,7 +1,10 @@
 package de.fmi.searouter.grid;
 
+import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
+import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.IntersectionHelper;
 import de.fmi.searouter.osmexport.GeoJsonConverter;
+import de.fmi.searouter.osmimport.CoastlineImporter;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -20,8 +23,20 @@ public class GridCreator {
     public static double coordinate_step_latitude;
     public static double coordinate_step_longitude;
 
+    public static boolean isPointOnWater(double latitude, double longitude, List<CoastlineWay> coastlinePolygons) {
+        for (CoastlineWay polygon : coastlinePolygons) {
+            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            if (!check.isPointInWater(latitude, longitude)) {
+                System.out.println(latitude + " " + longitude + " is on land");
+                return false;
+            }
+        }
+        System.out.println(latitude + " " + longitude + " is on water");
+        return true;
+    }
 
-    public static void createGrid() {
+
+    public static void createGrid(List<CoastlineWay> coastlinePolygons) {
         gridNodes = new ArrayList<>();
 
         coordinateNodeStore = new HashMap<>();
@@ -47,7 +62,13 @@ public class GridCreator {
         BigDecimal longEnd = BigDecimal.valueOf(-180);
         for (BigDecimal lat = BigDecimal.valueOf(90.0); lat.compareTo(latEnd) >= 0; lat = lat.subtract(coordinateStepLat)) {
             for (BigDecimal longitude = BigDecimal.valueOf(180); longitude.compareTo(longEnd) > 0; longitude = longitude.subtract(coordinateStepLong)) {
+
+                if (isPointOnWater(lat.doubleValue(), longitude.doubleValue(), coastlinePolygons)) {
+                    continue;
+                }
+
                 GridNode node = new GridNode(lat.doubleValue(), longitude.doubleValue());
+
                 gridNodes.add(node);
                 if (!coordinateNodeStore.containsKey(lat.doubleValue())) {
                     coordinateNodeStore.put(lat.doubleValue(), new HashMap<>());
@@ -61,6 +82,7 @@ public class GridCreator {
 
         // FOr test TODO REMOVE
         //gridNodes = new ArrayList<>();
+        /*
         gridNodes = Arrays.asList(
                 getNodeByLatLong(0.0, 0.0),
                 getNodeByLatLong(0.0, 0.18),
@@ -68,7 +90,7 @@ public class GridCreator {
                 getNodeByLatLong(0.36, 0.0),
                 getNodeByLatLong(-0.36, 0.0),
                 getNodeByLatLong(-0.72, 0.0)
-                );
+        );
 
         coordinateNodeStore = new HashMap<>();
         Map<Double, GridNode> zeroHash = new HashMap<>();
@@ -89,6 +111,7 @@ public class GridCreator {
         mseventwo.put(0.0, gridNodes.get(5));
         coordinateNodeStore.put(-0.72, mseventwo);
         // TODO TEST END
+        */
 
         // Create Node arrays
         double[] latitude = new double[gridNodes.size()];
@@ -210,7 +233,21 @@ public class GridCreator {
     }
 
     public static void main(String[] args) {
-        GridCreator.createGrid();
+
+
+        // Import coastlines
+        CoastlineImporter importer = new CoastlineImporter();
+        List<CoastlineWay> coastlines = new ArrayList<>();
+
+
+        try {
+            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        GridCreator.createGrid(coastlines);
     }
 
 

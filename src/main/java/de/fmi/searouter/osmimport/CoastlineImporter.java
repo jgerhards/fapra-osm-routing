@@ -54,11 +54,13 @@ public class CoastlineImporter implements Sink {
             for (Tag currTagOfWay : currentWay.getTags()) {
                 if ("natural".equalsIgnoreCase(currTagOfWay.getKey()) && "coastline".equalsIgnoreCase(currTagOfWay.getValue())) {
                     this.coastLines.add(currentWay);
+                    System.out.println("Add way " + currentWay.getId());
                 }
             }
         } else if (entityContainer.getEntity() instanceof Node) {
             Node node = (Node) entityContainer.getEntity();
             allNodes.put(node.getId(), node);
+            System.out.println("add node " + node.getId());
         }
     }
 
