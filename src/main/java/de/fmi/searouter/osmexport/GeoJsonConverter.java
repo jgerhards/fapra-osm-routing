@@ -1,6 +1,7 @@
 package de.fmi.searouter.osmexport;
 
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.grid.GridNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
@@ -37,6 +38,41 @@ public class GeoJsonConverter {
         return featureCollection;
     }
 
+    public static JSONObject osmNodesToGeoJSON(List<GridNode> nodes) {
+        // Outer FeatureCollection object (top-level obj)
+        JSONObject featureCollection = new JSONObject();
+        featureCollection.put("type", "FeatureCollection");
+
+        // Features, each representing one LineString (one Way of the coast)
+        JSONArray features = new JSONArray();
+        for (GridNode node : nodes) {
+            features.put(GeoJsonConverter.gridNodeToGeoJSONFeature(node));
+        }
+
+        featureCollection.put("features", features);
+
+        return featureCollection;
+    }
+
+    public static JSONObject gridNodeToGeoJSONFeature(GridNode node) {
+        JSONObject topLevelobj = new JSONObject();
+
+        topLevelobj.put("type", "Feature");
+        topLevelobj.put("properties", new JSONObject());
+
+        JSONObject geometry = new JSONObject();
+        geometry.put("type", "Point");
+        JSONArray arr = new JSONArray();
+        arr.put(node.getLongitude());
+        arr.put(node.getLatitude());
+
+        geometry.put("coordinates", arr);
+
+        topLevelobj.put("geometry", geometry);
+
+        return topLevelobj;
+    }
+
     /**
      * Parses a {@link Way} object to a GeoJSON representation using the type "Feature".
      *
@@ -67,4 +103,6 @@ public class GeoJsonConverter {
 
         return feature;
     }
+
+
 }
