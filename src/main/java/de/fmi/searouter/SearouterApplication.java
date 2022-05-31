@@ -19,7 +19,6 @@ public class SearouterApplication {
 		}
 
 		SpringApplication.run(SearouterApplication.class, args);
-		System.out.println("Hello world!");
 	}
 
 }
