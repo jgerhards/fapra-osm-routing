@@ -17,7 +17,7 @@ public interface Router {
      *
      * @param startNodeIdx The index of the start node (corresponding to {@link Node} indices)
      * @param destNodeIdx The index of the destination node (corresponding to {@link Node} indices)
-     * @return
+     * @return a route between start and destination node
      */
     RoutingResult route(int startNodeIdx, int destNodeIdx);
 }

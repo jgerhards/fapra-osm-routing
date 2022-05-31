@@ -8,3 +8,9 @@ mvn spring-boot:run
 ```
 
 Open browser with url: http://localhost:8080/.
+
+### tasks and where they are solved
+
+#### task 2
+
+

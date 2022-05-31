@@ -7,29 +7,36 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+/**
+ * class used to create a route when given a start and end node.
+ */
 @Component
 public class DijkstraRouter implements Router {
 
-    //protected final int[] currDistanceToNode;
-    protected int[] currDistanceToNode;
+    //current distance to the target node
+    protected final int[] currDistanceToNode;
+    //previous node on the way to the target node
     private final int[] previousNode;
     private final DijkstraHeap vertexHeap;
     private final boolean[] nodeTouched;
 
+    /**
+     * constructor. also initializes internal fields
+     */
     public DijkstraRouter() {
         this.currDistanceToNode = new int[Node.getSize()];
         this.previousNode = new int[Node.getSize()];
         this.nodeTouched = new boolean[Node.getSize()];
         this.vertexHeap = new DijkstraHeap(this);
 
-        for (int nodeIdx = 0; nodeIdx < Node.getSize(); nodeIdx++) {
-            currDistanceToNode[nodeIdx] = Integer.MAX_VALUE;
-            previousNode[nodeIdx] = -1;
-            nodeTouched[nodeIdx] = false;
-        }
-
+        Arrays.fill(currDistanceToNode, Integer.MAX_VALUE);
+        Arrays.fill(previousNode, -1);
+        Arrays.fill(nodeTouched, false);
     }
 
+    /**
+     * resets the state of a previous calculation
+     */
     private void resetState() {
         Arrays.fill(currDistanceToNode, Integer.MAX_VALUE);
         Arrays.fill(previousNode, -1);
@@ -38,28 +45,17 @@ public class DijkstraRouter implements Router {
         vertexHeap.resetState();
     }
 
+    /**
+     * Calculates the shortest path from one start node to a destination node. Node definitions
+     * are in {@link Node}, edge definition in {@link Edge} and the relationships between those two
+     * data structures in {@link Grid}.
+     *
+     * @param startNodeIdx The index of the start node (corresponding to {@link Node} indices)
+     * @param destNodeIdx The index of the destination node (corresponding to {@link Node} indices)
+     * @return a route between start and destination node
+     */
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
-
-        /*resetState();
-        currDistanceToNode = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-        vertexHeap.add(2);
-        vertexHeap.add(3);
-        vertexHeap.add(0);
-        vertexHeap.add(1);
-        vertexHeap.print();
-
-        currDistanceToNode[3] = -1;
-        vertexHeap.add(3);
-        vertexHeap.print();
-
-        vertexHeap.getNext();
-        vertexHeap.print();
-        vertexHeap.getNext();
-        vertexHeap.print();
-
-        if(true)
-            return null;*/
 
         long startTime = System.nanoTime();
         resetState();
@@ -80,11 +76,6 @@ public class DijkstraRouter implements Router {
             for (int neighbourEdgeId = Grid.offset[nodeToHandleId]; neighbourEdgeId < Grid.offset[nodeToHandleId + 1]; ++neighbourEdgeId) {
 
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
-
-                // If the edge destination vertex is not in the vertexSetQ
-                //if (!vertexSetQ.contains(destinationVertexId)) {
-                //    continue;
-                //}
 
                 // Calculate the distance to the destination vertex using the current edge
                 int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandleId] + Edge.getDist(neighbourEdgeId);
@@ -115,21 +106,5 @@ public class DijkstraRouter implements Router {
         long stopTime = System.nanoTime();
 
         return new RoutingResult(path, currDistanceToNode[destNodeIdx], (double) (stopTime - startTime) / 1000000);
-    }
-
-    public int getVertexWithMinimalDistance(Set<Integer> vertexSet, int[] currentDistancesToNode) {
-
-        int minDistance = Integer.MAX_VALUE;
-        int minDistanceNodeIdx = -1;
-
-        for (Integer nodeIdx : vertexSet) {
-            int nextDistanceToCompare = currentDistancesToNode[nodeIdx];
-            if (nextDistanceToCompare < minDistance) {
-                minDistance = currentDistancesToNode[nodeIdx];
-                minDistanceNodeIdx = nodeIdx;
-            }
-        }
-
-        return minDistanceNodeIdx;
     }
 }
