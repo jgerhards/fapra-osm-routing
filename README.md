@@ -1,5 +1,7 @@
 ## FaPra: Algorithms on OpenStreetMap data
 
+Jan Gerhards und Tim Schneider (Ilias-Name: TimSchneider1)
+
 ###  How to install and run the routing frontend
 
 First place a .fmi file containing the dijkstra grid graph in the
