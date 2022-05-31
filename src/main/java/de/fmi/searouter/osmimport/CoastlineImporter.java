@@ -4,7 +4,6 @@ import com.wolt.osm.parallelpbf.ParallelBinaryParser;
 import com.wolt.osm.parallelpbf.entity.Header;
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.Point;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -17,9 +16,9 @@ import java.util.*;
  * Uses the Osmosis pipeline to parse a PBF file. Imports and merges
  * coast lines.
  */
-public class CoastlineImporterMoreEfficient  {
+public class CoastlineImporter {
 
-    private Logger logger = LoggerFactory.getLogger(CoastlineImporterMoreEfficient.class);
+    private Logger logger = LoggerFactory.getLogger(CoastlineImporter.class);
 
     private InputStream inputStream;
 
@@ -27,7 +26,7 @@ public class CoastlineImporterMoreEfficient  {
 
     private Map<Long, Point> allNodes;
 
-    public CoastlineImporterMoreEfficient() {
+    public CoastlineImporter() {
         this.allNodes = new HashMap<>();
         this.coastLineWays = new ArrayList<>();
     }
@@ -49,7 +48,7 @@ public class CoastlineImporterMoreEfficient  {
 
                 for (int j = 0; j < coastlineSize; j++) {
 
-                    if (alreadyMerged[j] || i == j) {
+                    if (alreadyMerged[i] || alreadyMerged[j] || i == j) {
                         continue;
                     }
 
@@ -78,67 +77,6 @@ public class CoastlineImporterMoreEfficient  {
         }
 
     }
-
-
-/*
-    private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
-
-        int currSizeOfAllCoastlineWays = coastLinesToMerge.size();
-
-        int currIdx = 0;
-
-        while (true) {
-            AbstractMap.Entry<Integer, List<CoastlineWay>> result = findMergePartnerForCoastline(coastLinesToMerge, currIdx);
-            List<CoastlineWay> newResult = result.getValue();
-            currIdx = result.getKey();
-
-            if (newResult.size() == currSizeOfAllCoastlineWays) {
-                currIdx++;
-                if (currIdx >= currSizeOfAllCoastlineWays) {
-                    return newResult;
-                }
-            } else {
-                currSizeOfAllCoastlineWays = newResult.size();
-                coastLinesToMerge = newResult;
-            }
-        }
-
-    }
-
-
-    private AbstractMap.Entry<Integer, List<CoastlineWay>> findMergePartnerForCoastline(List<CoastlineWay> allCoastlinesToMerge, int idxOfCurrEl) {
-
-        int coastlineNodeSize = allCoastlinesToMerge.size();
-        for (int i = 0; i < coastlineNodeSize; i++) {
-
-            if (i == idxOfCurrEl) {
-                continue;
-            }
-
-            CoastlineWay mergeResult = allCoastlinesToMerge.get(idxOfCurrEl).mergeCoastlinesIfPossible(allCoastlinesToMerge.get(i));
-
-            if (mergeResult != null) {
-                // If a merge was performed
-
-                // Remove the merged coastline, but keep the bigger new coast line
-                List<CoastlineWay> retList = new ArrayList<>(allCoastlinesToMerge);
-                retList.set(idxOfCurrEl, mergeResult);
-                retList.remove(allCoastlinesToMerge.get(idxOfCurrEl));
-                retList.remove(allCoastlinesToMerge.get(i));
-                retList.add(mergeResult);
-
-                if (idxOfCurrEl > i) {
-                    idxOfCurrEl--;
-                }
-                return new AbstractMap.SimpleEntry<>(idxOfCurrEl, retList);
-            }
-
-        }
-        return new AbstractMap.SimpleEntry<>(idxOfCurrEl, allCoastlinesToMerge);
-
-    }
-    */
-
 
     public void close() {
         try {
@@ -192,7 +130,7 @@ public class CoastlineImporterMoreEfficient  {
                     cWay.getPoints().add(node);
                 }
             }
-            cWay.updatePointSize();
+            cWay.updateAfterGet();
             this.coastLineWays.add(cWay);
         }
 

@@ -1,20 +1,28 @@
 package de.fmi.searouter.grid;
 
 import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.utils.GeoJsonConverter;
 import de.fmi.searouter.utils.IntersectionHelper;
-import de.fmi.searouter.osmimport.CoastlineImporterMoreEfficient;
+import de.fmi.searouter.osmimport.CoastlineImporter;
+import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Contains logic for creating a grid graph which nodes are distributed equally over the latitude
+ * and longitudes of a world map.
+ */
 public class GridCreator {
 
     protected static List<GridNode> gridNodes;
 
     public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
 
-
+    // Number of latitude
     private static final int DIMENSION_LATITUDE = 500;
     private static final int DIMENSION_LONGITUDE = 2000;
 
@@ -31,6 +39,9 @@ public class GridCreator {
     }
 
     public static boolean isPointOnWater(double latitude, double longitude) {
+        if (latitude > -52) {
+            return true;
+        }
 
         for (BevisChatelainInPolygonCheck checkerObj : checkerObjects) {
             if (!checkerObj.isPointInWater(latitude, longitude)) {
@@ -42,7 +53,12 @@ public class GridCreator {
         return true;
     }
 
-
+    /**
+     *
+     * @param coastlinePolygons All coastline polygons represented as {@link CoastlineWay} that should be considered
+     *                          for a pointy-in-polygon check
+     * @throws InterruptedException If something with the threads went wrong
+     */
     public static void createGrid(List<CoastlineWay> coastlinePolygons) throws InterruptedException {
         gridNodes = new ArrayList<>();
 
@@ -57,10 +73,8 @@ public class GridCreator {
         initCheckObjs(coastlinePolygons);
 
         BigDecimal coordinateStepLat = BigDecimal.valueOf(coordinate_step_latitude);
-        BigDecimal coordinateStepLong = BigDecimal.valueOf(coordinate_step_longitude);
 
         BigDecimal latEnd = BigDecimal.valueOf(-90);
-        BigDecimal longEnd = BigDecimal.valueOf(-180);
 
         // Precalculate all latitudes that should be checked
         int numberOfThreads = 15;
@@ -194,7 +208,7 @@ public class GridCreator {
 
 
         // Import coastlines
-        CoastlineImporterMoreEfficient importer = new CoastlineImporterMoreEfficient();
+        CoastlineImporter importer = new CoastlineImporter();
         List<CoastlineWay> coastlines = new ArrayList<>();
 
 
@@ -204,6 +218,23 @@ public class GridCreator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+/*
+        System.out.println("Size: " + coastlines.size());
+
+
+        try {
+
+            JSONObject obj = GeoJsonConverter.coastlineWayToGeoJSON(coastlines);
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter("geoJsonNeuerTest.json"));
+            writer.write(obj.toString(1));
+
+
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        */
 
 
         try {
@@ -211,6 +242,8 @@ public class GridCreator {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+
     }
 
 

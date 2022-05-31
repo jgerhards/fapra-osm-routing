@@ -1,5 +1,8 @@
 package de.fmi.searouter.domain;
 
+/**
+ * Represents an OSM node. Only used for pre-processing (until grid is initialized).
+ */
 public class Point {
 
     private final float lat;

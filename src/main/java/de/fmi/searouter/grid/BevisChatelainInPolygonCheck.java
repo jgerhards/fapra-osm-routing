@@ -2,19 +2,16 @@ package de.fmi.searouter.grid;
 
 import com.google.common.math.DoubleMath;
 import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.Point;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
- * Analogeous implementation of the point-in-polygon test of Bevis in Chatelain in
+ * Implementation of the point-in-polygon test of Bevis in Chatelain as described in
  * "Locating a Point on a Spherical Surface Relative to a
  * Spherical Polygon of Arbitrary Shape" (Mathematical Geology, Vol. 21, No. 8, 1989).
+ * Transcribed from fortran to Java.
  */
 public class BevisChatelainInPolygonCheck {
 
+    // Delta for double comparisons
     double epsilon = 0.000001d;
 
     double[] vlat_c;
@@ -25,15 +22,24 @@ public class BevisChatelainInPolygonCheck {
     double[] tlonv;
     int ibndry;
 
+    /**
+     * Inits all data points for one polygon
+     * @param polygonToCheck
+     */
     public BevisChatelainInPolygonCheck(CoastlineWay polygonToCheck) {
 
         double lats[] = polygonToCheck.getLatitudeArray();
         double longs[] = polygonToCheck.getLongitudeArray();
 
-        //DefSPolyBndry(lats, longs, 	-89.99996, 	0.0001);
+        // Pass the point which acts as reference point for a water node
         DefSPolyBndry(lats, longs, 83.15311098437887, 23.90625);
     }
 
+    /**
+     * @param lat The latitude of the point to check
+     * @param longitude The longitude of the point to check
+     * @return True if point is outside the polygon --> in water
+     */
     public boolean isPointInWater(double lat, double longitude) {
         int res = LetPtRelBndry(lat, longitude);
         return res == 1 || res == 2;
@@ -51,6 +57,9 @@ public class BevisChatelainInPolygonCheck {
         return Math.atan2(y, x);
     }
 
+    /**
+     * Inits the array data structures for preparing polygon test calculations.
+     */
     public void DefSPolyBndry(double[] vlat, double[] vlon, double xlat, double xlon) {
         ibndry = 1;
 
@@ -66,6 +75,7 @@ public class BevisChatelainInPolygonCheck {
         xlat_c = xlat;
         xlon_c = xlon;
 
+        // Transformed longitude (for acting as a north pole)
         tlonv = new double[vlat.length];
 
         int ip = 0;
@@ -75,6 +85,8 @@ public class BevisChatelainInPolygonCheck {
             vlon_c[i] = vlon[i];
             tlonv[i] = TransfmLon(xlat, xlon, vlat[i], vlon[i]);
 
+
+            // Check error cases
             /*
             if (i == nv_c-1) {
                 ip = 1;
@@ -95,28 +107,29 @@ public class BevisChatelainInPolygonCheck {
             if (DoubleMath.fuzzyEquals(vlat[i], vlat[ip], epsilon)) {
                 double dellon = vlon[i] - vlon[ip];
                 if (dellon > +180d) dellon = dellon -360;
-                if (dellon < -180d) dellon = dellon + 360; // TODO changed from - to +
+                if (dellon < -180d) dellon = dellon + 360;
                 if (DoubleMath.fuzzyEquals(dellon, 180d, epsilon) || DoubleMath.fuzzyEquals(dellon, -180d, epsilon)) {
                     System.out.println("DefSPolyBndry detects user error: vertices i and ip are antipodal");
                     return;
                 }
             }
             */
-
-
         }
-
-
     }
 
+    /**
+     * Checks whether a point P with latitude plat and longitude plon is inside, on a side or outside the polygon-
+     * @param plat Latitude of point P
+     * @param plon Longitude of point P
+     * @return 0: P outside polygon, 1: P inside polygon, 2: P is on polygon boundary ; 3: user error
+     */
     public int LetPtRelBndry(double plat, double plon) {
-        int mxnv;
         double dellon;
 
         if (this.ibndry == 0) {
             // user never defined bndry
             System.out.println("Subroutine LctPtRelBndry detects user error: Subroutine DefSPolyBndry must be called before subroutine LctPtRelBndry can be called");
-            return 0;
+            return 3;
         }
 
         if (DoubleMath.fuzzyEquals(plat, -xlat_c, epsilon)) {
@@ -190,6 +203,12 @@ public class BevisChatelainInPolygonCheck {
         return 0;
     }
 
+    /**
+     * Finds the longitude f point Q in a geographic coordinate system for which point P acts as a 'north
+     * pole.
+
+     * @return transformed longitude in degrees
+     */
     public double TransfmLon(double plat, double plon, double qlat, double qlon) {
         double t, b;
 
@@ -202,6 +221,13 @@ public class BevisChatelainInPolygonCheck {
         }
     }
 
+    /**
+     * Determines whether D lies west or east of C by traveling the shortest path.
+     *
+     * @param clon longitude of point C
+     * @param dlon longitude of point D
+     * @return 1: D is east of C, -1: D is west of C, 0: D north or south of C
+     */
     public int EastOrWest(double clon, double dlon) {
         double del = dlon - clon;
 

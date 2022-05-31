@@ -1,5 +1,8 @@
 package de.fmi.searouter.domain;
 
+/**
+ * Object with latitude and longitude values for JSON mapping to the REST Api.
+ */
 public class LatLong {
 
     private double latitude;

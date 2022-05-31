@@ -1,5 +1,8 @@
 package de.fmi.searouter.domain;
 
+/**
+ * User request asking for a new route calculation. Used as JSON mapping object for the REST api.
+ */
 public class RoutingRequest {
 
     private LatLong startPoint;

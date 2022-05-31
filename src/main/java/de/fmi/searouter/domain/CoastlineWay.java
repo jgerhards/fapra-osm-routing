@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a coastline represented internally as osm way. This object
+ * Represents a coastline way and after the import a coastline polygon. This object
  * is only used for the import mechanism and will be transformed into a
  * more efficient data structure after the import process took place.
  */
@@ -16,15 +16,23 @@ public class CoastlineWay {
 
     private Logger logger = LoggerFactory.getLogger(CoastlineWay.class);
 
+    // All coordinate points of this coastline way section.
     private List<Point> points;
+
     private long id;
 
     private long startNodeId;
+
+    // The end
     private long endNodeId;
 
-    private int pointSize;
+    // Number of all nodes in a coastline polygon. Only used for first coastlineway in a series of coastlineways.
+    private int polygonLength;
 
+    // The coastline which comes after this CoastlineWay in the polygon
     private CoastlineWay nextCoastlineWay;
+
+    // The coastline which comes before this CoastlineWay in the polygon
     private CoastlineWay lastCoastlineWay;
 
     public CoastlineWay(com.wolt.osm.parallelpbf.entity.Way wayToTransform) {
@@ -34,7 +42,7 @@ public class CoastlineWay {
         endNodeId = -1;
         nextCoastlineWay = null;
         lastCoastlineWay = null;
-        pointSize = 0;
+        polygonLength = 0;
     }
 
     public CoastlineWay(long id, List<Point> points) {
@@ -42,13 +50,16 @@ public class CoastlineWay {
         this.points = points;
         startNodeId = calcStartNodeId();
         endNodeId = calcEndNodeId();
-        pointSize = points.size();
+        polygonLength = points.size();
         nextCoastlineWay = null;
         lastCoastlineWay = null;
+
     }
 
-    public void updatePointSize() {
-        this.pointSize = points.size();
+    public void updateAfterGet() {
+        this.polygonLength = points.size();
+        this.startNodeId = calcStartNodeId();
+        this.endNodeId = calcEndNodeId();
     }
 
     public long getStartNodeId() {
@@ -71,9 +82,12 @@ public class CoastlineWay {
         return lastCoastlineWay;
     }
 
+    /**
+     * @return The longitudes of the whole CoastlineWay polygon.
+     */
     public double[] getLongitudeArray() {
 
-        double[] longitude = new double[this.pointSize];
+        double[] longitude = new double[this.polygonLength];
 
         for (int i = 0; i < this.points.size(); i++) {
             longitude[i] = this.points.get(i).getLon();
@@ -81,14 +95,19 @@ public class CoastlineWay {
         CoastlineWay iterator = nextCoastlineWay;
         int index = this.points.size();
         while (iterator != null) {
-            index = iterator.getLongitudeArrayRecursive(index, longitude);
+            index = iterator.getLongitudeArrayInternal(index, longitude);
             iterator = iterator.getNextCoastlineWay();
         }
 
         return longitude;
     }
 
-    private int getLongitudeArrayRecursive(int startIndex, double[] longitude) {
+    /**
+     * @param startIndex Start index for the array fill mechanism
+     * @param longitude The longitude array which should be edited.
+     * @return The next start index
+     */
+    private int getLongitudeArrayInternal(int startIndex, double[] longitude) {
         for (int i = 0; i < this.points.size(); i++) {
             longitude[i+startIndex] = this.points.get(i).getLon();
         }
@@ -96,9 +115,12 @@ public class CoastlineWay {
         return startIndex + this.points.size();
     }
 
+    /**
+     * @return The latitudes of the whole CoastlineWay polygon.
+     */
     public double[] getLatitudeArray() {
 
-        double[] latitude = new double[this.pointSize];
+        double[] latitude = new double[this.polygonLength];
 
         for (int i = 0; i < this.points.size(); i++) {
             latitude[i] = this.points.get(i).getLat();
@@ -113,6 +135,11 @@ public class CoastlineWay {
         return latitude;
     }
 
+    /**
+     * @param startIndex Start index for the array fill mechanism
+     * @param latitude The longitude array which should be edited.
+     * @return The next start index
+     */
     private int getLatitudeArrayRecursive(int startIndex, double[] latitude) {
         for (int i = 0; i < this.points.size(); i++) {
             latitude[i+startIndex] = this.points.get(i).getLat();
@@ -125,7 +152,7 @@ public class CoastlineWay {
         this.points = points;
         startNodeId = calcStartNodeId();
         endNodeId = calcEndNodeId();
-        pointSize = points.size();
+        polygonLength = points.size();
     }
 
     public long getId() {
@@ -174,34 +201,17 @@ public class CoastlineWay {
         return this.calcEndNodeId() == otherCoastlineToCheck.calcEndNodeId();
     }
 
-
-    /**
-     * @param otherCoastlineToCheck The {@link CoastlineWay} to compare with this coastline.
-     * @return True if the two coastlines touch while this objects end node and the others
-     * object start node fit, else false
-     */
-    private boolean endNodeIsOthersStartNode(CoastlineWay otherCoastlineToCheck) {
-        return this.calcEndNodeId() == otherCoastlineToCheck.calcStartNodeId();
+    public int getPolygonLength() {
+        return polygonLength;
     }
 
     /**
-     * Checks whether this {@link CoastlineWay} is mergeable with another coastline under the
-     * assumption that this CoastlineWay is the starting point of a bigger way.
-     *
-     * @param otherCoastlineToCheck The {@link CoastlineWay} to compare with this coastline.
-     * @return True if the coastline is mergeable
+     * Appends a {@link CoastlineWay} to this CoastlineWay by updating the next and last coastlineway references.
+     * @param way The coastlineway to append.
      */
-    private boolean isMergeableWithCoastline(CoastlineWay otherCoastlineToCheck) {
-        return endNodeIsOthersStartNode(otherCoastlineToCheck) || (hasSameStartNode(otherCoastlineToCheck) && hasSameEndNode(otherCoastlineToCheck));
-    }
-
-    public int getPointSize() {
-        return pointSize;
-    }
-
     public void appendCoastlineWay(CoastlineWay way) {
         // Sanity check
-        if (way.getPointSize() == 0) {
+        if (way.getPolygonLength() == 0) {
             System.out.println("ERROR: Coastline Way with empty list");
             System.out.println(way.getPoints().size());
             System.exit(1);
@@ -209,7 +219,7 @@ public class CoastlineWay {
         }
 
         this.endNodeId = way.getEndNodeId();
-        this.pointSize = this.pointSize - 1 + way.getPointSize();
+        this.polygonLength = this.polygonLength - 1 + way.getPolygonLength();
 
         if (nextCoastlineWay == null) {
             this.lastCoastlineWay = way;
@@ -222,75 +232,34 @@ public class CoastlineWay {
     }
 
     /**
-     * Merges two {@link CoastlineWay}s if the ending points match exactly (polygon case: start1=start2, end1=end2)
-     * or the end point of this CoastlineWay is the start point of the coastlineToMergeWith (extended line case: end1=start2).
+     * Merges two {@link CoastlineWay}s if the ending node ids match.
      *
      * @param coastlineToMergeWith The other coastline which should be merged with the current, if possible.
-     * @return 0: No merge, 1: This obj merged (this beofre coastlineTomergewith), 2: coastlineToMerge before this obj
+     * @return 0: No merge, 1: Merge with this object being before coastlineToMergeWith in the polygon
+     * 2: Merge with coastlineToMergeWith being before this object in the polygon.
      */
     public int mergeCoastlinesIfPossible(CoastlineWay coastlineToMergeWith) {
 
         if (hasSameStartNode(coastlineToMergeWith) && hasSameEndNode(coastlineToMergeWith)) {
 
-            /*
-            // Build a polygon if the two ways share start and end node
-            logger.info("Merge coast lines " + this.getId() + "and " + coastlineToMergeWith.getId() + " by building a polygon.");
-            System.out.println("Will perform merge");
-
-            // Begin by adding the nodes of this CoastlineWay to the new list
-            List<Point> newWayNodesOrder = new ArrayList<>(this.points);
-
-            // Add the other coastline by concatenating its nodes in reverse order and skipping the first one (the end node)
-            List<Point> wayNodesOfSecondCoastline = coastlineToMergeWith.points;
-            for (int i = wayNodesOfSecondCoastline.size() - 2; i >= 0; i--) {
-                newWayNodesOrder.add(wayNodesOfSecondCoastline.get(i));
-            }
-
-            // Return a new CoastlineWay object with the metadata (id, user, ...) of this object
-            return new CoastlineWay(this.id, newWayNodesOrder);
-            */
-
             System.out.println("ERROR: Special case for merging occurred");
             System.exit(1);
         }
 
-
         // This end node is others start node
         if (this.endNodeId == coastlineToMergeWith.getStartNodeId()) {
             this.appendCoastlineWay(coastlineToMergeWith);
-            logger.info("Merge coast lines " + this.getId() + "and " + coastlineToMergeWith.getId() + " by building a polygon.");
+            logger.info("Cond1: Merge coast lines " + this.getId() + "and " + coastlineToMergeWith.getId() + " by building a polygon.");
 
             return 1;
         } else if (this.startNodeId == coastlineToMergeWith.getEndNodeId()) {
             coastlineToMergeWith.appendCoastlineWay(this);
-            logger.info("Merge coast lines " + this.getId() + "and " + coastlineToMergeWith.getId() + " by building a polygon.");
+            logger.info("Cond2: Merge coast lines " + this.getId() + "and " + coastlineToMergeWith.getId() + " by building a polygon.");
 
             return 2;
         }
 
         return 0;
-    }
-
-    /**
-     * Calculates the overall length of this {@link CoastlineWay} (=perimeter of polygon).
-     *
-     * @return The length (or perimeter) of this CoastlineWay (or coastline polygon)
-     */
-    public double getLength() {
-        double length = 0.;
-
-        for (int i = 1; i < this.points.size(); i++) {
-            Point startNode = this.points.get(i - 1);
-            Point destinationNode = this.points.get(i);
-
-            // Cumulate the length of the current edge looked at
-            length += IntersectionHelper.getDistance(
-                    startNode.getLat(), startNode.getLon(),
-                    destinationNode.getLat(), destinationNode.getLon()
-            );
-        }
-
-        return length;
     }
 }
 

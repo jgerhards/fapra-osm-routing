@@ -82,10 +82,13 @@ public class GeoJsonConverter {
         List<Point> wayNodes = wayToConvert.getPoints();
         // Build an json array of coordinate pairs (longitude-latitude pairs)
         JSONArray longLatArray = new JSONArray();
-        for (Point currNode : wayNodes) {
+        int polygonLength = wayToConvert.getPolygonLength();
+        double[] latitudes = wayToConvert.getLatitudeArray();
+        double[] longitudes = wayToConvert.getLongitudeArray();
+        for (int i = 0; i < polygonLength; i++) {
             JSONArray longLatPair = new JSONArray()
-                    .put(currNode.getLon())
-                    .put(currNode.getLat());
+                    .put(longitudes[i])
+                    .put(latitudes[i]);
             longLatArray.put(longLatPair);
         }
 
