@@ -31,9 +31,6 @@ public class GridCreator {
     }
 
     public static boolean isPointOnWater(double latitude, double longitude) {
-        if (latitude > -52) {
-            return true;
-        }
 
         for (BevisChatelainInPolygonCheck checkerObj : checkerObjects) {
             if (!checkerObj.isPointInWater(latitude, longitude)) {
@@ -202,8 +199,8 @@ public class GridCreator {
 
 
         try {
-            //coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
-            coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }

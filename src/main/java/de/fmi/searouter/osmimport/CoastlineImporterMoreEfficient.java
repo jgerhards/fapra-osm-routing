@@ -23,19 +23,64 @@ public class CoastlineImporterMoreEfficient  {
 
     private InputStream inputStream;
 
-    private List<Way> coastLines;
-
     private List<CoastlineWay> coastLineWays;
 
     private Map<Long, Point> allNodes;
 
     public CoastlineImporterMoreEfficient() {
-        this.coastLines = new ArrayList<>();
         this.allNodes = new HashMap<>();
         this.coastLineWays = new ArrayList<>();
     }
 
+    private void mergeCoastlines(List<CoastlineWay> coastlinesToMerge) {
 
+        boolean[] alreadyMerged = new boolean[coastlinesToMerge.size()];
+        Arrays.fill(alreadyMerged,false);
+
+        boolean mergeStatusChanged = false;
+
+        do {
+            mergeStatusChanged = false;
+            int coastlineSize = coastlinesToMerge.size();
+            for (int i = 0; i < coastlineSize; i++) {
+                if (alreadyMerged[i]) {
+                    continue;
+                }
+
+                for (int j = 0; j < coastlineSize; j++) {
+
+                    if (alreadyMerged[j] || i == j) {
+                        continue;
+                    }
+
+                    CoastlineWay coastlineOne = coastlinesToMerge.get(i);
+                    CoastlineWay coastlineTwo = coastlinesToMerge.get(j);
+
+                    int mergeResult = coastlineOne.mergeCoastlinesIfPossible(coastlineTwo);
+
+                    if (mergeResult == 1) {
+                        alreadyMerged[j] = true;
+                        mergeStatusChanged = true;
+                    }  else if (mergeResult == 2) {
+                        alreadyMerged[i] = true;
+                        mergeStatusChanged = true;
+                    }
+
+                }
+            }
+        } while(mergeStatusChanged);
+
+        // Remove coastlines which are no polygon starts
+        for (int i = coastlinesToMerge.size()-1; i >= 0; i--) {
+            if (alreadyMerged[i]) {
+                coastlinesToMerge.remove(i);
+            }
+        }
+
+    }
+
+
+/*
     private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
 
         int currSizeOfAllCoastlineWays = coastLinesToMerge.size();
@@ -78,7 +123,9 @@ public class CoastlineImporterMoreEfficient  {
                 // Remove the merged coastline, but keep the bigger new coast line
                 List<CoastlineWay> retList = new ArrayList<>(allCoastlinesToMerge);
                 retList.set(idxOfCurrEl, mergeResult);
+                retList.remove(allCoastlinesToMerge.get(idxOfCurrEl));
                 retList.remove(allCoastlinesToMerge.get(i));
+                retList.add(mergeResult);
 
                 if (idxOfCurrEl > i) {
                     idxOfCurrEl--;
@@ -90,6 +137,8 @@ public class CoastlineImporterMoreEfficient  {
         return new AbstractMap.SimpleEntry<>(idxOfCurrEl, allCoastlinesToMerge);
 
     }
+    */
+
 
     public void close() {
         try {
@@ -107,7 +156,6 @@ public class CoastlineImporterMoreEfficient  {
      * @throws FileNotFoundException If under the passed path name no file can be found.
      */
     public List<CoastlineWay> importPBF(String pbfCoastlineFilePath) throws IOException {
-        this.coastLines = new ArrayList<>();
         this.allNodes = new HashMap<>();
 
         // Get an input stream for the pbf file located in the resources directory
@@ -125,14 +173,14 @@ public class CoastlineImporterMoreEfficient  {
     }
 
     private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
-        return "coastline".equals(way.getTags().get("natural"));
+        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0;
     }
 
     private void onCompletion() {
         // Empty the nodes list to save memory
         this.allNodes = new HashMap<>();
 
-        this.coastLineWays = mergeTouchingCoastlines(this.coastLineWays);
+        mergeCoastlines(this.coastLineWays);
     }
 
     private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
@@ -143,8 +191,8 @@ public class CoastlineImporterMoreEfficient  {
                 if (node != null) {
                     cWay.getPoints().add(node);
                 }
-
             }
+            cWay.updatePointSize();
             this.coastLineWays.add(cWay);
         }
 

@@ -1,16 +1,5 @@
 package de.fmi.searouter;
 
-import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
-import org.openstreetmap.osmosis.core.domain.v0_6.CommonEntityData;
-import org.openstreetmap.osmosis.core.domain.v0_6.OsmUser;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 public class ManualTests {
 /*
     public static void testA() {

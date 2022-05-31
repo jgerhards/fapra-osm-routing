@@ -26,23 +26,12 @@ public class BevisChatelainInPolygonCheck {
     int ibndry;
 
     public BevisChatelainInPolygonCheck(CoastlineWay polygonToCheck) {
-        List<Point> wayNodes = polygonToCheck.getPoints();
 
-        double lats[] = new double[wayNodes.size()];
-        double longs[] = new double[wayNodes.size()];
+        double lats[] = polygonToCheck.getLatitudeArray();
+        double longs[] = polygonToCheck.getLongitudeArray();
 
-        for (int i = 0; i < wayNodes.size(); i++) {
-            lats[i] = wayNodes.get(i).getLat();
-            longs[i] = wayNodes.get(i).getLon();
-        }
-
-
-        //DefSPolyBndry(lats, longs, 90.0, 0.0);
         //DefSPolyBndry(lats, longs, 	-89.99996, 	0.0001);
         DefSPolyBndry(lats, longs, 83.15311098437887, 23.90625);
-        //DefSPolyBndry(lats, longs, 	-62.2328, 		-58.4599);
-        //DefSPolyBndry(lats, longs, 		-62.2327, 	-58.4603);
-        //DefSPolyBndry(lats, longs, 		-75.4255, 	-42.7808);
     }
 
     public boolean isPointInWater(double lat, double longitude) {
