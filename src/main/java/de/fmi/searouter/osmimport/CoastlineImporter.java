@@ -1,18 +1,9 @@
 package de.fmi.searouter.osmimport;
 
-import crosby.binary.osmosis.OsmosisReader;
+import com.wolt.osm.parallelpbf.ParallelBinaryParser;
+import com.wolt.osm.parallelpbf.entity.Header;
 import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.IntersectionHelper;
-import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
-import de.fmi.searouter.osmexport.GeoJsonConverter;
-import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
-import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
-import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
-import org.openstreetmap.osmosis.core.task.v0_6.Sink;
-
+import de.fmi.searouter.domain.Point;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -22,135 +13,80 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Uses the Osmosis pipeline to parse a PBF file. Imports and merges
+ * Provides means to import PBF file. Imports and merges
  * coast lines.
  */
-public class CoastlineImporter implements Sink {
-
-    private Logger logger = LoggerFactory.getLogger(CoastlineImporter.class);
+public class CoastlineImporter {
 
     private InputStream inputStream;
 
-    private List<Way> coastLines;
-
+    // The imported (and later on merged) coastline (polygons)
     private List<CoastlineWay> coastLineWays;
 
-    private Map<Long, Node> allNodes;
+    // Nodes need to be mapped to coastlines as in the pbf file coastlines do have only their ids but not coordinates
+    private Map<Long, Point> allNodes;
 
     public CoastlineImporter() {
-        this.coastLines = new ArrayList<>();
         this.allNodes = new HashMap<>();
         this.coastLineWays = new ArrayList<>();
     }
 
-    @Override
-    public void initialize(Map<String, Object> arg0) {
-    }
+    /**
+     * Merges {@link CoastlineWay} objects by updating the objects with their previous and last
+     * neighbor ways which form together a polygon.
+     *
+     * @param coastlinesToMerge A list of CoastlineWays which should be merged
+     */
+    private void mergeCoastlines(List<CoastlineWay> coastlinesToMerge) {
 
-    @Override
-    public void process(EntityContainer entityContainer) {
-        if (entityContainer instanceof WayContainer) {
-            Way currentWay = ((WayContainer) entityContainer).getEntity();
-            for (Tag currTagOfWay : currentWay.getTags()) {
-                if ("natural".equalsIgnoreCase(currTagOfWay.getKey()) && "coastline".equalsIgnoreCase(currTagOfWay.getValue())) {
-                    this.coastLines.add(currentWay);
+        // Track whether a merge was already performed for a CoastlineWay obj with this boolean array, true=merged
+        boolean[] alreadyMerged = new boolean[coastlinesToMerge.size()];
+        Arrays.fill(alreadyMerged,false);
+
+        boolean mergeStatusChanged = false;
+
+        do {
+            mergeStatusChanged = false;
+            int coastlineSize = coastlinesToMerge.size();
+
+            // Merge coastlines
+            for (int i = 0; i < coastlineSize; i++) {
+                if (alreadyMerged[i]) {
+                    continue;
+                }
+
+                for (int j = 0; j < coastlineSize; j++) {
+
+                    if (alreadyMerged[i] || alreadyMerged[j] || i == j) {
+                        continue;
+                    }
+
+                    CoastlineWay coastlineOne = coastlinesToMerge.get(i);
+                    CoastlineWay coastlineTwo = coastlinesToMerge.get(j);
+
+                    // Check whether merge can be performed and if yes perform it
+                    int mergeResult = coastlineOne.mergeCoastlinesIfPossible(coastlineTwo);
+
+                    if (mergeResult == 1) {
+                        alreadyMerged[j] = true;
+                        mergeStatusChanged = true;
+                    }  else if (mergeResult == 2) {
+                        alreadyMerged[i] = true;
+                        mergeStatusChanged = true;
+                    }
+
                 }
             }
-        } else if (entityContainer.getEntity() instanceof Node) {
-            Node node = (Node) entityContainer.getEntity();
-            allNodes.put(node.getId(), node);
-        }
-    }
+        } while(mergeStatusChanged);
 
-    @Override
-    public void complete() {
-        // Map nodes to WayNodes to retrieve and save the coordinates of each WayNode
-        for (Way currWay : this.coastLines) {
-            for (int i = 0; i < currWay.getWayNodes().size(); i++) {
-                Node node = this.allNodes.get(currWay.getWayNodes().get(i).getNodeId());
-                if (node != null) {
-                    currWay.getWayNodes().set(i, new WayNode(node.getId(), node.getLatitude(), node.getLongitude()));
-                }
-            }
-        }
-
-        // Empty the nodes list to save memory
-        this.allNodes = new HashMap<>();
-
-        // Transform all ways to coast line object and then merge
-        for (Way currWay : this.coastLines) {
-            this.coastLineWays.add(new CoastlineWay(currWay));
-        }
-        this.coastLineWays = mergeTouchingCoastlines(this.coastLineWays);
-
-        assignNewIdsToCoastlines(this.coastLineWays);
-    }
-
-    private List<CoastlineWay> mergeTouchingCoastlines(List<CoastlineWay> coastLinesToMerge) {
-
-        int currSizeOfAllCoastlineWays = coastLinesToMerge.size();
-
-        int currIdx = 0;
-
-        while (true) {
-            AbstractMap.Entry<Integer, List<CoastlineWay>> result = findMergePartnerForCoastline(coastLinesToMerge, currIdx);
-            List<CoastlineWay> newResult = result.getValue();
-            currIdx = result.getKey();
-
-            if (newResult.size() == currSizeOfAllCoastlineWays) {
-                currIdx++;
-                if (currIdx >= currSizeOfAllCoastlineWays) {
-                    return newResult;
-                }
-            } else {
-                currSizeOfAllCoastlineWays = newResult.size();
-                coastLinesToMerge = newResult;
+        // Remove coastlines which are no polygon starts
+        for (int i = coastlinesToMerge.size()-1; i >= 0; i--) {
+            if (alreadyMerged[i]) {
+                coastlinesToMerge.remove(i);
             }
         }
 
     }
-
-
-    private AbstractMap.Entry<Integer, List<CoastlineWay>> findMergePartnerForCoastline(List<CoastlineWay> allCoastlinesToMerge, int idxOfCurrEl) {
-
-
-        int coastlineNodeSize = allCoastlinesToMerge.size();
-        for (int i = 0; i < coastlineNodeSize; i++) {
-
-            if (i == idxOfCurrEl) {
-                continue;
-            }
-
-            CoastlineWay mergeResult = allCoastlinesToMerge.get(idxOfCurrEl).mergeCoastlinesIfPossible(allCoastlinesToMerge.get(i));
-
-            if (mergeResult != null) {
-                // If a merge was performed
-
-                // Remove the merged coastline, but keep the bigger new coast line
-                List<CoastlineWay> retList = new ArrayList<>(allCoastlinesToMerge);
-                retList.set(idxOfCurrEl, mergeResult);
-                retList.remove(allCoastlinesToMerge.get(i));
-
-                if (idxOfCurrEl > i) {
-                    idxOfCurrEl--;
-                }
-                return new AbstractMap.SimpleEntry<>(idxOfCurrEl, retList);
-            }
-
-        }
-        return new AbstractMap.SimpleEntry<>(idxOfCurrEl, allCoastlinesToMerge);
-
-    }
-
-    @Override
-    public void close() {
-        try {
-            this.inputStream.close();
-        } catch (IOException e) {
-            logger.error("Closing the InputStream after PBF import failed.");
-        }
-    }
-
 
     /**
      * Imports osm coastlines from a given pbf file.
@@ -159,125 +95,67 @@ public class CoastlineImporter implements Sink {
      * @throws FileNotFoundException If under the passed path name no file can be found.
      */
     public List<CoastlineWay> importPBF(String pbfCoastlineFilePath) throws IOException {
-        this.coastLines = new ArrayList<>();
         this.allNodes = new HashMap<>();
 
         // Get an input stream for the pbf file located in the resources directory
         Resource pbfResource = new ClassPathResource(pbfCoastlineFilePath);
         this.inputStream = pbfResource.getInputStream();
 
-        // Import the pbf file contents
-        OsmosisReader reader = new OsmosisReader(inputStream);
-        reader.setSink(this);
-        reader.run();
+        // Start import
+        new ParallelBinaryParser(this.inputStream, 1)
+                .onHeader(this::processHeader)
+                .onNode(this::processNode)
+                .onWay(this::processWay)
+                .onComplete(this::onCompletion)
+                .parse();
 
         return this.coastLineWays;
     }
 
     /**
-     * Iterates over a given list of coastlines and assigns IDs from 0 to coastlines.size().
-     *
-     * @param coastlinesThatNeedNewIDs The coastlines that should get new ids.
+     * @param way the Way to check whether it is a coast line
+     * @return True if a way is a coastline as defined by OSm
      */
-    private void assignNewIdsToCoastlines(List<CoastlineWay> coastlinesThatNeedNewIDs) {
-        for (int currCoastlineIdx = 0; currCoastlineIdx < coastlinesThatNeedNewIDs.size(); currCoastlineIdx++) {
-            coastlinesThatNeedNewIDs.get(currCoastlineIdx).setId(currCoastlineIdx);
-        }
+    private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
+        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0;
     }
 
-    public static void main(String[] args) throws IOException {
-        // Import coastlines
-        CoastlineImporter importer = new CoastlineImporter();
-        List<CoastlineWay> coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+    private void onCompletion() {
+        // Empty the nodes list to save memory
+        this.allNodes = new HashMap<>();
 
-        // Write a geo json file for test visualization reasons
-        String json = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString();
-        BufferedWriter writer = new BufferedWriter(new FileWriter("antarctica_geoJson.json"));
-        writer.write(json);
-        writer.close();
-
-        boolean test = IntersectionHelper.linesIntersect(1.0, 100.2, 1.32, 110.3,
-                -2.0, 105.123, 10.0, 105.321);
-        System.out.println("ttt: testbool " + test);
-
-        //Coastlines.initCoastlines(coastlines);
-
-        // land
-        double latToCheck = 	-61.9983;
-        double longToCheck = 	-58.3704;
-
-        boolean land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-
-        System.out.println("Is on land: " + land);
-        // water
-        latToCheck = 		-62.3878;
-        longToCheck = 		-58.4637;
-
-        land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-        System.out.println("Is on land: " + land);
-
-
-        // water
-        latToCheck = 			-61.2094;
-        longToCheck = 			-57.4146;
-
-        land = false;
-        for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
-            if (!check.isPointInWater(latToCheck, longToCheck)) {
-
-                land = true;
-                break;
-            }
-        }
-
-        System.out.println("Is on land: " + land);
-
-        //Coastlines.testSetValues();
-        //Coastlines.correctValues();
-
-        /*Set<Integer> testSet = new LinkedHashSet<>();
-        CoastlineGridLeaf leaf = new CoastlineGridLeaf(-82.2, 50.3, testSet);
-        leaf = new CoastlineGridLeaf(1.32, 110.3, testSet);
-        leaf = new CoastlineGridLeaf(-64.217508, -59.390335, testSet);
-        leaf = new CoastlineGridLeaf(-76.6654, -45.327835, testSet);
-        /*System.out.println("ttt: coastline: "+Coastlines.getStartLatitude(314346)+" "+
-                Coastlines.getStartLongitude(314346)+" "+Coastlines.getEndLatitude(314346)+" "+
-                Coastlines.getEndLongitude(314346)+" ");*/
-        //System.out.println("ttt: coastline: " + Coastlines.getStartLatitude(314353) + " " +
-        //        Coastlines.getStartLongitude(314353) + " " + Coastlines.getEndLatitude(314353) + " " +
-        //        Coastlines.getEndLongitude(314353) + " ");
-
-        //CoastlineChecker coastlineChecker = new CoastlineChecker();
-        //System.out.println(Coastlines.getNumberOfWays());
-
-        //test some points
-        //false
-        /*System.out.println("second point in water: " + coastlineChecker.pointIsInWater(-82.229, -58.34));
-        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(-70.591921, -64.172278));
-        //true
-        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-19.34, -41));
-        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(-76.6, -39.299));
-
-        System.out.println("second point in water: " + coastlineChecker.pointIsInWater(82.229, -58.34));
-        System.out.println("third point in water: " + coastlineChecker.pointIsInWater(70.591921, -64.172278));
-        System.out.println("first point in water: " + coastlineChecker.pointIsInWater(-0.34, -41));
-        System.out.println("fourth point in water: " + coastlineChecker.pointIsInWater(0.6, -39.299));*/
+        mergeCoastlines(this.coastLineWays);
     }
+
+    /**
+     * Handles an osm way when finding one during the pbf import.
+     *
+     * @param way The osm way
+     */
+    private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
+        if (isCoastlineEntity(way)) {
+            CoastlineWay cWay = new CoastlineWay(way);
+            for (int i = 0; i < way.getNodes().size(); i++) {
+                Point node = this.allNodes.get(way.getNodes().get(i));
+                if (node != null) {
+                    cWay.getPoints().add(node);
+                }
+            }
+            cWay.updateAfterGet();
+            this.coastLineWays.add(cWay);
+        }
+
+    }
+
+    /**
+     * Processes nodes during the PBF file import.
+     * @param node The node to process
+     */
+    private void processNode(com.wolt.osm.parallelpbf.entity.Node node) {
+        allNodes.put(node.getId(), new Point(node.getId(), (float) node.getLat(), (float) node.getLon()));
+    }
+
+    private void processHeader(Header header) { }
+
+
 }

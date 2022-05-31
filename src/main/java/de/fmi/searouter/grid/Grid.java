@@ -1,6 +1,6 @@
 package de.fmi.searouter.grid;
 
-import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.router.DijkstraRouter;
 import de.fmi.searouter.router.Router;
 import de.fmi.searouter.router.RoutingResult;
@@ -21,9 +21,10 @@ public class Grid {
     public static int[] offset;
 
     /**
+     * Returns the nearest existing grid node of the Grid of a given point P.
      *
-     * @param latitude (0 to 90°)
-     * @param longitude (-180 to 180°)
+     * @param latitude Latitude of point P (0 to 90°)
+     * @param longitude Longitude of point P  (-180 to 180°)
      * @return The index within the {@link Node} data structure that points to the nearest grid node. -1 if no node exists
      * in the requested plane of integer degrees.
      */
@@ -66,7 +67,7 @@ public class Grid {
 
 
     /**
-     * Only temporary during the import of fmi files needed (for sorting).
+     * Only temporary used during the import of fmi files needed (for sorting).
      */
     private static class TmpEdge {
         public int startNode;
@@ -192,18 +193,16 @@ public class Grid {
             Edge.setDestNode(destNode);
             Edge.setDist(dist);
 
+            //
             offset = new int[Node.getSize() + 1];
-
             for (int i = 0; i < Edge.getSize(); ++i) {
                 offset[Edge.getStart(i) + 1] += 1;
             }
-
             for (int i = 1; i < offset.length; ++i) {
                 offset[i] += offset[i - 1];
             }
 
             br.close();
-
 
         }
     }
@@ -241,39 +240,5 @@ public class Grid {
 
         writer.close();
     }
-
-    public static void main(String[] args) {
-
-        System.out.println(-180 + (580 % (-180)));
-
-        BigDecimal noA = BigDecimal.valueOf(580);
-        System.out.println(BigDecimal.valueOf(-180).add(noA.remainder(BigDecimal.valueOf(180))));
-
-        BigDecimal noB = BigDecimal.valueOf(-500);
-        System.out.println(noB.remainder(BigDecimal.valueOf(180)));
-
-        try {
-            importFmiFile("testImport.fmi");
-
-            exportToFmiFile("test2.fmi");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        int startNode = Grid.getNearestGridNodeByCoordinates(0.0, -0.2);
-        System.out.println("ID: " + startNode + " Lat: " + "Node.getLatitude(startNode)" +  " Long: " + "");
-
-        int destNode = Grid.getNearestGridNodeByCoordinates(-0.6, 0.0);
-        System.out.println("ID: " + destNode + " Lat: " + Node.getLatitude(destNode) +  " Long: " + Node.getLongitude(destNode));
-
-
-        Router router = new DijkstraRouter();
-        RoutingResult res = router.route(startNode, destNode);
-        System.out.println(res);
-
-        RoutingResult rest = router.route(startNode, destNode);
-        System.out.println(rest);
-    }
-
 
 }

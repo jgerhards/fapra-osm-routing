@@ -12,13 +12,13 @@ public class SearouterApplication {
 	public static void main(String[] args) {
 		try {
 			//Grid.importFmiFile("testImport.fmi");
-			Grid.importFmiFile("ocean.fmi");
+			//Grid.importFmiFile("ocean.fmi");
+			Grid.importFmiFile("exported_grid.fmi");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
 		SpringApplication.run(SearouterApplication.class, args);
-		System.out.println("Hello world!");
 	}
 
 }

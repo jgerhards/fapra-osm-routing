@@ -1,27 +1,78 @@
 package de.fmi.searouter.grid;
 
-import de.fmi.searouter.domain.IntersectionHelper;
-import de.fmi.searouter.osmexport.GeoJsonConverter;
+import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.utils.GeoJsonConverter;
+import de.fmi.searouter.utils.IntersectionHelper;
+import de.fmi.searouter.osmimport.CoastlineImporter;
+import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Contains logic for creating a grid graph which nodes are distributed equally over the latitude
+ * and longitudes of a world map.
+ */
 public class GridCreator {
 
-    private static List<GridNode> gridNodes;
+    protected static List<GridNode> gridNodes;
 
-    private static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
+    // Used for creating the grid. <Latitude, <Longitude, GridNode>>
+    public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
 
-
+    // Resolution of the grid
     private static final int DIMENSION_LATITUDE = 500;
     private static final int DIMENSION_LONGITUDE = 2000;
 
+    // Difference between latitude/longitude coordinates between two neighbor grid nodes
     public static double coordinate_step_latitude;
     public static double coordinate_step_longitude;
 
+    // All polygons have a point-in-polygon check object
+    private static List<BevisChatelainInPolygonCheck> checkerObjects;
 
-    public static void createGrid() {
+    /**
+     * Inits the point-in-polygon check objects. For each polygon one {@link BevisChatelainInPolygonCheck}
+     * object is created.
+     * @param coastlinePolygons
+     */
+    public static void initCheckObjs(List<CoastlineWay> coastlinePolygons) {
+        checkerObjects = new ArrayList<>();
+        for (CoastlineWay polygon : coastlinePolygons) {
+            checkerObjects.add(new BevisChatelainInPolygonCheck(polygon));
+        }
+    }
+
+    /**
+     * Checks whether a given coordinate point is on water or on land.
+     *
+     * @param latitude The latitude of point P to check.
+     * @param longitude The longitude of point P to check.
+     * @return True: Point on water, False: Water on land
+     */
+    public static boolean isPointOnWater(double latitude, double longitude) {
+        for (BevisChatelainInPolygonCheck checkerObj : checkerObjects) {
+            if (!checkerObj.isPointInWater(latitude, longitude)) {
+                System.out.println(latitude + " " + longitude + " is on land");
+                return false;
+            }
+        }
+        System.out.println(latitude + " " + longitude + " is on water");
+        return true;
+    }
+
+    /**
+     * Creates the grid graph for the Dijkstra routing. Fills the {@link Grid}, {@link Node} and {@link Edge}
+     * data structures.
+     *
+     * @param coastlinePolygons All coastline polygons represented as {@link CoastlineWay} that should be considered
+     *                          for a point-in-polygon check
+     * @throws InterruptedException If something with the threads went wrong
+     */
+    public static void createGrid(List<CoastlineWay> coastlinePolygons) throws InterruptedException {
         gridNodes = new ArrayList<>();
 
         coordinateNodeStore = new HashMap<>();
@@ -31,64 +82,34 @@ public class GridCreator {
         System.out.println(coordinate_step_latitude);
         System.out.println(coordinate_step_longitude);
 
-        /* Double variant
-        for (double latitude = -90.0; latitude <= 90.0; latitude = latitude + coordinate_step_latitude) {
-            for (double longitude = -180.0; longitude <= 180.0; longitude = longitude + coordinate_step_longitude) {
-                GridNode node = new GridNode(latitude, longitude);
-                gridNodes.add(node);
-            }
-        }
-        */
+
+        initCheckObjs(coastlinePolygons);
 
         BigDecimal coordinateStepLat = BigDecimal.valueOf(coordinate_step_latitude);
-        BigDecimal coordinateStepLong = BigDecimal.valueOf(coordinate_step_longitude);
 
         BigDecimal latEnd = BigDecimal.valueOf(-90);
-        BigDecimal longEnd = BigDecimal.valueOf(-180);
-        for (BigDecimal lat = BigDecimal.valueOf(90.0); lat.compareTo(latEnd) >= 0; lat = lat.subtract(coordinateStepLat)) {
-            for (BigDecimal longitude = BigDecimal.valueOf(180); longitude.compareTo(longEnd) > 0; longitude = longitude.subtract(coordinateStepLong)) {
-                GridNode node = new GridNode(lat.doubleValue(), longitude.doubleValue());
-                gridNodes.add(node);
-                if (!coordinateNodeStore.containsKey(lat.doubleValue())) {
-                    coordinateNodeStore.put(lat.doubleValue(), new HashMap<>());
-                }
-                coordinateNodeStore.get(lat.doubleValue()).put(longitude.doubleValue(), node);
-            }
+
+        // Precalculate all latitudes that should be checked
+        int numberOfThreads = 15;
+        List<NodeCreateWorkerThread> threads = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            threads.add(new NodeCreateWorkerThread());
         }
 
-        // TODO Filter land nodes (e.g. in previous step)
-        ;
+        int count = 0;
+        for (BigDecimal lat = BigDecimal.valueOf(90.0); lat.compareTo(latEnd) >= 0; lat = lat.subtract(coordinateStepLat)) {
+            int threadToAssign = count % numberOfThreads;
+            threads.get(threadToAssign).addLatitude(lat);
+            count++;
+        }
 
-        // FOr test TODO REMOVE
-        //gridNodes = new ArrayList<>();
-        gridNodes = Arrays.asList(
-                getNodeByLatLong(0.0, 0.0),
-                getNodeByLatLong(0.0, 0.18),
-                getNodeByLatLong(0.0, -0.18),
-                getNodeByLatLong(0.36, 0.0),
-                getNodeByLatLong(-0.36, 0.0),
-                getNodeByLatLong(-0.72, 0.0)
-                );
+        for (NodeCreateWorkerThread n : threads) {
+            n.start();
+        }
 
-        coordinateNodeStore = new HashMap<>();
-        Map<Double, GridNode> zeroHash = new HashMap<>();
-        zeroHash.put(0.0, gridNodes.get(0));
-        zeroHash.put(0.18, gridNodes.get(1));
-        zeroHash.put(-0.18, gridNodes.get(2));
-        coordinateNodeStore.put(0.0, zeroHash);
-
-        Map<Double, GridNode> zerothreesix = new HashMap<>();
-        zerothreesix.put(0.0, gridNodes.get(3));
-        coordinateNodeStore.put(0.36, zerothreesix);
-
-        Map<Double, GridNode> mzerothreesix = new HashMap<>();
-        mzerothreesix.put(0.0, gridNodes.get(4));
-        coordinateNodeStore.put(-0.36, mzerothreesix);
-
-        Map<Double, GridNode> mseventwo = new HashMap<>();
-        mseventwo.put(0.0, gridNodes.get(5));
-        coordinateNodeStore.put(-0.72, mseventwo);
-        // TODO TEST END
+        for (NodeCreateWorkerThread n : threads) {
+            n.join();
+        }
 
         // Create Node arrays
         double[] latitude = new double[gridNodes.size()];
@@ -179,22 +200,9 @@ public class GridCreator {
         Edge.setDestNode(destNode);
         Edge.setDist(dist);
 
-        // TEST DATA
-        GridNode center = coordinateNodeStore.get(0.0).get(0.0);
-        GridNode east = coordinateNodeStore.get(0.0).get(0.0).calcEasternNode(coordinate_step_longitude);
-        GridNode west = coordinateNodeStore.get(0.0).get(0.0).calcWesternNode(coordinate_step_longitude);
-        GridNode north = coordinateNodeStore.get(0.0).get(0.0).calcNorthernNode(coordinate_step_latitude);
-        GridNode south = coordinateNodeStore.get(0.0).get(0.0).calcSouthernNode(coordinate_step_latitude);
-
-        List<GridNode> nodes = Arrays.asList(center, east, west, north, south);
-
-        System.out.println(GeoJsonConverter.osmNodesToGeoJSON(gridNodes).toString(1));
-
-
-        System.out.println(gridNodes.size());
 
         try {
-            Grid.exportToFmiFile("testFile.fmi");
+            Grid.exportToFmiFile("exported_grid.fmi");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -202,6 +210,13 @@ public class GridCreator {
 
     }
 
+    /**
+     * Finds a known {@link GridNode} by its coordinates.
+     *
+     * @param latitude The latitude coordinate of the GridNode to search for
+     * @param longitude The longitude coordinate of the GridNode to search for.
+     * @return The searched {@link GridNode} object or null if not found
+     */
     private static GridNode getNodeByLatLong(double latitude, double longitude) {
         if (coordinateNodeStore.containsKey(latitude) && coordinateNodeStore.get(latitude).containsKey(longitude)) {
             return coordinateNodeStore.get(latitude).get(longitude);
@@ -209,8 +224,31 @@ public class GridCreator {
         return null;
     }
 
+    /**
+     * Entry point for the pre-processing part of this project.
+     * @param args Not used
+     */
     public static void main(String[] args) {
-        GridCreator.createGrid();
+
+
+        // Import coastlines
+        CoastlineImporter importer = new CoastlineImporter();
+        List<CoastlineWay> coastlines = new ArrayList<>();
+
+        try {
+            coastlines = importer.importPBF("planet-coastlines.pbf");
+            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            GridCreator.createGrid(coastlines);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 

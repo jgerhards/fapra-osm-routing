@@ -1,6 +1,5 @@
 package de.fmi.searouter.rest;
 
-import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 import de.fmi.searouter.domain.RoutingRequest;
 import de.fmi.searouter.grid.Grid;
 import de.fmi.searouter.router.DijkstraRouter;
@@ -9,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/route")

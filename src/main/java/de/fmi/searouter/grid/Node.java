@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Efficient storage for Node entites that represent grids on the Dijkstra grid graph {@link Grid}.
+ */
 public class Node {
 
     private static double[] latitude;

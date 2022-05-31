@@ -18,30 +18,45 @@ public class GridNode {
         this.longitude = longitude;
     }
 
+    /**
+     * Calculates the grid node neighbor laying in the north (if this node would be on water)
+     * @param latitudeOffset The offset between two neighbor nodes for the south/north
+     * @return A new {@link GridNode} object representing the neighbor node.
+     */
     public GridNode calcNorthernNode(double latitudeOffset) {
         BigDecimal offset = BigDecimal.valueOf(latitudeOffset);
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).add(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
             return null;
         }
 
         return new GridNode(nLatitude.doubleValue(), longitude);
     }
 
+    /**
+     * Calculates the grid node neighbor laying in the south (if this node would be on water)
+     * @param latitudeOffset The offset between two neighbor nodes for the south/north
+     * @return A new {@link GridNode} object representing the neighbor node.
+     */
     public GridNode calcSouthernNode(double latitudeOffset) {
         BigDecimal offset = BigDecimal.valueOf(latitudeOffset);
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).subtract(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
             return null;
         }
 
         return new GridNode(nLatitude.doubleValue(), longitude);
     }
 
+    /**
+     * Calculates the grid node neighbor laying in the east (if this node would be on water)
+     * @param longitudeOffset The offset between two neighbor nodes for the east/west
+     * @return A new {@link GridNode} object representing the neighbor node.
+     */
     public GridNode calcEasternNode(double longitudeOffset) {
         BigDecimal offset = BigDecimal.valueOf(longitudeOffset);
 
@@ -57,6 +72,11 @@ public class GridNode {
         return new GridNode(latitude, nLongitude.doubleValue());
     }
 
+    /**
+     * Calculates the grid node neighbor laying in the west (if this node would be on water)
+     * @param longitudeOffset The offset between two neighbor nodes for the east/west
+     * @return A new {@link GridNode} object representing the neighbor node.
+     */
     public GridNode calcWesternNode(double longitudeOffset) {
         BigDecimal offset = BigDecimal.valueOf(longitudeOffset);
 
