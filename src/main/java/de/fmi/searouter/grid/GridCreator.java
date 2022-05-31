@@ -20,17 +20,25 @@ public class GridCreator {
 
     protected static List<GridNode> gridNodes;
 
+    // Used for creating the grid. <Latitude, <Longitude, GridNode>>
     public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
 
-    // Number of latitude
+    // Resolution of the grid
     private static final int DIMENSION_LATITUDE = 500;
     private static final int DIMENSION_LONGITUDE = 2000;
 
+    // Difference between latitude/longitude coordinates between two neighbor grid nodes
     public static double coordinate_step_latitude;
     public static double coordinate_step_longitude;
 
+    // All polygons have a point-in-polygon check object
     private static List<BevisChatelainInPolygonCheck> checkerObjects;
 
+    /**
+     * Inits the point-in-polygon check objects. For each polygon one {@link BevisChatelainInPolygonCheck}
+     * object is created.
+     * @param coastlinePolygons
+     */
     public static void initCheckObjs(List<CoastlineWay> coastlinePolygons) {
         checkerObjects = new ArrayList<>();
         for (CoastlineWay polygon : coastlinePolygons) {
@@ -38,11 +46,14 @@ public class GridCreator {
         }
     }
 
+    /**
+     * Checks whether a given coordinate point is on water or on land.
+     *
+     * @param latitude The latitude of point P to check.
+     * @param longitude The longitude of point P to check.
+     * @return True: Point on water, False: Water on land
+     */
     public static boolean isPointOnWater(double latitude, double longitude) {
-        if (latitude > -52) {
-            return true;
-        }
-
         for (BevisChatelainInPolygonCheck checkerObj : checkerObjects) {
             if (!checkerObj.isPointInWater(latitude, longitude)) {
                 System.out.println(latitude + " " + longitude + " is on land");
@@ -54,9 +65,11 @@ public class GridCreator {
     }
 
     /**
+     * Creates the grid graph for the Dijkstra routing. Fills the {@link Grid}, {@link Node} and {@link Edge}
+     * data structures.
      *
      * @param coastlinePolygons All coastline polygons represented as {@link CoastlineWay} that should be considered
-     *                          for a pointy-in-polygon check
+     *                          for a point-in-polygon check
      * @throws InterruptedException If something with the threads went wrong
      */
     public static void createGrid(List<CoastlineWay> coastlinePolygons) throws InterruptedException {
@@ -197,6 +210,13 @@ public class GridCreator {
 
     }
 
+    /**
+     * Finds a known {@link GridNode} by its coordinates.
+     *
+     * @param latitude The latitude coordinate of the GridNode to search for
+     * @param longitude The longitude coordinate of the GridNode to search for.
+     * @return The searched {@link GridNode} object or null if not found
+     */
     private static GridNode getNodeByLatLong(double latitude, double longitude) {
         if (coordinateNodeStore.containsKey(latitude) && coordinateNodeStore.get(latitude).containsKey(longitude)) {
             return coordinateNodeStore.get(latitude).get(longitude);
@@ -204,6 +224,10 @@ public class GridCreator {
         return null;
     }
 
+    /**
+     * Entry point for the pre-processing part of this project.
+     * @param args Not used
+     */
     public static void main(String[] args) {
 
 
@@ -211,31 +235,12 @@ public class GridCreator {
         CoastlineImporter importer = new CoastlineImporter();
         List<CoastlineWay> coastlines = new ArrayList<>();
 
-
         try {
-            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            coastlines = importer.importPBF("planet-coastlines.pbf");
             //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
-/*
-        System.out.println("Size: " + coastlines.size());
-
-
-        try {
-
-            JSONObject obj = GeoJsonConverter.coastlineWayToGeoJSON(coastlines);
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter("geoJsonNeuerTest.json"));
-            writer.write(obj.toString(1));
-
-
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
-
 
         try {
             GridCreator.createGrid(coastlines);

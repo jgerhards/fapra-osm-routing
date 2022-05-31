@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Thread which is responsible to perform a point-in-polygon check for {@link GridNode}s
+ * in a certain range of value of latitudes.
+ */
 public class NodeCreateWorkerThread extends Thread {
 
     public static Semaphore mapGuard = new Semaphore(1, true);
@@ -27,6 +31,7 @@ public class NodeCreateWorkerThread extends Thread {
         BigDecimal coordinateStepLong = BigDecimal.valueOf(GridCreator.coordinate_step_longitude);
 
         BigDecimal longEnd = BigDecimal.valueOf(-180);
+        // Perform a point-in-polygon test for a given list of latitudes
         for (BigDecimal lat : latList) {
             for (BigDecimal longitude = BigDecimal.valueOf(180); longitude.compareTo(longEnd) > 0; longitude = longitude.subtract(coordinateStepLong)) {
 
@@ -36,6 +41,7 @@ public class NodeCreateWorkerThread extends Thread {
 
                 GridNode node = new GridNode(lat.doubleValue(), longitude.doubleValue());
 
+                // Add the node to the central data structures in the GridCreator
                 try {
                     mapGuard.acquire();
                     GridCreator.gridNodes.add(node);

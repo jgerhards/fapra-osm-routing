@@ -21,9 +21,10 @@ public class CoastlineWay {
 
     private long id;
 
+    // The id of the first Point in this CoastlineWay
     private long startNodeId;
 
-    // The end
+    // The id of the last Point in this CoastLineWay
     private long endNodeId;
 
     // Number of all nodes in a coastline polygon. Only used for first coastlineway in a series of coastlineways.

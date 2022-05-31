@@ -13,17 +13,17 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Uses the Osmosis pipeline to parse a PBF file. Imports and merges
+ * Provides means to import PBF file. Imports and merges
  * coast lines.
  */
 public class CoastlineImporter {
 
-    private Logger logger = LoggerFactory.getLogger(CoastlineImporter.class);
-
     private InputStream inputStream;
 
+    // The imported (and later on merged) coastline (polygons)
     private List<CoastlineWay> coastLineWays;
 
+    // Nodes need to be mapped to coastlines as in the pbf file coastlines do have only their ids but not coordinates
     private Map<Long, Point> allNodes;
 
     public CoastlineImporter() {
@@ -31,8 +31,15 @@ public class CoastlineImporter {
         this.coastLineWays = new ArrayList<>();
     }
 
+    /**
+     * Merges {@link CoastlineWay} objects by updating the objects with their previous and last
+     * neighbor ways which form together a polygon.
+     *
+     * @param coastlinesToMerge A list of CoastlineWays which should be merged
+     */
     private void mergeCoastlines(List<CoastlineWay> coastlinesToMerge) {
 
+        // Track whether a merge was already performed for a CoastlineWay obj with this boolean array, true=merged
         boolean[] alreadyMerged = new boolean[coastlinesToMerge.size()];
         Arrays.fill(alreadyMerged,false);
 
@@ -41,6 +48,8 @@ public class CoastlineImporter {
         do {
             mergeStatusChanged = false;
             int coastlineSize = coastlinesToMerge.size();
+
+            // Merge coastlines
             for (int i = 0; i < coastlineSize; i++) {
                 if (alreadyMerged[i]) {
                     continue;
@@ -55,6 +64,7 @@ public class CoastlineImporter {
                     CoastlineWay coastlineOne = coastlinesToMerge.get(i);
                     CoastlineWay coastlineTwo = coastlinesToMerge.get(j);
 
+                    // Check whether merge can be performed and if yes perform it
                     int mergeResult = coastlineOne.mergeCoastlinesIfPossible(coastlineTwo);
 
                     if (mergeResult == 1) {
@@ -78,15 +88,6 @@ public class CoastlineImporter {
 
     }
 
-    public void close() {
-        try {
-            this.inputStream.close();
-        } catch (IOException e) {
-            logger.error("Closing the InputStream after PBF import failed.");
-        }
-    }
-
-
     /**
      * Imports osm coastlines from a given pbf file.
      *
@@ -100,6 +101,7 @@ public class CoastlineImporter {
         Resource pbfResource = new ClassPathResource(pbfCoastlineFilePath);
         this.inputStream = pbfResource.getInputStream();
 
+        // Start import
         new ParallelBinaryParser(this.inputStream, 1)
                 .onHeader(this::processHeader)
                 .onNode(this::processNode)
@@ -110,6 +112,10 @@ public class CoastlineImporter {
         return this.coastLineWays;
     }
 
+    /**
+     * @param way the Way to check whether it is a coast line
+     * @return True if a way is a coastline as defined by OSm
+     */
     private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
         return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0;
     }
@@ -121,6 +127,11 @@ public class CoastlineImporter {
         mergeCoastlines(this.coastLineWays);
     }
 
+    /**
+     * Handles an osm way when finding one during the pbf import.
+     *
+     * @param way The osm way
+     */
     private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
         if (isCoastlineEntity(way)) {
             CoastlineWay cWay = new CoastlineWay(way);
@@ -136,13 +147,15 @@ public class CoastlineImporter {
 
     }
 
+    /**
+     * Processes nodes during the PBF file import.
+     * @param node The node to process
+     */
     private void processNode(com.wolt.osm.parallelpbf.entity.Node node) {
         allNodes.put(node.getId(), new Point(node.getId(), (float) node.getLat(), (float) node.getLon()));
     }
 
     private void processHeader(Header header) { }
-
-
 
 
 }

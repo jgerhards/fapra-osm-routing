@@ -10,7 +10,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import java.util.List;
 
 /**
- * Provides methods to parse osm entities to GeoJSON.
+ * Provides methods to parse osm entities to GeoJSON for debugging and test purposes.
  */
 public class GeoJsonConverter {
 
