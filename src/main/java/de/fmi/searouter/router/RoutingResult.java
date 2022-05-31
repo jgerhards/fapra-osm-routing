@@ -6,6 +6,9 @@ import de.fmi.searouter.grid.Node;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * class storing the result of a routing request. Used for communicating with the REST API
+ */
 public class RoutingResult {
 
     private List<Integer> path;
