@@ -23,7 +23,7 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).add(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
             return null;
         }
 
@@ -35,7 +35,7 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).subtract(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < 0) {
+        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
             return null;
         }
 

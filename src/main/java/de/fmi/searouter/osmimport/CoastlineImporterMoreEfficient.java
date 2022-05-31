@@ -2,19 +2,9 @@ package de.fmi.searouter.osmimport;
 
 import com.wolt.osm.parallelpbf.ParallelBinaryParser;
 import com.wolt.osm.parallelpbf.entity.Header;
-import crosby.binary.osmosis.OsmosisReader;
-import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
 import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.IntersectionHelper;
 import de.fmi.searouter.domain.Point;
-import de.fmi.searouter.osmexport.GeoJsonConverter;
-import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
-import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
-import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
-import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -73,7 +63,6 @@ public class CoastlineImporterMoreEfficient  {
 
     private AbstractMap.Entry<Integer, List<CoastlineWay>> findMergePartnerForCoastline(List<CoastlineWay> allCoastlinesToMerge, int idxOfCurrEl) {
 
-
         int coastlineNodeSize = allCoastlinesToMerge.size();
         for (int i = 0; i < coastlineNodeSize; i++) {
 
@@ -125,9 +114,6 @@ public class CoastlineImporterMoreEfficient  {
         Resource pbfResource = new ClassPathResource(pbfCoastlineFilePath);
         this.inputStream = pbfResource.getInputStream();
 
-        long time = System.currentTimeMillis();
-        System.out.println("Start");
-
         new ParallelBinaryParser(this.inputStream, 1)
                 .onHeader(this::processHeader)
                 .onNode(this::processNode)
@@ -135,21 +121,14 @@ public class CoastlineImporterMoreEfficient  {
                 .onComplete(this::onCompletion)
                 .parse();
 
-        System.out.println(System.currentTimeMillis() - time);
-        System.out.println("aaa");
-
         return this.coastLineWays;
     }
 
-    private static boolean isCoastline(com.wolt.osm.parallelpbf.entity.Way way) {
+    private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
         return "coastline".equals(way.getTags().get("natural"));
     }
 
     private void onCompletion() {
-        System.out.println("# points: " + allNodes.size());
-        System.out.println("# coastlines: " + coastLineWays.size());
-        System.out.println("Complete.");
-
         // Empty the nodes list to save memory
         this.allNodes = new HashMap<>();
 
@@ -157,7 +136,7 @@ public class CoastlineImporterMoreEfficient  {
     }
 
     private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
-        if (isCoastline(way)) {
+        if (isCoastlineEntity(way)) {
             CoastlineWay cWay = new CoastlineWay(way);
             for (int i = 0; i < way.getNodes().size(); i++) {
                 Point node = this.allNodes.get(way.getNodes().get(i));

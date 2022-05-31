@@ -2,15 +2,14 @@ package de.fmi.searouter.osmimport;
 
 import crosby.binary.osmosis.OsmosisReader;
 import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.IntersectionHelper;
-import de.fmi.searouter.domain.BevisChatelainCoastlineCheck;
-import de.fmi.searouter.osmexport.GeoJsonConverter;
+import de.fmi.searouter.utils.IntersectionHelper;
+import de.fmi.searouter.grid.BevisChatelainInPolygonCheck;
+import de.fmi.searouter.utils.GeoJsonConverter;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
 import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 import org.slf4j.Logger;
@@ -211,7 +210,7 @@ public class CoastlineImporter implements Sink {
 
         boolean land = false;
         for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            BevisChatelainInPolygonCheck check = new BevisChatelainInPolygonCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
 
                 land = true;
@@ -226,7 +225,7 @@ public class CoastlineImporter implements Sink {
 
         land = false;
         for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            BevisChatelainInPolygonCheck check = new BevisChatelainInPolygonCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
 
                 land = true;
@@ -242,7 +241,7 @@ public class CoastlineImporter implements Sink {
 
         land = false;
         for (CoastlineWay polygon : coastlines) {
-            BevisChatelainCoastlineCheck check = new BevisChatelainCoastlineCheck(polygon);
+            BevisChatelainInPolygonCheck check = new BevisChatelainInPolygonCheck(polygon);
             if (!check.isPointInWater(latToCheck, longToCheck)) {
 
                 land = true;

@@ -1,16 +1,10 @@
 package de.fmi.searouter.domain;
 
-import org.openstreetmap.osmosis.core.domain.v0_6.CommonEntityData;
-import org.openstreetmap.osmosis.core.domain.v0_6.OsmUser;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
-import org.openstreetmap.osmosis.core.store.StoreClassRegister;
-import org.openstreetmap.osmosis.core.store.StoreReader;
+import de.fmi.searouter.utils.IntersectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**

@@ -1,6 +1,8 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.grid;
 
 import com.google.common.math.DoubleMath;
+import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.domain.Point;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
 import java.math.BigDecimal;
@@ -11,7 +13,7 @@ import java.util.List;
  * "Locating a Point on a Spherical Surface Relative to a
  * Spherical Polygon of Arbitrary Shape" (Mathematical Geology, Vol. 21, No. 8, 1989).
  */
-public class BevisChatelainCoastlineCheck {
+public class BevisChatelainInPolygonCheck {
 
     double epsilon = 0.000001d;
 
@@ -23,7 +25,7 @@ public class BevisChatelainCoastlineCheck {
     double[] tlonv;
     int ibndry;
 
-    public BevisChatelainCoastlineCheck(CoastlineWay polygonToCheck) {
+    public BevisChatelainInPolygonCheck(CoastlineWay polygonToCheck) {
         List<Point> wayNodes = polygonToCheck.getPoints();
 
         double lats[] = new double[wayNodes.size()];

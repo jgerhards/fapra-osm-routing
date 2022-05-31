@@ -1,6 +1,6 @@
 package de.fmi.searouter.grid;
 
-import de.fmi.searouter.domain.IntersectionHelper;
+import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.router.DijkstraRouter;
 import de.fmi.searouter.router.Router;
 import de.fmi.searouter.router.RoutingResult;

@@ -1,4 +1,4 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.utils;
 
 import java.util.Arrays;
 

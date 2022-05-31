@@ -1,4 +1,4 @@
-package de.fmi.searouter.osmexport;
+package de.fmi.searouter.utils;
 
 import de.fmi.searouter.domain.CoastlineWay;
 import de.fmi.searouter.domain.Point;
@@ -6,9 +6,7 @@ import de.fmi.searouter.grid.GridNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
