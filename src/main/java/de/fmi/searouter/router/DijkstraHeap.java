@@ -4,14 +4,25 @@ import de.fmi.searouter.grid.Node;
 
 import java.util.Arrays;
 
+/**
+ * class used to effeciently manage a priority queue of ids (represented as int instead of Integer objects)
+ */
 public class DijkstraHeap {
     private final int INITIAL_SIZE = 400;
     private final int SIZE_INCREASE = 200;
+
+    //for each node, the position of it in the heap or -1 if not on the heap
     private final int[] heapPosition;
-    private final DijkstraRouter router;
+    //the array representing the heap
     private int[] idHeapArray;
     private int currentSize;
+    //used when comparing the distances of ids
+    private final DijkstraRouter router;
 
+    /**
+     * constructor for the dijkstra heap
+     * @param router the router containing the distance array
+     */
     protected DijkstraHeap(DijkstraRouter router) {
         this.heapPosition = new int[Node.getSize()];
         this.idHeapArray = new int[INITIAL_SIZE];
@@ -20,18 +31,29 @@ public class DijkstraHeap {
         currentSize = 0;
     }
 
+    /**
+     * resets the satate of the heap and prepares it for a new calculation
+     */
     protected void resetState() {
         Arrays.fill(heapPosition, -1);
-        //todo: maybe leave it at the current size, in this case remember to reset all values
         this.idHeapArray = new int[INITIAL_SIZE];
         Arrays.fill(idHeapArray, -1);
         currentSize = 0;
     }
 
+    /**
+     * checks if the heap is empty
+     * @return true if no more elements are contained on the heap, else false
+     */
     protected boolean isEmpty() {
         return (currentSize == 0);
     }
 
+    /**
+     * gets the id of the node with the lowest distance from the start node stored on the heap. Also restores
+     * the remaining array to a heap.
+     * @return the id of the node with the shortest distance
+     */
     protected int getNext() {
         int returnValue = idHeapArray[0];
 
@@ -43,6 +65,11 @@ public class DijkstraHeap {
         return returnValue;
     }
 
+    /**
+     * adds an id to the heap. if the id is already on the heap, updates its position if necessary
+     * (for example after an update).
+     * @param id the id to add
+     */
     protected void add(int id) {
         if(heapPosition[id] != -1) {
             //update, do not add again
@@ -58,18 +85,11 @@ public class DijkstraHeap {
         }
     }
 
-    /*protected void printSize() {
-        System.out.println("ttt: heapsize: " + idHeapArray.length);
-    }
-
-    protected void print() {
-        String str = "";
-        for(int i = 0; i < currentSize; i++) {
-            str += idHeapArray[i] + ", ";
-        }
-        System.out.println("ttt: " + str);
-    }*/
-
+    /**
+     * restores the heap property of the array after removing the first element.
+     * @param n the length of the array
+     * @param root the position in the array of the root of the subtree to heapify
+     */
     private void heapifyTopDown(int n, int root) {
         int smallest = root; // Initialize smallest as root
         int leftChild = 2 * root + 1;
@@ -94,6 +114,11 @@ public class DijkstraHeap {
         }
     }
 
+    /**
+     * restores the heap property of the array after adding another element. also used to update the
+     * position of an id already contained in the array.
+     * @param nodeID the position in the array of the node to check
+     */
     private void heapifyBottomUp(int nodeID) {
         if(nodeID <= 0) {
             return;
@@ -112,6 +137,11 @@ public class DijkstraHeap {
         }
     }
 
+    /**
+     * swaps two elements within the array. Also updates the heap positions of these elements.
+     * @param i the position of the first element
+     * @param j the position of the second element
+     */
     private void swap(int i, int j) {
         int tmp = idHeapArray[i];
         idHeapArray[i] = idHeapArray[j];
@@ -123,12 +153,22 @@ public class DijkstraHeap {
         heapPosition[idHeapArray[j]] = tmp;
     }
 
+    /**
+     * increases the size of the heap array.
+     */
     private void grow() {
         int oldLen = idHeapArray.length;
         idHeapArray = Arrays.copyOf(idHeapArray, oldLen + SIZE_INCREASE);
         Arrays.fill(idHeapArray, oldLen, idHeapArray.length, -1);
     }
 
+    /**
+     * compares the distances from the start node of elements at specific positions on the heap.
+     * Returns a number indicating the relation of the distances.
+     * @param firstID the first position on the heap
+     * @param secondID the first position on the heap
+     * @return 0 if equal, 1 if distance of first element is larger, else -1
+     */
     private int compareValues(int firstID, int secondID) {
         if(router.currDistanceToNode[idHeapArray[firstID]] == router.currDistanceToNode[idHeapArray[secondID]]) {
             return 0;
