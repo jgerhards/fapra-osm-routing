@@ -31,62 +31,6 @@ public class CoastlineImporter {
         this.coastLineWays = new ArrayList<>();
     }
 
-    /**
-     * Merges {@link CoastlineWay} objects by updating the objects with their previous and last
-     * neighbor ways which form together a polygon.
-     *
-     * @param coastlinesToMerge A list of CoastlineWays which should be merged
-     */
-    private void mergeCoastlines(List<CoastlineWay> coastlinesToMerge) {
-
-        // Track whether a merge was already performed for a CoastlineWay obj with this boolean array, true=merged
-        boolean[] alreadyMerged = new boolean[coastlinesToMerge.size()];
-        Arrays.fill(alreadyMerged,false);
-
-        boolean mergeStatusChanged = false;
-
-        do {
-            mergeStatusChanged = false;
-            int coastlineSize = coastlinesToMerge.size();
-
-            // Merge coastlines
-            for (int i = 0; i < coastlineSize; i++) {
-                if (alreadyMerged[i]) {
-                    continue;
-                }
-
-                for (int j = 0; j < coastlineSize; j++) {
-
-                    if (alreadyMerged[i] || alreadyMerged[j] || i == j) {
-                        continue;
-                    }
-
-                    CoastlineWay coastlineOne = coastlinesToMerge.get(i);
-                    CoastlineWay coastlineTwo = coastlinesToMerge.get(j);
-
-                    // Check whether merge can be performed and if yes perform it
-                    int mergeResult = coastlineOne.mergeCoastlinesIfPossible(coastlineTwo);
-
-                    if (mergeResult == 1) {
-                        alreadyMerged[j] = true;
-                        mergeStatusChanged = true;
-                    }  else if (mergeResult == 2) {
-                        alreadyMerged[i] = true;
-                        mergeStatusChanged = true;
-                    }
-
-                }
-            }
-        } while(mergeStatusChanged);
-
-        // Remove coastlines which are no polygon starts
-        for (int i = coastlinesToMerge.size()-1; i >= 0; i--) {
-            if (alreadyMerged[i]) {
-                coastlinesToMerge.remove(i);
-            }
-        }
-
-    }
 
     /**
      * Imports osm coastlines from a given pbf file.
@@ -123,8 +67,6 @@ public class CoastlineImporter {
     private void onCompletion() {
         // Empty the nodes list to save memory
         this.allNodes = new HashMap<>();
-
-        mergeCoastlines(this.coastLineWays);
     }
 
     /**
