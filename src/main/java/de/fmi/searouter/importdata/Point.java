@@ -1,4 +1,4 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.importdata;
 
 /**
  * Represents an OSM node. Only used for pre-processing (until grid is initialized).

@@ -1,7 +1,6 @@
 package de.fmi.searouter.router;
 
-import java.util.List;
-import de.fmi.searouter.grid.*;
+import de.fmi.searouter.dijkstragrid.*;
 
 /**
  * A router gets two nodes of a {@link Grid} as input and

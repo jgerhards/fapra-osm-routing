@@ -1,67 +1,53 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.coastlinegrid;
 
 import de.fmi.searouter.utils.IntersectionHelper;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO himmelsrichtung statt left, right etc
-public class GridParent extends GridCell {
+public final class CoastlineChecker implements Serializable {
 
-    private double lowerLatitude;
-    private double upperLatitude;
-    private double leftLongitude;
-    private double rightLongitude;
+    private static final long serialVersionUID = 13424412415L;
 
-    private GridCell[][] lowerLevelCells;
+    private static CoastlineChecker INSTANCE;
+    private static GridCell[][] topLevelGrid;
 
+    public static CoastlineChecker getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new CoastlineChecker();
+        }
 
-    public GridParent(List<Integer> edgeIDs, double lowerLatitude, double upperLatitude, double leftLongitude, double rightLongitude) {
-        this.lowerLatitude = lowerLatitude;
-        this.upperLatitude = upperLatitude;
-        this.leftLongitude = leftLongitude;
-        this.rightLongitude = rightLongitude;
-
-        lowerLevelCells = new GridCell[3][3];
-
-        buildLowerLevel(edgeIDs);
+        return INSTANCE;
     }
 
-    private void buildLowerLevel(List<Integer> edgeIDs) {
+    // private constructor, this is a singleton!
+    private CoastlineChecker() {
+        topLevelGrid = new GridCell[18][36];
+        for(int latIdx = 0; latIdx < 18; latIdx++) {
+            double lowerLatBound = 10.0 * (latIdx - 9);
+            double upperLatBound = lowerLatBound + 10.0;
+            for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+                double leftLonBound = 10.0 * (lonIdx - 18);
+                double rightLonBound = leftLonBound + 10.0;
 
-        double latSeparation = (upperLatitude - lowerLatitude) / 3;
-        double lonSeparation = (leftLongitude - rightLongitude) / 3;
-
-        double[] lowerLevelLat = new double[]{
-                lowerLatitude, lowerLatitude + latSeparation, lowerLatitude + 2 * latSeparation, upperLatitude
-        };
-
-
-        double[] lowerLevelLon = new double[]{
-                leftLongitude, leftLongitude + lonSeparation, leftLongitude + 2 * lonSeparation, rightLongitude
-        };
-
-        // assign edges to sub grids
-        for (int latIdx = 0; latIdx < 3; latIdx++) {
-
-            for (int lonIdx = 0; lonIdx < 3; lonIdx++) {
-
-                List<Integer> edgesInCell = new ArrayList<>();
-                for (Integer edgeId : edgeIDs) {
-                    boolean[] startResults = IntersectionHelper.getPositionInfoOfPointRelativeToCell(
+                List<Integer> edgesInCell = new ArrayList();
+                int numOfEdges = CoastlineWays.getNumberOfEdges();
+                for (int edgeId = 0; edgeId < numOfEdges; edgeId++) {
+                    boolean[] startResults = IntersectionHelper.getPositionInfoOfPointRelativeToCellRough(
                             CoastlineWays.getStartLatByEdgeIdx(edgeId),
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
-                            lowerLevelLon[lonIdx], lowerLevelLon[lonIdx + 1],
-                            lowerLevelLat[latIdx], lowerLevelLat[latIdx + 1]);
+                            leftLonBound, rightLonBound,
+                            lowerLatBound, upperLatBound);
                     if (!(startResults[0] || startResults[1] || startResults[2] || startResults[3])) { // is inside
                         edgesInCell.add(edgeId);
                         continue;
                     }
-                    boolean[] destResults = IntersectionHelper.getPositionInfoOfPointRelativeToCell(
+                    boolean[] destResults = IntersectionHelper.getPositionInfoOfPointRelativeToCellRough(
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLon[lonIdx], lowerLevelLon[lonIdx + 1],
-                            lowerLevelLat[latIdx], lowerLevelLat[latIdx + 1]);
+                            leftLonBound, rightLonBound,
+                            lowerLatBound, upperLatBound);
                     if (!(destResults[0] || destResults[1] || destResults[2] || destResults[3])) { // is inside
                         edgesInCell.add(edgeId);
                         continue;
@@ -80,17 +66,17 @@ public class GridParent extends GridCell {
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLat[latIdx], lowerLevelLon[lonIdx],
-                            lowerLevelLat[latIdx + 1], lowerLevelLon[lonIdx] // Left vertical edge of cell, e.g. 0,0 - 1,0
-                            )) {
+                            lowerLatBound, leftLonBound,
+                            upperLatBound, leftLonBound // Left vertical edge of cell, e.g. 0,0 - 1,0
+                    )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.arcsIntersect(
                             CoastlineWays.getStartLatByEdgeIdx(edgeId),
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLat[latIdx], lowerLevelLon[lonIdx+1],
-                            lowerLevelLat[latIdx+1], lowerLevelLon[lonIdx+1] // Right vertical edge of cell, e.g. 0,1 - 1,1
+                            lowerLatBound, rightLonBound,
+                            upperLatBound, rightLonBound // Right vertical edge of cell, e.g. 0,1 - 1,1
                     )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.crossesLatitude(
@@ -98,7 +84,8 @@ public class GridParent extends GridCell {
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLat[latIdx] // lower latitude coord of cell
+                            lowerLatBound, // lower latitude coord of cell
+                            leftLonBound, rightLonBound
                     )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.crossesLatitude(
@@ -106,7 +93,8 @@ public class GridParent extends GridCell {
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLat[latIdx + 1] // upper latitude coord of cell
+                            upperLatBound, // upper latitude coord of cell
+                            leftLonBound, rightLonBound
                     )) {
                         intersectsBorder = true;
                     }
@@ -116,34 +104,19 @@ public class GridParent extends GridCell {
                     }
                 }
 
+                topLevelGrid[latIdx][lonIdx] = new GridParent(edgesInCell, lowerLatBound, upperLatBound,
+                        leftLonBound, rightLonBound);
+
             }
-
         }
-
-
-        // for every sub grid: how many coastline edges?
-
-        //
-
     }
 
-    @Override
-    public void initializeCellBorders() {
+    public boolean pointInWater(float lat, float lon) {
+        // Calculate the grid cell indices for the cell array depending on lat/lon
+        int latIdx = (int) ((lat + 90) - (lat % 10) / 10);
+        int lonIdx = (int) ((lon + 180) - (lon % 10) / 10);
 
+        return topLevelGrid[latIdx][lonIdx].isPointInWater(lat, lon);
     }
 
-    @Override
-    public void initCenterPoint() {
-
-    }
-
-    @Override
-    public boolean isPointInWater(float lat, float lon) {
-        return false;
-    }
-
-    @Override
-    public List<Integer> getContainedEdgesIDs() {
-        return null;
-    }
 }

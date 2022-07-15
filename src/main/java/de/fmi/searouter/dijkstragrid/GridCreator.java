@@ -1,13 +1,9 @@
-package de.fmi.searouter.grid;
+package de.fmi.searouter.dijkstragrid;
 
-import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.utils.GeoJsonConverter;
+import de.fmi.searouter.importdata.CoastlineWay;
 import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.osmimport.CoastlineImporter;
-import org.json.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;

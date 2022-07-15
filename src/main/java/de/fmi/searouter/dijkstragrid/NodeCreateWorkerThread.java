@@ -1,4 +1,4 @@
-package de.fmi.searouter.grid;
+package de.fmi.searouter.dijkstragrid;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

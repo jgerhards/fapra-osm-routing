@@ -1,8 +1,8 @@
 package de.fmi.searouter.router;
 
-import de.fmi.searouter.grid.Edge;
-import de.fmi.searouter.grid.Grid;
-import de.fmi.searouter.grid.Node;
+import de.fmi.searouter.dijkstragrid.Edge;
+import de.fmi.searouter.dijkstragrid.Grid;
+import de.fmi.searouter.dijkstragrid.Node;
 import org.springframework.stereotype.Component;
 
 import java.util.*;

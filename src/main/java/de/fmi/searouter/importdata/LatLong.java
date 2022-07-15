@@ -1,4 +1,4 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.importdata;
 
 /**
  * Object with latitude and longitude values for JSON mapping to the REST Api.

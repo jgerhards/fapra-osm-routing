@@ -1,6 +1,5 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.importdata;
 
-import de.fmi.searouter.utils.IntersectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

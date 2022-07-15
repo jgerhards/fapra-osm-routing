@@ -1,8 +1,4 @@
-package de.fmi.searouter.grid;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+package de.fmi.searouter.dijkstragrid;
 
 /**
  * Efficient storage for Node entites that represent grids on the Dijkstra grid graph {@link Grid}.

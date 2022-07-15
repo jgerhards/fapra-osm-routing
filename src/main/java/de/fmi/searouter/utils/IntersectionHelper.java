@@ -146,15 +146,15 @@ public class IntersectionHelper {
      * <p>
      * Source: https://edwilliams.org/avform147.htm#Par
      *
-     * @param pointALat
-     * @param pointALon
-     * @param pointBLat
-     * @param pointBLon
+     * @param pointALat         |
+     * @param pointALon         |
+     * @param pointBLat         |  x--------------------x
+     * @param pointBLon         |
      * @param latitudeToCheck
      * @return
      */
     public static boolean crossesLatitude(double pointALat, double pointALon, double pointBLat,
-                                   double pointBLon, double latitudeToCheck) {
+                                   double pointBLon, double latitudeToCheck, double lonValStart, double lonValDest) {
         double lonDiff = pointALon - pointBLon;
         double A = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latitudeToCheck) * Math.sin(lonDiff);
         double B = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latitudeToCheck) * Math.cos(lonDiff) - Math.cos(pointALat) * Math.sin(pointBLat) * Math.cos(latitudeToCheck);
@@ -172,10 +172,15 @@ public class IntersectionHelper {
             double crossLonA = mod(pointALon + dlon + lon + Math.PI, 2*Math.PI) - Math.PI;
             double crossLonB = mod(pointALon - dlon + lon + Math.PI, 2*Math.PI) - Math.PI;
 
-            double maxLon = Math.max(pointALat, pointBLon);
-            double minLon = Math.max(pointALat, pointBLon);
-            return pointLonBetweenLongitudes(crossLonA, minLon, maxLon) ||
-                    pointLonBetweenLongitudes(crossLonB, minLon, maxLon);
+            double maxLon = Math.max(pointALon, pointBLon);
+            double minLon = Math.min(pointALon, pointBLon);
+            double lonMax = Math.max(lonValStart, lonValDest);
+            double lonMin = Math.min(lonValStart, lonValDest);
+            boolean firstIntersectValid = pointLonBetweenLongitudes(crossLonA, minLon, maxLon) &&
+                    pointLonBetweenLongitudes(crossLonA, lonMin, lonMax);
+            boolean secondIntersectValid = pointLonBetweenLongitudes(crossLonB, minLon, maxLon) &&
+                    pointLonBetweenLongitudes(crossLonB, lonMin, lonMax);
+            return firstIntersectValid || secondIntersectValid;
         }
     }
 

@@ -1,4 +1,4 @@
-package de.fmi.searouter.grid;
+package de.fmi.searouter.dijkstragrid;
 
 /**
  * Stores all edges of the grid graph. All data of one edge is accessible

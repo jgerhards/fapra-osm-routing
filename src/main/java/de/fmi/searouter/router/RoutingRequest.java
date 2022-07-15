@@ -1,4 +1,6 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.router;
+
+import de.fmi.searouter.importdata.LatLong;
 
 /**
  * User request asking for a new route calculation. Used as JSON mapping object for the REST api.

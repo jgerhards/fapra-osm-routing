@@ -1,10 +1,10 @@
-package de.fmi.searouter.grid;
+package de.fmi.searouter.dijkstragrid;
 
 import com.google.common.math.DoubleMath;
-import de.fmi.searouter.domain.CoastlineWay;
+import de.fmi.searouter.importdata.CoastlineWay;
 
 /**
- * Implementation of the point-in-polygon test of Bevis in Chatelain as described in
+ * Implementation of the point-in-polygon test of Bevis and Chatelain as described in
  * "Locating a Point on a Spherical Surface Relative to a
  * Spherical Polygon of Arbitrary Shape" (Mathematical Geology, Vol. 21, No. 8, 1989).
  * Transcribed from fortran to Java.

@@ -1,14 +1,10 @@
-package de.fmi.searouter.grid;
+package de.fmi.searouter.dijkstragrid;
 
 import de.fmi.searouter.utils.IntersectionHelper;
-import de.fmi.searouter.router.DijkstraRouter;
-import de.fmi.searouter.router.Router;
-import de.fmi.searouter.router.RoutingResult;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.*;
 
 /**

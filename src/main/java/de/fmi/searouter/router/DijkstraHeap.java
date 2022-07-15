@@ -1,6 +1,6 @@
 package de.fmi.searouter.router;
 
-import de.fmi.searouter.grid.Node;
+import de.fmi.searouter.dijkstragrid.Node;
 
 import java.util.Arrays;
 

@@ -1,4 +1,7 @@
-package de.fmi.searouter.domain;
+package de.fmi.searouter.coastlinegrid;
+
+import de.fmi.searouter.importdata.CoastlineWay;
+import de.fmi.searouter.importdata.Point;
 
 import java.util.List;
 

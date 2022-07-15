@@ -2,10 +2,8 @@ package de.fmi.searouter.osmimport;
 
 import com.wolt.osm.parallelpbf.ParallelBinaryParser;
 import com.wolt.osm.parallelpbf.entity.Header;
-import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.Point;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import de.fmi.searouter.importdata.CoastlineWay;
+import de.fmi.searouter.importdata.Point;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
