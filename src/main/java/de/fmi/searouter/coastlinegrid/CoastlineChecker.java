@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CoastlineChecker implements Serializable {
+    private static final double INITIAL_POINT_LAT = 70.0;
+    private static final double INITIAL_POINT_LON = -5.0;
+    private static final boolean INITIAL_POINT_IN_WATER = true;
 
     private static final long serialVersionUID = 13424412415L;
 
@@ -24,6 +27,7 @@ public final class CoastlineChecker implements Serializable {
     // private constructor, this is a singleton!
     private CoastlineChecker() {
         topLevelGrid = new GridCell[18][36];
+
         for(int latIdx = 0; latIdx < 18; latIdx++) {
             double lowerLatBound = 10.0 * (latIdx - 9);
             double upperLatBound = lowerLatBound + 10.0;
@@ -109,6 +113,65 @@ public final class CoastlineChecker implements Serializable {
 
             }
         }
+
+        //initialize middle points
+        double[] centerPointLat = new double[18];
+        double[] centerPointLon = new double[36];
+        double lat = -85.0;
+        for(int i = 0; i < 18; i++) {
+            centerPointLat[i] = lat;
+            lat += 10.0;
+        }
+        double lon = -175.0;
+        for(int i = 0; i < 36; i++) {
+            centerPointLon[i] = lon;
+            lon += 10.0;
+        }
+
+        //first, check if the middle point of the first cell is in water
+        boolean firstPointInWater = INITIAL_POINT_IN_WATER;
+        int numOfEdges = CoastlineWays.getNumberOfEdges();
+        for (int edgeId = 0; edgeId < numOfEdges; edgeId++) {
+            if(IntersectionHelper.arcsIntersect(
+                    CoastlineWays.getStartLatByEdgeIdx(edgeId),
+                    CoastlineWays.getStartLonByEdgeIdx(edgeId),
+                    CoastlineWays.getDestLatByEdgeIdx(edgeId),
+                    CoastlineWays.getDestLonByEdgeIdx(edgeId),
+                    INITIAL_POINT_LAT, INITIAL_POINT_LON,
+                    centerPointLat[0], centerPointLon[0]
+            )) {
+                firstPointInWater = !firstPointInWater;
+            }
+        }
+        //just this once, we use set instead of init (since point in water is known)
+        topLevelGrid[0][0].setCenterPoint(centerPointLat[0], centerPointLon[0], firstPointInWater);
+
+        boolean[] firstCenterPointInWater = new boolean[36];
+        List<Integer>[] firstAdditionalEdges = new List[36];
+        firstCenterPointInWater[0] = firstPointInWater;
+        firstAdditionalEdges[0] = topLevelGrid[0][0].getAllContainedEdgeIDs();
+
+        // first, calculate bottom row
+        double firstRowLat = centerPointLat[0];
+        for(int lonIdx = 1; lonIdx < 36; lonIdx++) {
+            firstCenterPointInWater[lonIdx] = topLevelGrid[0][lonIdx].initCenterPoint(firstRowLat,
+                    centerPointLon[lonIdx - 1], firstCenterPointInWater[lonIdx - 1],
+                    firstAdditionalEdges[lonIdx - 1], GridCell.ApproachDirection.FROM_HORIZONTAL);
+            firstAdditionalEdges[lonIdx] = topLevelGrid[0][lonIdx].getAllContainedEdgeIDs();
+        }
+
+        //now, calculate by column
+        for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+            boolean previousPointInWater = firstCenterPointInWater[lonIdx];
+            List<Integer> previousEdges = firstAdditionalEdges[lonIdx];
+            for(int latIdx = 1; latIdx < 18; latIdx++) { //first row already calculated, so start at idx 1
+                previousPointInWater = topLevelGrid[latIdx][lonIdx].initCenterPoint(centerPointLat[latIdx - 1],
+                        centerPointLon[lonIdx], previousPointInWater,
+                        previousEdges, GridCell.ApproachDirection.FROM_VERTICAL);
+                previousEdges = topLevelGrid[latIdx][lonIdx].getAllContainedEdgeIDs();
+            }
+        }
+
     }
 
     public boolean pointInWater(float lat, float lon) {
