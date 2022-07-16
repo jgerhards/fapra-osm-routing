@@ -72,7 +72,7 @@ public class CoastlineWays {
     }
 
     public static float getDestLatByEdgeIdx(int edgeIdx) {
-        return pointLat[edgePosStart[edgeIdx+1]];
+        return pointLat[edgePosStart[edgeIdx]+1];
     }
 
     public static float getStartLonByEdgeIdx(int edgeIdx) {
@@ -80,7 +80,7 @@ public class CoastlineWays {
     }
 
     public static float getDestLonByEdgeIdx(int edgeIdx) {
-        return pointLon[edgePosStart[edgeIdx+1]];
+        return pointLon[edgePosStart[edgeIdx]+1];
     }
 
     public static int getNumberOfEdges() {
