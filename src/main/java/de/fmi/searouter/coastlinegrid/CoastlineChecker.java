@@ -175,9 +175,20 @@ public final class CoastlineChecker implements Serializable {
     }
 
     public boolean pointInWater(float lat, float lon) {
+        int latIdx;
+        int lonIdx;
         // Calculate the grid cell indices for the cell array depending on lat/lon
-        int latIdx = (int) ((lat + 90) - (lat % 10) / 10);
-        int lonIdx = (int) ((lon + 180) - (lon % 10) / 10);
+        if(lat == 90) {
+            latIdx = 17;
+        } else {
+            latIdx = (int) (((lat + 90) - (lat % 10)) / 10);
+        }
+
+        if(lon == 180) {
+            lonIdx = 35;
+        } else {
+            lonIdx = (int) (((lon + 180) - (lon % 10)) / 10);
+        }
 
         return topLevelGrid[latIdx][lonIdx].isPointInWater(lat, lon);
     }
