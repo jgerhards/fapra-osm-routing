@@ -1,5 +1,6 @@
 package de.fmi.searouter.coastlinegrid;
 
+import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.utils.IntersectionHelper;
 
 import java.util.ArrayList;
@@ -16,8 +17,10 @@ public class GridParent extends GridCell {
     private GridCell[][] lowerLevelCells;
 
     private double[] innerLatBorders;
-    private double [] innerLonBorders;
+    private double[] innerLonBorders;
 
+    private double centerPointLat;
+    private double centerPointLon;
 
 
     public GridParent(List<Integer> edgeIDs, double lowerLatitude, double upperLatitude, double leftLongitude,
@@ -92,15 +95,15 @@ public class GridParent extends GridCell {
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
                             lowerLevelLat[latIdx], lowerLevelLon[lonIdx],
                             lowerLevelLat[latIdx + 1], lowerLevelLon[lonIdx] // Left vertical edge of cell, e.g. 0,0 - 1,0
-                            )) {
+                    )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.arcsIntersect(
                             CoastlineWays.getStartLatByEdgeIdx(edgeId),
                             CoastlineWays.getStartLonByEdgeIdx(edgeId),
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
-                            lowerLevelLat[latIdx], lowerLevelLon[lonIdx+1],
-                            lowerLevelLat[latIdx+1], lowerLevelLon[lonIdx+1] // Right vertical edge of cell, e.g. 0,1 - 1,1
+                            lowerLevelLat[latIdx], lowerLevelLon[lonIdx + 1],
+                            lowerLevelLat[latIdx + 1], lowerLevelLon[lonIdx + 1] // Right vertical edge of cell, e.g. 0,1 - 1,1
                     )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.crossesLatitude(
@@ -109,7 +112,7 @@ public class GridParent extends GridCell {
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
                             lowerLevelLat[latIdx], // lower latitude coord of cell
-                            lowerLevelLon[latIdx], lowerLevelLon[latIdx+1]
+                            lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]
                     )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.crossesLatitude(
@@ -118,7 +121,7 @@ public class GridParent extends GridCell {
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
                             lowerLevelLat[latIdx + 1], // upper latitude coord of cell
-                            lowerLevelLon[latIdx], lowerLevelLon[latIdx+1]
+                            lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]
                     )) {
                         intersectsBorder = true;
                     }
@@ -128,10 +131,10 @@ public class GridParent extends GridCell {
                     }
                 }
 
-                if(edgesInCell.size() >= EDGE_THRESHOLD) {
+                if (edgesInCell.size() >= EDGE_THRESHOLD) {
                     // A new grid cell subdivision is needed, due to the threshold being exceeded
                     lowerLevelCells[latIdx][lonIdx] = new GridParent(edgesInCell, lowerLevelLat[latIdx],
-                            lowerLevelLat[latIdx+1], lowerLevelLon[latIdx], lowerLevelLon[latIdx+1]);
+                            lowerLevelLat[latIdx + 1], lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]);
                 } else {
                     // Calculate center point of new cell
                     double ctrLat = (lowerLevelLat[latIdx] + lowerLevelLat[latIdx + 1]) / 2;
@@ -140,7 +143,7 @@ public class GridParent extends GridCell {
                     // Transform the edge index list to an edge index array
                     int listSize = edgesInCell.size();
                     int[] idArray = new int[listSize];
-                    for(int i = 0; i < listSize; i++) {
+                    for (int i = 0; i < listSize; i++) {
                         idArray[i] = edgesInCell.get(i);
                     }
 
@@ -161,9 +164,13 @@ public class GridParent extends GridCell {
 
     @Override
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
+        this.centerPointLat = lat;
+        this.centerPointLon = lon;
+
+
         //set middle center point of lower level
         lowerLevelCells[1][1].setCenterPoint(lat, lon, isInWater);
-        List<Integer>[] middleEdgeLists = new List[] {
+        List<Integer>[] middleEdgeLists = new List[]{
                 lowerLevelCells[1][0].getAllContainedEdgeIDs(),
                 lowerLevelCells[1][1].getAllContainedEdgeIDs(),
                 lowerLevelCells[1][2].getAllContainedEdgeIDs()
@@ -176,7 +183,7 @@ public class GridParent extends GridCell {
         centersInWater[2] = lowerLevelCells[1][2].initCenterPoint(lat, lon, isInWater, middleEdgeLists[1],
                 ApproachDirection.FROM_HORIZONTAL);
 
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             lowerLevelCells[0][i].initCenterPoint(lat, lon, centersInWater[i], middleEdgeLists[i],
                     ApproachDirection.FROM_VERTICAL);
             lowerLevelCells[2][i].initCenterPoint(lat, lon, centersInWater[i], middleEdgeLists[i],
@@ -186,12 +193,12 @@ public class GridParent extends GridCell {
 
     @Override
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
-                                boolean originCenterPointInWater, List<Integer> additionalEdges,
-                                ApproachDirection dir) {
+                                   boolean originCenterPointInWater, List<Integer> additionalEdges,
+                                   ApproachDirection dir) {
         boolean centerInWater = false;
         double centerLat = (lowerLatitude + upperLatitude) / 2;
         double centerLon = (leftLongitude + rightLongitude) / 2;
-        if(dir == ApproachDirection.FROM_HORIZONTAL) {
+        if (dir == ApproachDirection.FROM_HORIZONTAL) {
             centerInWater = originCenterPointInWater;
             for (Integer edgeId : additionalEdges) {
                 if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
@@ -252,12 +259,33 @@ public class GridParent extends GridCell {
     }
 
     @Override
+    public List<GridNode> getAllCenterPoints(int currDepth, int maxDepth) {
+        List<GridNode> currList = new ArrayList<>();
+
+        currList.add(this.getCenterPoint());
+
+        if (currDepth + 1 > maxDepth) {
+            return  currList;
+        }
+
+        currDepth++;
+
+        for (int latIdx = 0; latIdx < lowerLevelCells.length; latIdx++) {
+            for (int lonIdx = 0; lonIdx < lowerLevelCells[latIdx].length; lonIdx++) {
+                currList.addAll(lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth));
+            }
+        }
+        return currList;
+
+    }
+
+    @Override
     public boolean isPointInWater(float lat, float lon) {
         //first, determine lat idx of responsible lower level cell
         int latIdx;
-        if(lat < innerLatBorders[0]) {
+        if (lat < innerLatBorders[0]) {
             latIdx = 0;
-        } else if(lat < innerLatBorders[1]) {
+        } else if (lat < innerLatBorders[1]) {
             latIdx = 1;
         } else {
             latIdx = 2;
@@ -265,9 +293,9 @@ public class GridParent extends GridCell {
 
         //then, determine lon idx of responsible lower level cell
         int lonIdx;
-        if(lon < innerLonBorders[0]) {
+        if (lon < innerLonBorders[0]) {
             lonIdx = 0;
-        } else if(lon < innerLonBorders[1]) {
+        } else if (lon < innerLonBorders[1]) {
             lonIdx = 1;
         } else {
             lonIdx = 2;
@@ -280,11 +308,17 @@ public class GridParent extends GridCell {
     @Override
     public List<Integer> getAllContainedEdgeIDs() {
         List<Integer> fullList = new ArrayList();
-        for(int i = 0; i < 3; i++) {
-            for(int j = 0; j < 3; j++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
                 fullList.addAll(lowerLevelCells[i][j].getAllContainedEdgeIDs());
             }
         }
         return fullList;
     }
+
+    @Override
+    public GridNode getCenterPoint() {
+        return new GridNode(this.centerPointLat, this.centerPointLon);
+    }
+
 }

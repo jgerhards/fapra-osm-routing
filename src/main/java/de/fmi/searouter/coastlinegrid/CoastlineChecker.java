@@ -1,5 +1,6 @@
 package de.fmi.searouter.coastlinegrid;
 
+import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.utils.IntersectionHelper;
 
 import java.io.Serializable;
@@ -22,6 +23,28 @@ public final class CoastlineChecker implements Serializable {
         }
 
         return INSTANCE;
+    }
+
+    public List<GridNode> getAllCenterPoints(int maxDepth) {
+
+        int currDepth = 0;
+
+        List<GridNode> resultList = new ArrayList<>();
+
+        for(int latIdx = 0; latIdx < 18; latIdx++) {
+            for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+                if (currDepth + 1 <= maxDepth) {
+                    resultList.addAll(topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, maxDepth));
+                } else {
+                    return resultList;
+                }
+
+            }
+        }
+
+
+        return resultList;
+
     }
 
     // private constructor, this is a singleton!

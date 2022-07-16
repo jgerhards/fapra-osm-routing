@@ -1,7 +1,10 @@
 package de.fmi.searouter.coastlinegrid;
 
+import de.fmi.searouter.dijkstragrid.GridNode;
+import de.fmi.searouter.importdata.Point;
 import de.fmi.searouter.utils.IntersectionHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -95,4 +98,21 @@ public class GridLeaf extends GridCell {
         List<Integer> list = Arrays.stream(edgeIds).boxed().collect(Collectors.toList());
         return list;
     }
+
+    @Override
+    public GridNode getCenterPoint() {
+        return new GridNode(latCenterPoint, lonCenterPoint);
+    }
+
+    @Override
+    public List<GridNode> getAllCenterPoints(int currDepth, int maxDepth) {
+
+        List<GridNode> currList = new ArrayList<>();
+        currList.add(this.getCenterPoint());
+
+
+        return currList;
+
+    }
+
 }

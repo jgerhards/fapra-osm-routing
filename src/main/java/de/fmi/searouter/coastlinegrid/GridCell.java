@@ -1,5 +1,8 @@
 package de.fmi.searouter.coastlinegrid;
 
+import de.fmi.searouter.dijkstragrid.GridNode;
+import de.fmi.searouter.importdata.Point;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +23,10 @@ public abstract class GridCell {
     public abstract boolean isPointInWater(float lat, float lon);
 
     public abstract List<Integer> getAllContainedEdgeIDs();
+
+    public abstract GridNode getCenterPoint();
+
+    public abstract List<GridNode> getAllCenterPoints(int currDepth, int maxDepth);
 
 
 }

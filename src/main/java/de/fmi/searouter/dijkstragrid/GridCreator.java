@@ -3,10 +3,14 @@ package de.fmi.searouter.dijkstragrid;
 import de.fmi.searouter.coastlinegrid.CoastlineChecker;
 import de.fmi.searouter.coastlinegrid.CoastlineWays;
 import de.fmi.searouter.importdata.CoastlineWay;
+import de.fmi.searouter.utils.GeoJsonConverter;
 import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.osmimport.CoastlineImporter;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -207,7 +211,7 @@ public class GridCreator {
      * Entry point for the pre-processing part of this project.
      * @param args Not used
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
 
         // Import coastlines
@@ -223,6 +227,12 @@ public class GridCreator {
 
         CoastlineWays.initEdges(coastlines);
         coastlineChecker = CoastlineChecker.getInstance();
+        List<GridNode> centerPoints = CoastlineChecker.getInstance().getAllCenterPoints(2);
+
+        String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
+        BufferedWriter writer = new BufferedWriter(new FileWriter("centerpoints.json"));
+        writer.write(json);
+
 
         try {
             GridCreator.createGrid(coastlines);
