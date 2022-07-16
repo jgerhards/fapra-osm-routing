@@ -1,5 +1,7 @@
 package de.fmi.searouter.dijkstragrid;
 
+import de.fmi.searouter.coastlinegrid.CoastlineChecker;
+import de.fmi.searouter.coastlinegrid.CoastlineWays;
 import de.fmi.searouter.importdata.CoastlineWay;
 import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.osmimport.CoastlineImporter;
@@ -28,19 +30,7 @@ public class GridCreator {
     public static double coordinate_step_longitude;
 
     // All polygons have a point-in-polygon check object
-    private static List<BevisChatelainInPolygonCheck> checkerObjects;
-
-    /**
-     * Inits the point-in-polygon check objects. For each polygon one {@link BevisChatelainInPolygonCheck}
-     * object is created.
-     * @param coastlinePolygons
-     */
-    public static void initCheckObjs(List<CoastlineWay> coastlinePolygons) {
-        checkerObjects = new ArrayList<>();
-        for (CoastlineWay polygon : coastlinePolygons) {
-            checkerObjects.add(new BevisChatelainInPolygonCheck(polygon));
-        }
-    }
+    private static CoastlineChecker coastlineChecker;
 
     /**
      * Checks whether a given coordinate point is on water or on land.
@@ -50,14 +40,10 @@ public class GridCreator {
      * @return True: Point on water, False: Water on land
      */
     public static boolean isPointOnWater(double latitude, double longitude) {
-        for (BevisChatelainInPolygonCheck checkerObj : checkerObjects) {
-            if (!checkerObj.isPointInWater(latitude, longitude)) {
-                System.out.println(latitude + " " + longitude + " is on land");
-                return false;
-            }
+        if (coastlineChecker.pointInWater((float) latitude, (float) longitude)) {
+            return true;
         }
-        System.out.println(latitude + " " + longitude + " is on water");
-        return true;
+        return false;
     }
 
     /**
@@ -77,9 +63,6 @@ public class GridCreator {
         coordinate_step_longitude = (double) 360 / DIMENSION_LONGITUDE;
         System.out.println(coordinate_step_latitude);
         System.out.println(coordinate_step_longitude);
-
-
-        initCheckObjs(coastlinePolygons);
 
         BigDecimal coordinateStepLat = BigDecimal.valueOf(coordinate_step_latitude);
 
@@ -232,11 +215,14 @@ public class GridCreator {
         List<CoastlineWay> coastlines = new ArrayList<>();
 
         try {
-            coastlines = importer.importPBF("planet-coastlines.pbf");
-            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+            //coastlines = importer.importPBF("planet-coastlines.pbf");
+            coastlines = importer.importPBF("antarctica-latest.osm.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        CoastlineWays.initEdges(coastlines);
+        coastlineChecker = CoastlineChecker.getInstance();
 
         try {
             GridCreator.createGrid(coastlines);

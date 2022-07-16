@@ -81,7 +81,6 @@ public class CoastlineImporter {
                     cWay.getPoints().add(node);
                 }
             }
-            cWay.updateAfterGet();
             this.coastLineWays.add(cWay);
         }
 
