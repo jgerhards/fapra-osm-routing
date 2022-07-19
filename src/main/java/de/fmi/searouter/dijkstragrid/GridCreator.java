@@ -232,6 +232,7 @@ public class GridCreator {
         String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
         BufferedWriter writer = new BufferedWriter(new FileWriter("centerpoints.json"));
         writer.write(json);
+        System.out.println(json);
 
 
         try {

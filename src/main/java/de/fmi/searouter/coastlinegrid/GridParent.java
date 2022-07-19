@@ -158,10 +158,6 @@ public class GridParent extends GridCell {
 
     }
 
-    public void startCenterPointInitialization(boolean pointOnWater) {
-
-    }
-
     @Override
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
@@ -259,23 +255,25 @@ public class GridParent extends GridCell {
     }
 
     @Override
-    public List<GridNode> getAllCenterPoints(int currDepth, int maxDepth) {
-        List<GridNode> currList = new ArrayList<>();
+    public void getAllCenterPoints(int currDepth, int maxDepth, List<GridNode> pointList) {
+        //List<GridNode> currList = new ArrayList<>();
 
-        currList.add(this.getCenterPoint());
+        //currList.add(this.getCenterPoint());
 
-        if (currDepth + 1 > maxDepth) {
+        /*if (currDepth + 1 > maxDepth) {
             return  currList;
-        }
+        }*/
 
         currDepth++;
 
         for (int latIdx = 0; latIdx < lowerLevelCells.length; latIdx++) {
             for (int lonIdx = 0; lonIdx < lowerLevelCells[latIdx].length; lonIdx++) {
-                currList.addAll(lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth));
+                System.out.println("ttt " + latIdx + " " + lonIdx);
+                lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth, pointList);
+                //currList.addAll(lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth));
             }
         }
-        return currList;
+        //return currList;
 
     }
 

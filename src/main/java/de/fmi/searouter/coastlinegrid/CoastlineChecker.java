@@ -31,13 +31,13 @@ public final class CoastlineChecker implements Serializable {
 
         List<GridNode> resultList = new ArrayList<>();
 
-        for(int latIdx = 0; latIdx < 18; latIdx++) {
-            for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
-                if (currDepth + 1 <= maxDepth) {
-                    resultList.addAll(topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, maxDepth));
+        for(int latIdx = 0; latIdx < 1; latIdx++) {
+            for(int lonIdx = 0; lonIdx < 1; lonIdx++) {
+                topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, maxDepth, resultList);
+                /*if (currDepth + 1 <= maxDepth) {
                 } else {
                     return resultList;
-                }
+                }*/
 
             }
         }

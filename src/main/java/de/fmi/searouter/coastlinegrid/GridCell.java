@@ -26,7 +26,7 @@ public abstract class GridCell {
 
     public abstract GridNode getCenterPoint();
 
-    public abstract List<GridNode> getAllCenterPoints(int currDepth, int maxDepth);
+    public abstract void getAllCenterPoints(int currDepth, int maxDepth, List<GridNode> pointList);
 
 
 }
