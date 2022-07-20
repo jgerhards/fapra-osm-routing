@@ -132,12 +132,21 @@ public class IntersectionHelper {
         double[] midPoint = addVectors(arcAStartVector, addVectors(arcAEndVector, addVectors(arcBStartVector, arcBEndVector)));
 
         double dot = dotProductOfVector(midPoint, i1);
-        if (dot > 0) {
+        if (dot != 0) {
             return true;
         } else {
             return false;
         }
     }
+
+    public static double degreeCoordinateToRadian(double degreeCoord) {
+        return degreeCoord * Math.PI / 180;
+    }
+
+    public static double radianCoordToDegree(double radianCoord) {
+        return radianCoord *  180 / Math.PI;
+    }
+
 
     /**
      * Checks if an arc defined by start point A (pointALat, pointALon) and
@@ -150,18 +159,26 @@ public class IntersectionHelper {
      * @param pointALon         |
      * @param pointBLat         |  x--------------------x
      * @param pointBLon         |
-     * @param latitudeToCheck
+     * @param latToIntersect
      * @return
      */
     public static boolean crossesLatitude(double pointALat, double pointALon, double pointBLat,
-                                   double pointBLon, double latitudeToCheck, double lonValStart, double lonValDest) {
+                                   double pointBLon, double latToIntersect, double lonValStart, double lonValDest) {
+        pointALat = degreeCoordinateToRadian(pointALat);
+        pointBLat = degreeCoordinateToRadian(pointBLat);
+        pointALon = degreeCoordinateToRadian(pointALon);
+        pointBLon = degreeCoordinateToRadian(pointBLon);
+        latToIntersect = degreeCoordinateToRadian(latToIntersect);
+        lonValStart = degreeCoordinateToRadian(lonValStart);
+        lonValDest = degreeCoordinateToRadian(lonValDest);
+
         double lonDiff = pointALon - pointBLon;
-        double A = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latitudeToCheck) * Math.sin(lonDiff);
-        double B = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latitudeToCheck) * Math.cos(lonDiff) - Math.cos(pointALat) * Math.sin(pointBLat) * Math.cos(latitudeToCheck);
-        double C = Math.cos(pointALat) * Math.cos(pointBLat) * Math.sin(latitudeToCheck) * Math.sin(lonDiff);
+        double A = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latToIntersect) * Math.sin(lonDiff);
+        double B = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latToIntersect) * Math.cos(lonDiff) - Math.cos(pointALat) * Math.sin(pointBLat) * Math.cos(latToIntersect);
+        double C = Math.cos(pointALat) * Math.cos(pointBLat) * Math.sin(latToIntersect) * Math.sin(lonDiff);
         double lon = Math.atan2(B, A);
 
-        double sumABsquared = Math.sqrt(Math.pow(A, 2) + Math.pow(B, 2));
+        double sumABsquared = Math.sqrt(A*A + B*B);
 
         if (Math.abs(C) > sumABsquared) {
             // no crossing
@@ -202,8 +219,7 @@ public class IntersectionHelper {
      * @return
      */
     public static double mod(double y, double x) {
-        double mod = y - x * ((int) (y / x));
-        if (mod < 0) mod = mod + x;
+        double mod = y - x * Math.floor(y/x);
         return mod;
     }
 
