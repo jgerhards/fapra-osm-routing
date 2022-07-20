@@ -38,8 +38,8 @@ public class GridParent extends GridCell {
 
     private void buildLowerLevel(List<Integer> edgeIDs) {
 
-        double latSeparation = (upperLatitude - lowerLatitude) / 3;
-        double lonSeparation = (leftLongitude - rightLongitude) / 3;
+        double latSeparation = Math.abs(upperLatitude - lowerLatitude) / 3;
+        double lonSeparation = Math.abs(leftLongitude - rightLongitude) / 3;
 
         double[] lowerLevelLat = new double[]{
                 lowerLatitude, lowerLatitude + latSeparation, lowerLatitude + 2 * latSeparation, upperLatitude
