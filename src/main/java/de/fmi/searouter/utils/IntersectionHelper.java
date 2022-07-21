@@ -38,19 +38,23 @@ public class IntersectionHelper {
         // if set to true, true, true, true: left, right, top, bottom
         boolean[] position = new boolean[4];
 
-        if (leftBoundLon < -175) {
+        /*if (leftBoundLon < -175) {
             if (pointToCheckLon > 50) {
+                System.out.println("ttt: case 1");
                 position[0] = true;
-            } else if (pointToCheckLon < -175 && pointToCheckLon > -180 && pointToCheckLon < leftBoundLon) {
+            } else if (pointToCheckLon < -175 && pointToCheckLon >= -180 && pointToCheckLon < leftBoundLon) {
+                System.out.println("ttt: case 2");
                 position[0] = true;
             }
         } else if (rightBoundLon > 175) {
             if (pointToCheckLon < -50) {
+                System.out.println("ttt: case 3");
                 position[1] = true;
-            } else if (pointToCheckLon > 175 && pointToCheckLon < 180 && pointToCheckLon > rightBoundLon) {
+            } else if (pointToCheckLon > 175 && pointToCheckLon <= 180 && pointToCheckLon > rightBoundLon) {
+                System.out.println("ttt: case 4");
                 position[1] = true;
             }
-        } else if (pointToCheckLon < leftBoundLon) {
+        } else*/ if (pointToCheckLon < leftBoundLon) {
             position[0] = true;
         } else if (pointToCheckLon > rightBoundLon) {
             position[1] = true;

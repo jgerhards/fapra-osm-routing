@@ -113,7 +113,7 @@ public class GridParent extends GridCell {
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
                             lowerLevelLat[latIdx], // lower latitude coord of cell
-                            lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]
+                            lowerLevelLon[lonIdx], lowerLevelLon[lonIdx + 1]
                     )) {
                         intersectsBorder = true;
                     } else if (IntersectionHelper.crossesLatitude(
@@ -122,7 +122,7 @@ public class GridParent extends GridCell {
                             CoastlineWays.getDestLatByEdgeIdx(edgeId),
                             CoastlineWays.getDestLonByEdgeIdx(edgeId),
                             lowerLevelLat[latIdx + 1], // upper latitude coord of cell
-                            lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]
+                            lowerLevelLon[lonIdx], lowerLevelLon[lonIdx + 1]
                     )) {
                         intersectsBorder = true;
                     }
@@ -135,7 +135,7 @@ public class GridParent extends GridCell {
                 if (edgesInCell.size() >= EDGE_THRESHOLD) {
                     // A new grid cell subdivision is needed, due to the threshold being exceeded
                     lowerLevelCells[latIdx][lonIdx] = new GridParent(edgesInCell, lowerLevelLat[latIdx],
-                            lowerLevelLat[latIdx + 1], lowerLevelLon[latIdx], lowerLevelLon[latIdx + 1]);
+                            lowerLevelLat[latIdx + 1], lowerLevelLon[lonIdx], lowerLevelLon[lonIdx + 1]);
                 } else {
                     // Calculate center point of new cell
                     double ctrLat = (lowerLevelLat[latIdx] + lowerLevelLat[latIdx + 1]) / 2;
