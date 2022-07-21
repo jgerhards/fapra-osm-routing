@@ -7,6 +7,8 @@ import java.util.Arrays;
  */
 public class IntersectionHelper {
 
+    public static final int EARTH_RADIUS_METERS = 6371 * 1000;
+
     public static boolean[] getPositionInfoOfPointRelativeToCellRough(double pointToCheckLat, double pointToCheckLon,
                                                                       double leftBoundLon, double rightBoundLon,
                                                                       double lowerBoundLat, double upperBoundLat) {
@@ -103,36 +105,58 @@ public class IntersectionHelper {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
     }
 
+    public static double length(double v[]) {
+        return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    }
 
-    /**
-     * Implementation from javascript section of: http://www.movable-type.co.uk/scripts/latlong-vectors.html
-     *
-     * @param arcAStartPointLat
-     * @param arcAStartPointLon
-     * @param arcAEndPointLat
-     * @param arcAEndPointLat
-     * @return
-     */
-    public static boolean arcsIntersect(double arcAStartPointLat, double arcAStartPointLon,
-                                 double arcAEndPointLat, double arcAEndPointLon,
-                                 double arcBStartPointLat, double arcBStartPointLon,
-                                 double arcBEndPointLat, double arcBEndPointLon) {
-        // Transform coordinates to vectors
-        double[] arcAStartVector = latLonToVector(arcAStartPointLat, arcAStartPointLon);
-        double[] arcAEndVector = latLonToVector(arcAEndPointLat, arcAEndPointLon);
+    public static double distance(double v[], double u[]) {
+        return EARTH_RADIUS_METERS * Math.atan2(length(crossProductOfVector(v, u)), dotProductOfVector(v, u));
+    }
 
-        double[] arcBStartVector = latLonToVector(arcBStartPointLat, arcBStartPointLon);
-        double[] arcBEndVector = latLonToVector(arcBEndPointLat, arcBEndPointLon);
+    public static boolean arcsIntersect(
+            double latSourceA, double lonSourceA,
+            double latDestA, double lonDestA,
+            double latSourceB, double lonSourceB,
+            double latDestB, double lonDestB) {
 
-        double[] c1 = crossProductOfVector(arcAStartVector, arcAEndVector);
-        double[] c2 = crossProductOfVector(arcBStartVector, arcBEndVector);
+        return segmentIntersection(
+                latLonToVector(latSourceA, lonSourceA),
+                latLonToVector(latDestA, lonDestA),
+                latLonToVector(latSourceB, lonSourceB),
+                latLonToVector(latDestB, lonDestB), new double[3]);
+    }
+
+    private static boolean segmentIntersection(double[] sourceA, double[] destA, double[] sourceB, double[] destB, double[] target) {
+        boolean intersect = lineIntersection(sourceA, destA, sourceB, destB, target);
+        if (isLineIntersectionInSegment(sourceA, destA, target) && isLineIntersectionInSegment(sourceB, destB, target)) {
+            return intersect;
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean isLineIntersectionInSegment(double[] source, double[] dest, double[] inter) {
+        double segmentDistance = distance(source, dest);
+        return distance(inter, source) <= segmentDistance && distance(inter, dest) <= segmentDistance;
+    }
+
+
+    private static boolean lineIntersection(double[] sourceA, double[] destA, double[] sourceB, double[] destB, double[] target) {
+        double[] c1 = crossProductOfVector(sourceA, destA);
+        double[] c2 = crossProductOfVector(sourceB, destB);
 
         double[] i1 = crossProductOfVector(c1, c2);
+        double[] i2 = crossProductOfVector(c2, c1);
 
-        double[] midPoint = addVectors(arcAStartVector, addVectors(arcAEndVector, addVectors(arcBStartVector, arcBEndVector)));
+        // const mid = p1.plus(p2).plus(path1brngEnd.toNvector()).plus(path2brngEnd.toNvector());
+        double[] midPoint = addVectors(sourceA, addVectors(destA, addVectors(sourceB, destB)));
 
         double dot = dotProductOfVector(midPoint, i1);
-        if (dot > 0.0001 || dot < -0.0001) {
+        if (dot > 0) {
+            System.arraycopy(i1, 0, target, 0, 3);
+            return true;
+        } else if (dot < 0) {
+            System.arraycopy(i2, 0, target, 0, 3);
             return true;
         } else {
             return false;
