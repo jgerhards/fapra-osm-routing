@@ -189,6 +189,7 @@ public final class CoastlineChecker implements Serializable {
                 firstPointInWater = !firstPointInWater;
             }
         }
+
         System.out.println("ttt: firstPointInWater: " + firstPointInWater);
         //just this once, we use set instead of init (since point in water is known)
         topLevelGrid[0][0].setCenterPoint(centerPointLat[0], centerPointLon[0], firstPointInWater);

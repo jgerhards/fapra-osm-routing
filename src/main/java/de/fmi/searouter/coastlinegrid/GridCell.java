@@ -28,5 +28,9 @@ public abstract class GridCell {
 
     public abstract void getAllCenterPoints(int currDepth, int maxDepth, List<GridNode> pointList);
 
+    public abstract double getCtrLat();
+
+    public abstract double getCtrLon();
+
 
 }

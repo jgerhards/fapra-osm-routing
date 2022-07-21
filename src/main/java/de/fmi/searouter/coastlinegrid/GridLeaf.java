@@ -1,5 +1,6 @@
 package de.fmi.searouter.coastlinegrid;
 
+import com.google.common.math.DoubleMath;
 import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.importdata.Point;
 import de.fmi.searouter.utils.IntersectionHelper;
@@ -31,12 +32,19 @@ public class GridLeaf extends GridCell {
         this.latCenterPoint = lat;
         this.lonCenterPoint = lon;
         this.centerPointInWater = isInWater;
+
+        if(DoubleMath.fuzzyEquals(lat, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lon, -61.6667, 0.1)) {
+            System.out.println("a");
+        }
     }
 
     @Override
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
                                 boolean originCenterPointInWater, List<Integer> additionalEdges,
                                 ApproachDirection dir) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lonCenterPoint, -61.6667, 0.1)) {
+            System.out.println("a");
+        }
         centerPointInWater = originCenterPointInWater;
         if(dir == ApproachDirection.FROM_HORIZONTAL) {
             for (Integer edgeId : additionalEdges) {
@@ -108,13 +116,23 @@ public class GridLeaf extends GridCell {
     public void getAllCenterPoints(int currDepth, int maxDepth, List<GridNode> pointList) {
 
         //List<GridNode> currList = new ArrayList<>();
-        if(centerPointInWater ) { //|| !centerPointInWater
+        if(centerPointInWater || !centerPointInWater) { //
             pointList.add(this.getCenterPoint());
         }
 
 
         //return currList;
 
+    }
+
+    @Override
+    public double getCtrLat() {
+        return latCenterPoint;
+    }
+
+    @Override
+    public double getCtrLon() {
+        return lonCenterPoint;
     }
 
 }

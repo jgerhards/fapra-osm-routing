@@ -1,5 +1,6 @@
 package de.fmi.searouter.coastlinegrid;
 
+import com.google.common.math.DoubleMath;
 import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.utils.IntersectionHelper;
 
@@ -162,6 +163,9 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
+        if(DoubleMath.fuzzyEquals(lat, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lon, -61.6667, 0.1)) {
+            System.out.println("a");
+        }
 
 
         //set middle center point of lower level
@@ -180,6 +184,8 @@ public class GridParent extends GridCell {
                 ApproachDirection.FROM_HORIZONTAL);
 
         for (int i = 0; i < 3; i++) {
+            lat = lowerLevelCells[1][i].getCtrLat();
+            lon = lowerLevelCells[1][i].getCtrLon();
             lowerLevelCells[0][i].initCenterPoint(lat, lon, centersInWater[i], middleEdgeLists[i],
                     ApproachDirection.FROM_VERTICAL);
             lowerLevelCells[2][i].initCenterPoint(lat, lon, centersInWater[i], middleEdgeLists[i],
@@ -191,11 +197,10 @@ public class GridParent extends GridCell {
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
                                    boolean originCenterPointInWater, List<Integer> additionalEdges,
                                    ApproachDirection dir) {
-        boolean centerInWater = false;
+        boolean centerInWater = originCenterPointInWater;
         double centerLat = (lowerLatitude + upperLatitude) / 2;
         double centerLon = (leftLongitude + rightLongitude) / 2;
         if (dir == ApproachDirection.FROM_HORIZONTAL) {
-            centerInWater = originCenterPointInWater;
             for (Integer edgeId : additionalEdges) {
                 if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
@@ -204,23 +209,17 @@ public class GridParent extends GridCell {
                 }
             }
 
-            //check for edges from the left and middle subnodes
-            for (Integer edgeId : lowerLevelCells[1][1].getAllContainedEdgeIDs()) {
-                if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
-                    centerInWater = !centerInWater;
+            //check for edges from the left, right, and middle subnodes
+            for(int i = 0; i < 3; i++) {
+                for (Integer edgeId : lowerLevelCells[1][i].getAllContainedEdgeIDs()) {
+                    if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
+                            CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
+                            CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
+                        centerInWater = !centerInWater;
+                    }
                 }
             }
-            for (Integer edgeId : lowerLevelCells[1][0].getAllContainedEdgeIDs()) {
-                if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
-                    centerInWater = !centerInWater;
-                }
-            }
-        } else {  //approach from top
-            centerInWater = originCenterPointInWater;
+        } else {  //vertical approach
             for (Integer edgeId : additionalEdges) {
                 if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
@@ -230,21 +229,14 @@ public class GridParent extends GridCell {
                 }
             }
 
-            //check for edges from the left and middle subnodes
-            for (Integer edgeId : lowerLevelCells[1][1].getAllContainedEdgeIDs()) {
-                if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
-                        originCenterPointLat, originCenterPointLon)) {
-                    centerInWater = !centerInWater;
-                }
-            }
-            for (Integer edgeId : lowerLevelCells[1][0].getAllContainedEdgeIDs()) {
-                if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
-                        originCenterPointLat, originCenterPointLon)) {
-                    centerInWater = !centerInWater;
+            for(int i = 0; i < 3; i++) {
+                for (Integer edgeId : lowerLevelCells[i][1].getAllContainedEdgeIDs()) {
+                    if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
+                            CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
+                            CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
+                            originCenterPointLat, originCenterPointLon)) {
+                        centerInWater = !centerInWater;
+                    }
                 }
             }
         }
@@ -275,6 +267,16 @@ public class GridParent extends GridCell {
         }
         //return currList;
 
+    }
+
+    @Override
+    public double getCtrLat() {
+        return lowerLevelCells[1][1].getCtrLat();
+    }
+
+    @Override
+    public double getCtrLon() {
+        return lowerLevelCells[1][1].getCtrLon();
     }
 
     @Override

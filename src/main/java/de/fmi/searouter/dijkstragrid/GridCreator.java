@@ -234,10 +234,10 @@ public class GridCreator {
         writer.write(json);
         writer.close();
 
-        String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
+        /*String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
         BufferedWriter writer2 = new BufferedWriter(new FileWriter("ways.json"));
         writer2.write(json2);
-        writer2.close();
+        writer2.close();*/
 
         /*String json3 = GeoJsonConverter.coastlineWaysToGeoJSON().toString(0);
         BufferedWriter writer3 = new BufferedWriter(new FileWriter("ways2.json"));
