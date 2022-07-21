@@ -132,7 +132,7 @@ public class IntersectionHelper {
         double[] midPoint = addVectors(arcAStartVector, addVectors(arcAEndVector, addVectors(arcBStartVector, arcBEndVector)));
 
         double dot = dotProductOfVector(midPoint, i1);
-        if (dot != 0) {
+        if (dot > 0.0001 || dot < -0.0001) {
             return true;
         } else {
             return false;

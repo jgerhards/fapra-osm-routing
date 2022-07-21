@@ -268,7 +268,7 @@ public class GridParent extends GridCell {
 
         for (int latIdx = 0; latIdx < lowerLevelCells.length; latIdx++) {
             for (int lonIdx = 0; lonIdx < lowerLevelCells[latIdx].length; lonIdx++) {
-                System.out.println("ttt " + latIdx + " " + lonIdx);
+                //System.out.println("ttt " + latIdx + " " + lonIdx);
                 lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth, pointList);
                 //currList.addAll(lowerLevelCells[latIdx][lonIdx].getAllCenterPoints(currDepth, maxDepth));
             }

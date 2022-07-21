@@ -1,5 +1,6 @@
 package de.fmi.searouter.utils;
 
+import de.fmi.searouter.coastlinegrid.CoastlineWays;
 import de.fmi.searouter.importdata.CoastlineWay;
 import de.fmi.searouter.importdata.Point;
 import de.fmi.searouter.dijkstragrid.GridNode;
@@ -13,6 +14,62 @@ import java.util.List;
  * Provides methods to parse osm entities to GeoJSON for debugging and test purposes.
  */
 public class GeoJsonConverter {
+
+    /**
+     * Parses a list of {@link CoastlineWay}s to a GeoJSON object of the
+     * type "FeatureCollection".
+     *
+     * @return The GeoJSON as FeatureCollection type
+     */
+    public static JSONObject coastlineWaysToGeoJSON() {
+        // Outer FeatureCollection object (top-level obj)
+        JSONObject featureCollection = new JSONObject();
+        featureCollection.put("type", "FeatureCollection");
+
+        // Features, each representing one LineString (one Way of the coast)
+        JSONArray features = new JSONArray();
+        for (int i = 0; i < 10000; i++) {
+            features.put(GeoJsonConverter.edgeToJSON(CoastlineWays.getStartLatByEdgeIdx(i), CoastlineWays.getStartLonByEdgeIdx(i), CoastlineWays.getDestLatByEdgeIdx(i), CoastlineWays.getDestLonByEdgeIdx(i)));
+        }
+
+        featureCollection.put("features", features);
+
+        return featureCollection;
+    }
+
+    /**
+     * Parses a {@link Way} object to a GeoJSON representation using the type "Feature".
+     *
+     * @return
+     */
+    public static JSONObject edgeToJSON(double lat1, double lon1, double lat2, double lon2) {
+        // Build an json array of coordinate pairs (longitude-latitude pairs)
+        JSONArray longLatArray = new JSONArray();
+
+        JSONArray longLatPair = new JSONArray()
+                .put(lon1)
+                .put(lat1);
+        longLatArray.put(longLatPair);
+
+        JSONArray longLatPair2 = new JSONArray()
+                .put(lon2)
+                .put(lat2);
+        longLatArray.put(longLatPair2);
+
+
+        // Geometry json obj inside  a feature obj
+        JSONObject geometry = new JSONObject()
+                .put("type", "LineString")
+                .put("coordinates", longLatArray);
+
+        // Outer feature obj
+        JSONObject feature = new JSONObject()
+                .put("type", "Feature")
+                .put("properties", new JSONObject())
+                .put("geometry", geometry);
+
+        return feature;
+    }
 
     /**
      * Parses a list of {@link CoastlineWay}s to a GeoJSON object of the

@@ -59,7 +59,8 @@ public class CoastlineImporter {
      * @return True if a way is a coastline as defined by OSm
      */
     private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
-        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0;
+        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0 &&
+                !"bogus".equals(way.getTags().get("coastline"));
     }
 
     private void onCompletion() {

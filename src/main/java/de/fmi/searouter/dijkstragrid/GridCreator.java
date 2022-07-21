@@ -239,30 +239,10 @@ public class GridCreator {
         writer2.write(json2);
         writer2.close();
 
-        //get new string for geojson coastlines
+        /*String json3 = GeoJsonConverter.coastlineWaysToGeoJSON().toString(0);
         BufferedWriter writer3 = new BufferedWriter(new FileWriter("ways2.json"));
-        writer3.write("{\n" +
-                " \"features\": [\n" +
-                "  {\n" +
-                "   \"geometry\": {" + "\n    \"coordinates\": [\n");
-        for(int i = 0; i < CoastlineWays.getNumberOfEdges(); i++) {
-            String str = "[" + CoastlineWays.getStartLonByEdgeIdx(i) + ", " + CoastlineWays.getStartLatByEdgeIdx(i) + "], ";
-            writer3.write(str);
-        }
-        String str = "[" + CoastlineWays.getDestLonByEdgeIdx(CoastlineWays.getNumberOfEdges()) + ", " + CoastlineWays.getDestLatByEdgeIdx(CoastlineWays.getNumberOfEdges()) + "]";
-        writer3.write(str);
-        writer3.write("],\n" +
-                "    \"type\": \"LineString\"\n" +
-                "   },\n" +
-                "   \"type\": \"Feature\",\n" +
-                "   \"properties\": {}\n" +
-                "  }\n" +
-                " ],\n" +
-                " \"type\": \"FeatureCollection\"\n" +
-                "}");
-
-        writer3.close();
-
+        writer3.write(json3);
+        writer3.close();*/
 
         try {
             GridCreator.createGrid(coastlines);

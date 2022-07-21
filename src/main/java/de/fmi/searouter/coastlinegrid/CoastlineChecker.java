@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class CoastlineChecker implements Serializable {
-    private static final double INITIAL_POINT_LAT = 70.0;
-    private static final double INITIAL_POINT_LON = -5.0;
-    private static final boolean INITIAL_POINT_IN_WATER = true;
+    private static final double INITIAL_POINT_LAT = -83.0;
+    private static final double INITIAL_POINT_LON = -170.0;
+    private static final boolean INITIAL_POINT_IN_WATER = false;
 
     private static final long serialVersionUID = 13424412415L;
 
@@ -166,7 +166,14 @@ public final class CoastlineChecker implements Serializable {
         //first, check if the middle point of the first cell is in water
         boolean firstPointInWater = INITIAL_POINT_IN_WATER;
         int numOfEdges = CoastlineWays.getNumberOfEdges();
+        System.out.print("ttt: init point: ");
+        System.out.println(INITIAL_POINT_LAT + ", " +
+                INITIAL_POINT_LON + ", " + centerPointLat[0] + ", "
+                + centerPointLon[0]);
         for (int edgeId = 0; edgeId < numOfEdges; edgeId++) {
+            if(edgeId==672380) {
+                int a = 5;
+            }
             if(IntersectionHelper.arcsIntersect(
                     CoastlineWays.getStartLatByEdgeIdx(edgeId),
                     CoastlineWays.getStartLonByEdgeIdx(edgeId),
@@ -175,9 +182,14 @@ public final class CoastlineChecker implements Serializable {
                     INITIAL_POINT_LAT, INITIAL_POINT_LON,
                     centerPointLat[0], centerPointLon[0]
             )) {
+                System.out.print("ttt: arcs intersect: ");
+                System.out.println(CoastlineWays.getStartLatByEdgeIdx(edgeId) + ", " +
+                        CoastlineWays.getStartLonByEdgeIdx(edgeId) + ", " + CoastlineWays.getDestLatByEdgeIdx(edgeId) + ", "
+                        + CoastlineWays.getDestLonByEdgeIdx(edgeId) + ", " + edgeId);
                 firstPointInWater = !firstPointInWater;
             }
         }
+        System.out.println("ttt: firstPointInWater: " + firstPointInWater);
         //just this once, we use set instead of init (since point in water is known)
         topLevelGrid[0][0].setCenterPoint(centerPointLat[0], centerPointLon[0], firstPointInWater);
 
