@@ -14,7 +14,7 @@ public abstract class GridCell {
 
     public abstract void setCenterPoint(double lat, double lon, boolean isInWater);
 
-    protected static int EDGE_THRESHOLD = 50;
+    protected static int EDGE_THRESHOLD = 1000;
 
     public abstract boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
                                          boolean originCenterPointInWater, List<Integer> additionalEdges,

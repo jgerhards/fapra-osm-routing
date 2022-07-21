@@ -31,8 +31,8 @@ public final class CoastlineChecker implements Serializable {
 
         List<GridNode> resultList = new ArrayList<>();
 
-        for(int latIdx = 0; latIdx < 1; latIdx++) {
-            for(int lonIdx = 0; lonIdx < 1; lonIdx++) {
+        for(int latIdx = 0; latIdx < 18; latIdx++) {
+            for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
                 topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, maxDepth, resultList);
                 /*if (currDepth + 1 <= maxDepth) {
                 } else {
@@ -55,6 +55,9 @@ public final class CoastlineChecker implements Serializable {
             double lowerLatBound = 10.0 * (latIdx - 9);
             double upperLatBound = lowerLatBound + 10.0;
             for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+                if(latIdx == 0 && lonIdx == 0) {
+                    int a = 5; //todo: remove
+                }
                 double leftLonBound = 10.0 * (lonIdx - 18);
                 double rightLonBound = leftLonBound + 10.0;
 
@@ -128,6 +131,15 @@ public final class CoastlineChecker implements Serializable {
 
                     if (intersectsBorder) {
                         edgesInCell.add(edgeId);
+                    }
+                }
+
+                //todo: remove below
+                if(latIdx == 0 && lonIdx == 0) {
+                    for(Integer i : edgesInCell) {
+                        System.out.println("ttt: " + CoastlineWays.getStartLatByEdgeIdx(i) + ", " +
+                                CoastlineWays.getStartLonByEdgeIdx(i) + ", " + CoastlineWays.getDestLatByEdgeIdx(i) + ", "
+                                + CoastlineWays.getDestLonByEdgeIdx(i) + ", " + i);
                     }
                 }
 
