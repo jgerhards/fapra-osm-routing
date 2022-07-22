@@ -167,7 +167,7 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
-        if(DoubleMath.fuzzyEquals(lat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lon, 	61.6667, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, 55.0, 0.1) && DoubleMath.fuzzyEquals(lon, -135.0, 0.1)) {
             int breakpoint = 1;
             System.out.println("a");
         }
@@ -205,9 +205,11 @@ public class GridParent extends GridCell {
         boolean centerInWater = originCenterPointInWater;
         double centerLat = (lowerLatitude + upperLatitude) / 2;
         double centerLon = (leftLongitude + rightLongitude) / 2;
-        if(DoubleMath.fuzzyEquals(centerLat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(centerLon, 	61.6667, 0.1)) {
+        boolean ttt = false;
+        if(DoubleMath.fuzzyEquals(centerLat, 65.0, 0.1) && DoubleMath.fuzzyEquals(centerLon, -135.0, 0.1)) {
+            ttt = true;
             int breakpoint = 1;
-            System.out.println("a");
+            System.out.println("aaa");
         }
         if (dir == ApproachDirection.FROM_HORIZONTAL) {
             //check for edges from the left, right, and middle subnodes
@@ -232,6 +234,12 @@ public class GridParent extends GridCell {
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
                         CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
                         originCenterPointLat, originCenterPointLon)) {
+                    if(ttt) {
+                        System.out.println("intersect: " + edgeId + " " + CoastlineWays.getStartLatByEdgeIdx(edgeId) +
+                                " " + CoastlineWays.getStartLonByEdgeIdx(edgeId) +
+                                " " + CoastlineWays.getDestLatByEdgeIdx(edgeId) +
+                                " " + CoastlineWays.getDestLonByEdgeIdx(edgeId));
+                    }
                     centerInWater = !centerInWater;
                 }
             }

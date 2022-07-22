@@ -33,7 +33,7 @@ public final class CoastlineChecker implements Serializable {
 
         List<GridNode> resultList = new ArrayList<>();
 
-        for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+        for(int lonIdx = 0; lonIdx < 5; lonIdx++) { //full 36
             topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, 5, resultList);
             /*if (currDepth + 1 <= maxDepth) {
             } else {
@@ -209,7 +209,7 @@ public final class CoastlineChecker implements Serializable {
         }
 
         //now, calculate by column
-        for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+        for(int lonIdx = 0; lonIdx < 5; lonIdx++) { //full size: 36
             boolean previousPointInWater = firstCenterPointInWater[lonIdx];
             Set<Integer> previousEdges = firstAdditionalEdges[lonIdx];
             for(int latIdx = 1; latIdx < 18; latIdx++) { //first row already calculated, so start at idx 1

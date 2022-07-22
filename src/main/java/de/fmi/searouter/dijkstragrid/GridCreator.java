@@ -213,6 +213,11 @@ public class GridCreator {
      */
     public static void main(String[] args) throws IOException {
 
+        boolean test = IntersectionHelper.arcsIntersect(5.0, 10.00001, 6.0, 9.99999,
+                4.0, 10.0, 9., 10.0);
+        System.out.println(test);
+        System.exit(0);
+
         Date startTime = new Date();
         // Import coastlines
         CoastlineImporter importer = new CoastlineImporter();
@@ -221,8 +226,8 @@ public class GridCreator {
         try {
             //coastlines = importer.importPBF("planet-coastlines.pbf");
             //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
-            coastlines = importer.importPBF("south-america-latest.osm.pbf");
-            //coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            //coastlines = importer.importPBF("south-america-latest.osm.pbf");
+            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
