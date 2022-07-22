@@ -39,9 +39,6 @@ public class CoastlineWays {
         for (CoastlineWay currCoastlineWay : importedCoastlines) {
 
             List<Point> currPoints = currCoastlineWay.getPoints();
-            if(currPoints.get(0).getId() == 2413800368L) {
-                int breakpoint = 1;
-            }
 
             if (currPoints.size() <= 1) {
                 continue;

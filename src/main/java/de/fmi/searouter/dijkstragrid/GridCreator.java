@@ -220,8 +220,8 @@ public class GridCreator {
 
         try {
             //coastlines = importer.importPBF("planet-coastlines.pbf");
-            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
-            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+            //coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
