@@ -213,10 +213,12 @@ public class GridCreator {
      */
     public static void main(String[] args) throws IOException {
 
-        boolean test = IntersectionHelper.arcsIntersect(5.0, 10.00001, 6.0, 9.99999,
-                4.0, 10.0, 9., 10.0);
+        boolean test = IntersectionHelper.arcsIntersect(5.0, 10.0000, 6.0, 10.0,
+                4.0, 10.0, 9.0, 10.0);
+        test = IntersectionHelper.crossesLatitude(5.0, 10.0000, 5.0, 11.0,
+                5.0, 9.0, 12.0);
         System.out.println(test);
-        System.exit(0);
+        //System.exit(0);
 
         Date startTime = new Date();
         // Import coastlines

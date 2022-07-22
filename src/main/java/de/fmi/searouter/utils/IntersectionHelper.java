@@ -119,11 +119,31 @@ public class IntersectionHelper {
         return EARTH_RADIUS_METERS * Math.atan2(length(crossProductOfVector(v, u)), dotProductOfVector(v, u));
     }
 
+    public static boolean arcsIntersectWithException(
+            double latSourceA, double lonSourceA,
+            double latDestA, double lonDestA,
+            double latSourceB, double lonSourceB,
+            double latDestB, double lonDestB) throws IllegalArgumentException {
+        if(DoubleMath.fuzzyEquals(lonSourceA, lonDestA, 0.0000001) &&
+                DoubleMath.fuzzyEquals(lonDestA, lonSourceB, 0.0000001) &&
+                DoubleMath.fuzzyEquals(lonSourceB, lonDestB, 0.0000001)) {
+            System.out.println("bbbbbbbbbbbb");
+            throw new IllegalArgumentException();
+        }
+        return arcsIntersect(latSourceA, lonSourceA, latDestA, lonDestA, latSourceB, lonSourceB, latDestB, lonDestB);
+    }
+
     public static boolean arcsIntersect(
             double latSourceA, double lonSourceA,
             double latDestA, double lonDestA,
             double latSourceB, double lonSourceB,
             double latDestB, double lonDestB) {
+        if(DoubleMath.fuzzyEquals(lonSourceA, lonDestA, 0.0000001) &&
+                DoubleMath.fuzzyEquals(lonDestA, lonSourceB, 0.0000001) &&
+                DoubleMath.fuzzyEquals(lonSourceB, lonDestB, 0.0000001)) {
+            System.out.println("ggggggggggg");
+            return true;
+        }
 
         return segmentIntersection(
                 latLonToVector(latSourceA, lonSourceA),

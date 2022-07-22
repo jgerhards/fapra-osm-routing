@@ -34,7 +34,7 @@ public class GridLeaf extends GridCell {
         this.lonCenterPoint = lon;
         this.centerPointInWater = isInWater;
 
-        if(DoubleMath.fuzzyEquals(lat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lon, 	61.6667, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, 	28.2099, 0.1) && DoubleMath.fuzzyEquals(lon, -177.3868, 0.1)) {
             int breakpoint = 1;
             System.out.println("a");
         }
@@ -44,7 +44,7 @@ public class GridLeaf extends GridCell {
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
                                 boolean originCenterPointInWater, Set<Integer> allEdgeIds,
                                 ApproachDirection dir) {
-        if(DoubleMath.fuzzyEquals(latCenterPoint, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lonCenterPoint, 	61.6667, 0.1)) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, 	28.2099, 0.1) && DoubleMath.fuzzyEquals(lonCenterPoint, -177.3868, 0.1)) {
             int breakpoint = 1;
             System.out.println("a");
         }
@@ -62,14 +62,26 @@ public class GridLeaf extends GridCell {
                 }
             }
         } else {
-            for (Integer edgeId : allEdgeIds) {
-                if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint, lonCenterPoint,
-                        originCenterPointLat, originCenterPointLon)) {
-                    centerPointInWater = !centerPointInWater;
+            boolean noException;
+            do {
+                boolean backupInWater = centerPointInWater;
+                noException = true;
+                try {
+                    for (Integer edgeId : allEdgeIds) {
+                        if (IntersectionHelper.arcsIntersectWithException(CoastlineWays.getStartLatByEdgeIdx(edgeId),
+                                CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
+                                CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint, lonCenterPoint,
+                                originCenterPointLat, originCenterPointLon)) {
+                            centerPointInWater = !centerPointInWater;
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("ttt: caught exception");
+                    lonCenterPoint += 0.000001;
+                    noException = false;
+                    centerPointInWater = backupInWater;
                 }
-            }
+            } while(!noException);
         }
 
         return centerPointInWater;
