@@ -75,6 +75,9 @@ public class CoastlineImporter {
      */
     private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
         if (isCoastlineEntity(way)) {
+            if (way.getId() == 233045662) {
+                int breakpoint = 1;
+            }
             CoastlineWay cWay = new CoastlineWay(way);
             for (int i = 0; i < way.getNodes().size(); i++) {
                 Point node = this.allNodes.get(way.getNodes().get(i));
