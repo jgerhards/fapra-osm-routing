@@ -213,7 +213,7 @@ public class GridCreator {
      */
     public static void main(String[] args) throws IOException {
 
-
+        Date startTime = new Date();
         // Import coastlines
         CoastlineImporter importer = new CoastlineImporter();
         List<CoastlineWay> coastlines = new ArrayList<>();
@@ -221,18 +221,23 @@ public class GridCreator {
         try {
             //coastlines = importer.importPBF("planet-coastlines.pbf");
             coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+            //coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         CoastlineWays.initEdges(coastlines);
         coastlineChecker = CoastlineChecker.getInstance();
-        List<GridNode> centerPoints = CoastlineChecker.getInstance().getAllCenterPoints(2);
 
-        String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
-        BufferedWriter writer = new BufferedWriter(new FileWriter("centerpoints.json"));
-        writer.write(json);
-        writer.close();
+        for(int latIdx = 0; latIdx < 18; latIdx++) {
+            List<GridNode> centerPoints = CoastlineChecker.getInstance().getAllCenterPoints(latIdx);
+
+            String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
+            String fileName = "centerpoints" + latIdx + ".json";
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+            writer.write(json);
+            writer.close();
+        }
 
         /*String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
         BufferedWriter writer2 = new BufferedWriter(new FileWriter("ways.json"));
@@ -250,6 +255,9 @@ public class GridCreator {
             e.printStackTrace();
         }
 
+        Date endTime = new Date();
+        long timeDiffMin = ((endTime.getTime() - startTime.getTime())/1000)/60;
+        System.out.println("ttt: runtime: " + timeDiffMin);
 
     }
 
