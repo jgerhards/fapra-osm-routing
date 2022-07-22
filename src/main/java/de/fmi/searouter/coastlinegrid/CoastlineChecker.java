@@ -5,6 +5,7 @@ import de.fmi.searouter.utils.IntersectionHelper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -60,7 +61,7 @@ public final class CoastlineChecker implements Serializable {
                 double leftLonBound = 10.0 * (lonIdx - 18);
                 double rightLonBound = leftLonBound + 10.0;
 
-                List<Integer> edgesInCell = new ArrayList();
+                Set<Integer> edgesInCell = new HashSet<>();
                 int numOfEdges = CoastlineWays.getNumberOfEdges();
                 for (int edgeId = 0; edgeId < numOfEdges; edgeId++) {
                     boolean[] startResults = IntersectionHelper.getPositionInfoOfPointRelativeToCellRough(

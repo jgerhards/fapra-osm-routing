@@ -26,7 +26,7 @@ public class GridParent extends GridCell {
     private double centerPointLon;
 
 
-    public GridParent(List<Integer> edgeIDs, double lowerLatitude, double upperLatitude, double leftLongitude,
+    public GridParent(Set<Integer> edgeIDs, double lowerLatitude, double upperLatitude, double leftLongitude,
                       double rightLongitude) {
         this.lowerLatitude = lowerLatitude;
         this.upperLatitude = upperLatitude;
@@ -39,7 +39,7 @@ public class GridParent extends GridCell {
         buildLowerLevel(edgeIDs);
     }
 
-    private void buildLowerLevel(List<Integer> edgeIDs) {
+    private void buildLowerLevel(Set<Integer> edgeIDs) {
 
         double latSeparation = Math.abs(upperLatitude - lowerLatitude) / 3;
         double lonSeparation = Math.abs(leftLongitude - rightLongitude) / 3;
@@ -61,7 +61,7 @@ public class GridParent extends GridCell {
 
             for (int lonIdx = 0; lonIdx < 3; lonIdx++) {
 
-                List<Integer> edgesInCell = new ArrayList<>();
+                Set<Integer> edgesInCell = new HashSet<>();
                 for (Integer edgeId : edgeIDs) {
                     boolean[] startResults = IntersectionHelper.getPositionInfoOfPointRelativeToCell(
                             CoastlineWays.getStartLatByEdgeIdx(edgeId),
@@ -146,8 +146,10 @@ public class GridParent extends GridCell {
                     // Transform the edge index list to an edge index array
                     int listSize = edgesInCell.size();
                     int[] idArray = new int[listSize];
-                    for (int i = 0; i < listSize; i++) {
-                        idArray[i] = edgesInCell.get(i);
+                    int i = 0;
+                    for (Integer toAdd : edgesInCell) {
+                        idArray[i] = toAdd;
+                        i++;
                     }
 
                     // As the number of edges is smaller than the threshold no further lower levels are needed --> leaf

@@ -24,6 +24,10 @@ public class CoastlineWays {
             numberOfCoordinates += currCoastline.getNumberOfPoints();
         }
 
+        /*edgePosStart = new int[]{0, 2};
+        numberOfEdges = 2;
+        pointLat = new float[] {1.2f, 1.3f, 1.2f, 1.3f};
+        pointLon = new float[] {2.2f, 2.3f, 2.2f, 2.3f};*/
         edgePosStart = new int[numberOfEdges];
 
         pointLon = new float[numberOfCoordinates];

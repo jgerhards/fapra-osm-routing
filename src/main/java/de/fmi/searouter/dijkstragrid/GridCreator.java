@@ -227,6 +227,63 @@ public class GridCreator {
         }
 
         CoastlineWays.initEdges(coastlines);
+        coastlines = null;
+       /* Map<Float, Map<Float, List<Float[]>>> checkerMap = new HashMap();
+        int numOfEdges = CoastlineWays.getNumberOfEdges();
+        for(int i = 0; i < numOfEdges; i++) {
+            Float values[] = new Float[]{CoastlineWays.getStartLatByEdgeIdx(i),
+                    CoastlineWays.getStartLonByEdgeIdx(i)};
+            if(checkerMap.containsKey(values[0])) {
+                if(checkerMap.get(values[0]).containsKey(values[1])) {
+                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                            CoastlineWays.getDestLonByEdgeIdx(i)};
+                    for(Float[] arr : checkerMap.get(values[0]).get(values[1])) {
+                        if(arr[0].equals(valuesDest[0]) && arr[1].equals(valuesDest[1])) {
+                            System.out.println("equal pair found");
+                            System.exit(0);
+                        }
+                    }
+                } else {
+                    checkerMap.get(values[0]).put(values[1], new ArrayList<>());
+                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                            CoastlineWays.getDestLonByEdgeIdx(i)};
+                    checkerMap.get(values[0]).get(values[1]).add(valuesDest);
+                }
+            } else {
+                checkerMap.put(values[0], new HashMap<>());
+                checkerMap.get(values[0]).put(values[1], new ArrayList<>());
+                Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                        CoastlineWays.getDestLonByEdgeIdx(i)};
+                checkerMap.get(values[0]).get(values[1]).add(valuesDest);
+            }
+
+
+            values = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                    CoastlineWays.getDestLonByEdgeIdx(i)};
+            if(checkerMap.containsKey(values[0])) {
+                if(checkerMap.get(values[0]).containsKey(values[1])) {
+                    Float valuesDest[] = new Float[]{CoastlineWays.getStartLatByEdgeIdx(i),
+                            CoastlineWays.getStartLonByEdgeIdx(i)};
+                    for(Float[] arr : checkerMap.get(values[0]).get(values[1])) {
+                        if(arr[0].equals(valuesDest[0]) && arr[1].equals(valuesDest[1])) {
+                            System.out.println("equal pair found");
+                            System.exit(0);
+                        }
+                    }
+                } else {
+                    checkerMap.get(values[0]).put(values[1], new ArrayList<>());
+                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                            CoastlineWays.getDestLonByEdgeIdx(i)};
+                    checkerMap.get(values[0]).get(values[1]).add(valuesDest);
+                }
+            } else {
+                checkerMap.put(values[0], new HashMap<>());
+                checkerMap.get(values[0]).put(values[1], new ArrayList<>());
+                Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
+                        CoastlineWays.getDestLonByEdgeIdx(i)};
+                checkerMap.get(values[0]).get(values[1]).add(valuesDest);
+            }
+        }*/
         coastlineChecker = CoastlineChecker.getInstance();
 
         for(int latIdx = 0; latIdx < 18; latIdx++) {
@@ -249,7 +306,7 @@ public class GridCreator {
         writer3.write(json3);
         writer3.close();*/
 
-        try {
+        /*try {
             GridCreator.createGrid(coastlines);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -257,7 +314,7 @@ public class GridCreator {
 
         Date endTime = new Date();
         long timeDiffMin = ((endTime.getTime() - startTime.getTime())/1000)/60;
-        System.out.println("ttt: runtime: " + timeDiffMin);
+        System.out.println("ttt: runtime: " + timeDiffMin);*/
 
     }
 

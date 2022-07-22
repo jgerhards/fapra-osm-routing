@@ -106,7 +106,7 @@ public class GridLeaf extends GridCell {
     public void getAllCenterPoints(int currDepth, int maxDepth, List<GridNode> pointList) {
 
         //List<GridNode> currList = new ArrayList<>();
-        if(!centerPointInWater || !centerPointInWater) { //
+        if(centerPointInWater || centerPointInWater) { //
             pointList.add(this.getCenterPoint());
         }
 
