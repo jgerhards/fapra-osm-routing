@@ -220,8 +220,8 @@ public class GridCreator {
 
         try {
             //coastlines = importer.importPBF("planet-coastlines.pbf");
-            coastlines = importer.importPBF("antarctica-latest.osm.pbf");
-            //coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -239,10 +239,10 @@ public class GridCreator {
             writer.close();
         }
 
-        String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
+        /*String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
         BufferedWriter writer2 = new BufferedWriter(new FileWriter("ways.json"));
         writer2.write(json2);
-        writer2.close();
+        writer2.close();*/
 
         /*String json3 = GeoJsonConverter.coastlineWaysToGeoJSON().toString(0);
         BufferedWriter writer3 = new BufferedWriter(new FileWriter("ways2.json"));

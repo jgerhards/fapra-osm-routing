@@ -5,6 +5,7 @@ import de.fmi.searouter.importdata.Point;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class GridCell {
 
@@ -17,12 +18,12 @@ public abstract class GridCell {
     protected static int EDGE_THRESHOLD = 1000;
 
     public abstract boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
-                                         boolean originCenterPointInWater, List<Integer> additionalEdges,
+                                         boolean originCenterPointInWater, Set<Integer> additionalEdges,
                                          ApproachDirection dir);
 
     public abstract boolean isPointInWater(float lat, float lon);
 
-    public abstract List<Integer> getAllContainedEdgeIDs();
+    public abstract Set<Integer> getAllContainedEdgeIDs();
 
     public abstract GridNode getCenterPoint();
 

@@ -5,7 +5,9 @@ import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.utils.IntersectionHelper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // TODO himmelsrichtung statt left, right etc
 public class GridParent extends GridCell {
@@ -163,7 +165,7 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
-        if(DoubleMath.fuzzyEquals(lat, -66.1111, 0.1) && DoubleMath.fuzzyEquals(lon, 110.9259, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lon, 	61.6667, 0.1)) {
             int breakpoint = 1;
             System.out.println("a");
         }
@@ -171,7 +173,7 @@ public class GridParent extends GridCell {
 
         //set middle center point of lower level
         lowerLevelCells[1][1].setCenterPoint(lat, lon, isInWater);
-        List<Integer>[] middleEdgeLists = new List[]{
+        Set<Integer>[] middleEdgeLists = new Set[]{
                 lowerLevelCells[1][0].getAllContainedEdgeIDs(),
                 lowerLevelCells[1][1].getAllContainedEdgeIDs(),
                 lowerLevelCells[1][2].getAllContainedEdgeIDs()
@@ -196,32 +198,34 @@ public class GridParent extends GridCell {
 
     @Override
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
-                                   boolean originCenterPointInWater, List<Integer> additionalEdges,
+                                   boolean originCenterPointInWater, Set<Integer> edgeIds,
                                    ApproachDirection dir) {
         boolean centerInWater = originCenterPointInWater;
         double centerLat = (lowerLatitude + upperLatitude) / 2;
         double centerLon = (leftLongitude + rightLongitude) / 2;
+        if(DoubleMath.fuzzyEquals(centerLat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(centerLon, 	61.6667, 0.1)) {
+            int breakpoint = 1;
+            System.out.println("a");
+        }
         if (dir == ApproachDirection.FROM_HORIZONTAL) {
-            for (Integer edgeId : additionalEdges) {
+            //check for edges from the left, right, and middle subnodes
+            for(int i = 0; i < 3; i++) {
+                edgeIds.addAll(lowerLevelCells[1][i].getAllContainedEdgeIDs());
+            }
+
+            for (Integer edgeId : edgeIds) {
                 if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
                         CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
                     centerInWater = !centerInWater;
                 }
             }
-
-            //check for edges from the left, right, and middle subnodes
-            for(int i = 0; i < 3; i++) {
-                for (Integer edgeId : lowerLevelCells[1][i].getAllContainedEdgeIDs()) {
-                    if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                            CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                            CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
-                        centerInWater = !centerInWater;
-                    }
-                }
-            }
         } else {  //vertical approach
-            for (Integer edgeId : additionalEdges) {
+            for(int i = 0; i < 3; i++) {
+                edgeIds.addAll(lowerLevelCells[i][1].getAllContainedEdgeIDs());
+            }
+
+            for(Integer edgeId : edgeIds) {
                 if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
                         CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
@@ -229,17 +233,7 @@ public class GridParent extends GridCell {
                     centerInWater = !centerInWater;
                 }
             }
-
-            for(int i = 0; i < 3; i++) {
-                for (Integer edgeId : lowerLevelCells[i][1].getAllContainedEdgeIDs()) {
-                    if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                            CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                            CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
-                            originCenterPointLat, originCenterPointLon)) {
-                        centerInWater = !centerInWater;
-                    }
-                }
-            }
+            //System.out.println(ttt);
         }
 
         setCenterPoint(centerLat, centerLon, centerInWater);
@@ -307,8 +301,8 @@ public class GridParent extends GridCell {
     }
 
     @Override
-    public List<Integer> getAllContainedEdgeIDs() {
-        List<Integer> fullList = new ArrayList();
+    public Set<Integer> getAllContainedEdgeIDs() {
+        Set<Integer> fullList = new HashSet<>();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 fullList.addAll(lowerLevelCells[i][j].getAllContainedEdgeIDs());

@@ -6,6 +6,7 @@ import de.fmi.searouter.utils.IntersectionHelper;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public final class CoastlineChecker implements Serializable {
     private static final double INITIAL_POINT_LAT = -83.0;
@@ -193,7 +194,7 @@ public final class CoastlineChecker implements Serializable {
         topLevelGrid[0][0].setCenterPoint(centerPointLat[0], centerPointLon[0], firstPointInWater);
 
         boolean[] firstCenterPointInWater = new boolean[36];
-        List<Integer>[] firstAdditionalEdges = new List[36];
+        Set<Integer>[] firstAdditionalEdges = new Set[36];
         firstCenterPointInWater[0] = firstPointInWater;
         firstAdditionalEdges[0] = topLevelGrid[0][0].getAllContainedEdgeIDs();
 
@@ -209,7 +210,7 @@ public final class CoastlineChecker implements Serializable {
         //now, calculate by column
         for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
             boolean previousPointInWater = firstCenterPointInWater[lonIdx];
-            List<Integer> previousEdges = firstAdditionalEdges[lonIdx];
+            Set<Integer> previousEdges = firstAdditionalEdges[lonIdx];
             for(int latIdx = 1; latIdx < 18; latIdx++) { //first row already calculated, so start at idx 1
                 previousPointInWater = topLevelGrid[latIdx][lonIdx].initCenterPoint(centerPointLat[latIdx - 1],
                         centerPointLon[lonIdx], previousPointInWater,

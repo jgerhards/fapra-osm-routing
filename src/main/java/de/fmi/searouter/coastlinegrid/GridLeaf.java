@@ -8,6 +8,7 @@ import de.fmi.searouter.utils.IntersectionHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GridLeaf extends GridCell {
@@ -33,35 +34,26 @@ public class GridLeaf extends GridCell {
         this.lonCenterPoint = lon;
         this.centerPointInWater = isInWater;
 
-        if(DoubleMath.fuzzyEquals(latCenterPoint, -66.1111, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 110.5555, 0.001)) {
+        if(DoubleMath.fuzzyEquals(lat, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lon, 	61.6667, 0.1)) {
             int breakpoint = 1;
-            System.out.println("a");
-        }
-
-        if(DoubleMath.fuzzyEquals(lat, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lon, -61.6667, 0.1)) {
             System.out.println("a");
         }
     }
 
     @Override
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
-                                boolean originCenterPointInWater, List<Integer> additionalEdges,
+                                boolean originCenterPointInWater, Set<Integer> allEdgeIds,
                                 ApproachDirection dir) {
-        if(DoubleMath.fuzzyEquals(latCenterPoint, -66.1111, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 110.5555, 0.001)) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, -68.3333, 0.1) && DoubleMath.fuzzyEquals(lonCenterPoint, 	61.6667, 0.1)) {
             int breakpoint = 1;
             System.out.println("a");
         }
         centerPointInWater = originCenterPointInWater;
+        for (int edgeId : this.edgeIds) {
+            allEdgeIds.add(edgeId);
+        }
         if(dir == ApproachDirection.FROM_HORIZONTAL) {
-            for (Integer edgeId : additionalEdges) {
-                if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint,
-                        originCenterPointLon, lonCenterPoint)) {
-                    centerPointInWater = !centerPointInWater;
-                }
-            }
-            for (int edgeId : edgeIds) {
+            for (Integer edgeId : allEdgeIds) {
                 if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
                         CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint,
@@ -70,15 +62,7 @@ public class GridLeaf extends GridCell {
                 }
             }
         } else {
-            for (Integer edgeId : additionalEdges) {
-                if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint, lonCenterPoint,
-                        originCenterPointLat, originCenterPointLon)) {
-                    centerPointInWater = !centerPointInWater;
-                }
-            }
-            for (int edgeId : edgeIds) {
+            for (Integer edgeId : allEdgeIds) {
                 if (IntersectionHelper.arcsIntersect(CoastlineWays.getStartLatByEdgeIdx(edgeId),
                         CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
                         CoastlineWays.getDestLonByEdgeIdx(edgeId), latCenterPoint, lonCenterPoint,
@@ -108,8 +92,8 @@ public class GridLeaf extends GridCell {
     }
 
     @Override
-    public List<Integer> getAllContainedEdgeIDs() {
-        List<Integer> list = Arrays.stream(edgeIds).boxed().collect(Collectors.toList());
+    public Set<Integer> getAllContainedEdgeIDs() {
+        Set<Integer> list = Arrays.stream(edgeIds).boxed().collect(Collectors.toSet());
         return list;
     }
 
