@@ -213,9 +213,15 @@ public final class CoastlineChecker implements Serializable {
             boolean previousPointInWater = firstCenterPointInWater[lonIdx];
             Set<Integer> previousEdges = firstAdditionalEdges[lonIdx];
             for(int latIdx = 1; latIdx < 18; latIdx++) { //first row already calculated, so start at idx 1
+                boolean tmpWater = previousPointInWater;
                 previousPointInWater = topLevelGrid[latIdx][lonIdx].initCenterPoint(centerPointLat[latIdx - 1],
                         centerPointLon[lonIdx], previousPointInWater,
                         previousEdges, GridCell.ApproachDirection.FROM_VERTICAL);
+
+                System.out.println("tmpWater: " + tmpWater+ " centerPointLat: " + centerPointLat[latIdx - 1] +
+                        " centerPointLon: " + centerPointLon[lonIdx] + " previousPointInWater: " + previousPointInWater + " newLat: " + centerPointLat[latIdx] +
+                        " newLon: " + centerPointLon[lonIdx]);
+
                 previousEdges = topLevelGrid[latIdx][lonIdx].getAllContainedEdgeIDs();
             }
         }
