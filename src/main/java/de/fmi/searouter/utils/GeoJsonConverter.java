@@ -140,7 +140,7 @@ public class GeoJsonConverter {
         // Build an json array of coordinate pairs (longitude-latitude pairs)
         JSONArray longLatArray = new JSONArray();
 
-        for (int i = 0; i < wayToConvert.getNumberOfEdges(); i++) {
+        for (int i = 0; i < wayToConvert.getNumberOfPoints(); i++) {
             JSONArray longLatPair = new JSONArray()
                     .put(wayNodes.get(i).getLon())
                     .put(wayNodes.get(i).getLat());

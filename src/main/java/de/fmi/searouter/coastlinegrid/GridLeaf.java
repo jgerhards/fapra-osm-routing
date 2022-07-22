@@ -33,6 +33,11 @@ public class GridLeaf extends GridCell {
         this.lonCenterPoint = lon;
         this.centerPointInWater = isInWater;
 
+        if(DoubleMath.fuzzyEquals(latCenterPoint, -66.1111, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 110.5555, 0.001)) {
+            int breakpoint = 1;
+            System.out.println("a");
+        }
+
         if(DoubleMath.fuzzyEquals(lat, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lon, -61.6667, 0.1)) {
             System.out.println("a");
         }
@@ -42,7 +47,8 @@ public class GridLeaf extends GridCell {
     public boolean initCenterPoint(double originCenterPointLat, double originCenterPointLon,
                                 boolean originCenterPointInWater, List<Integer> additionalEdges,
                                 ApproachDirection dir) {
-        if(DoubleMath.fuzzyEquals(latCenterPoint, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lonCenterPoint, -61.6667, 0.1)) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, -66.1111, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 110.5555, 0.001)) {
+            int breakpoint = 1;
             System.out.println("a");
         }
         centerPointInWater = originCenterPointInWater;

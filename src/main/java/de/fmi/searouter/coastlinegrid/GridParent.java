@@ -163,7 +163,8 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
-        if(DoubleMath.fuzzyEquals(lat, -78.3333, 0.1) && DoubleMath.fuzzyEquals(lon, -61.6667, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, -66.1111, 0.1) && DoubleMath.fuzzyEquals(lon, 110.9259, 0.1)) {
+            int breakpoint = 1;
             System.out.println("a");
         }
 
