@@ -1,5 +1,6 @@
 package de.fmi.searouter.dijkstragrid;
 
+import com.google.common.math.DoubleMath;
 import de.fmi.searouter.coastlinegrid.CoastlineChecker;
 import de.fmi.searouter.coastlinegrid.CoastlineWays;
 import de.fmi.searouter.importdata.CoastlineWay;
@@ -58,7 +59,7 @@ public class GridCreator {
      *                          for a point-in-polygon check
      * @throws InterruptedException If something with the threads went wrong
      */
-    public static void createGrid(List<CoastlineWay> coastlinePolygons) throws InterruptedException {
+    public static void createGrid() throws InterruptedException {
         gridNodes = new ArrayList<>();
 
         coordinateNodeStore = new HashMap<>();
@@ -215,27 +216,61 @@ public class GridCreator {
 
         boolean test = IntersectionHelper.arcsIntersect(5.0, 10.0000, 6.0, 10.0,
                 4.0, 10.0, 9.0, 10.0);
-        test = IntersectionHelper.crossesLatitude(5.0, 10.0000, 5.0, 11.0,
-                5.0, 9.0, 12.0);
+        test = IntersectionHelper.crossesLatitude(52.0371, 	-174.9236, 52.0367, 	-174.9236,
+                52.03703703703704, -175.0, -174.87654320987656);
+        System.out.println(test);
+        test = IntersectionHelper.crossesLatitude(52.0367, 	-174.9236,52.0371, 	-174.9236,
+                52.03703703703704, -175.0, -174.87654320987656);
         System.out.println(test);
         //System.exit(0);
 
         Date startTime = new Date();
-        // Import coastlines
-        CoastlineImporter importer = new CoastlineImporter();
-        List<CoastlineWay> coastlines = new ArrayList<>();
+        if(false) {
+            // Import coastlines
+            CoastlineImporter importer = new CoastlineImporter();
+            List<CoastlineWay> coastlines = new ArrayList<>();
 
-        try {
-            //coastlines = importer.importPBF("planet-coastlines.pbf");
-            //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
-            //coastlines = importer.importPBF("south-america-latest.osm.pbf");
-            coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                //coastlines = importer.importPBF("planet-coastlines.pbf");
+                //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
+                //coastlines = importer.importPBF("south-america-latest.osm.pbf");
+                coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            CoastlineWays.initEdges(coastlines);
+            coastlines = null;
+            CoastlineWays.storeData();
+        } else {
+            CoastlineWays.getData();
         }
 
-        CoastlineWays.initEdges(coastlines);
-        coastlines = null;
+        System.out.println(CoastlineWays.getNumberOfEdges());
+
+        /*test = IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(30875904), CoastlineWays.getStartLonByEdgeIdx(30875904),
+                CoastlineWays.getDestLatByEdgeIdx(30875904), CoastlineWays.getDestLonByEdgeIdx(30875904),
+                55.0, -163.9566832780838, -163.8888888888889);
+        System.out.println(test);
+        System.exit(0);*/
+
+        /*int numOfEdges = CoastlineWays.getNumberOfEdges();
+        for(int i = 0; i < numOfEdges; i++) {
+            if(DoubleMath.fuzzyEquals(CoastlineWays.getStartLatByEdgeIdx(i), 			55.0001891, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLonByEdgeIdx(i), 		-163.9566860, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLatByEdgeIdx(i), 	55.0000002, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLonByEdgeIdx(i), 			-163.9570449, 0.0001)
+            ) {
+                System.out.println("ppp: found " + i);
+            } else if(DoubleMath.fuzzyEquals(CoastlineWays.getDestLatByEdgeIdx(i), 	55.0000002, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLonByEdgeIdx(i), 			-163.9570449, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLatByEdgeIdx(i), 		55.0001891, 0.0001) &&
+                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLonByEdgeIdx(i), 		-163.9566860, 0.0001)
+            ) {
+                System.out.println("ppp: found" + i);
+            }
+        }
+        System.exit(0);*/
        /* Map<Float, Map<Float, List<Float[]>>> checkerMap = new HashMap();
         int numOfEdges = CoastlineWays.getNumberOfEdges();
         for(int i = 0; i < numOfEdges; i++) {
@@ -314,15 +349,15 @@ public class GridCreator {
         writer3.write(json3);
         writer3.close();*/
 
-        /*try {
-            GridCreator.createGrid(coastlines);
+        try {
+            GridCreator.createGrid();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         Date endTime = new Date();
         long timeDiffMin = ((endTime.getTime() - startTime.getTime())/1000)/60;
-        System.out.println("ttt: runtime: " + timeDiffMin);*/
+        System.out.println("ttt: runtime: " + timeDiffMin);
 
     }
 

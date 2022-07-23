@@ -33,7 +33,7 @@ public final class CoastlineChecker implements Serializable {
 
         List<GridNode> resultList = new ArrayList<>();
 
-        for(int lonIdx = 0; lonIdx < 5; lonIdx++) { //full 36
+        for(int lonIdx = 0; lonIdx < 36; lonIdx++) { //full 36
             topLevelGrid[latIdx][lonIdx].getAllCenterPoints(currDepth + 1, 5, resultList);
             /*if (currDepth + 1 <= maxDepth) {
             } else {
@@ -54,7 +54,7 @@ public final class CoastlineChecker implements Serializable {
         for(int latIdx = 0; latIdx < 18; latIdx++) {
             double lowerLatBound = 10.0 * (latIdx - 9);
             double upperLatBound = lowerLatBound + 10.0;
-            for(int lonIdx = 0; lonIdx < 36; lonIdx++) {
+            for(int lonIdx = 0; lonIdx < 36; lonIdx++) { //full size: 36
                 if(latIdx == 0 && lonIdx == 0) {
                     int a = 5; //todo: remove
                 }
@@ -201,7 +201,7 @@ public final class CoastlineChecker implements Serializable {
 
         // first, calculate bottom row
         double firstRowLat = centerPointLat[0];
-        for(int lonIdx = 1; lonIdx < 36; lonIdx++) {
+        for(int lonIdx = 1; lonIdx < 36; lonIdx++) { //full size: 36
             firstCenterPointInWater[lonIdx] = topLevelGrid[0][lonIdx].initCenterPoint(firstRowLat,
                     centerPointLon[lonIdx - 1], firstCenterPointInWater[lonIdx - 1],
                     firstAdditionalEdges[lonIdx - 1], GridCell.ApproachDirection.FROM_HORIZONTAL);
@@ -209,7 +209,7 @@ public final class CoastlineChecker implements Serializable {
         }
 
         //now, calculate by column
-        for(int lonIdx = 0; lonIdx < 5; lonIdx++) { //full size: 36
+        for(int lonIdx = 0; lonIdx < 36; lonIdx++) { //full size: 36
             boolean previousPointInWater = firstCenterPointInWater[lonIdx];
             Set<Integer> previousEdges = firstAdditionalEdges[lonIdx];
             for(int latIdx = 1; latIdx < 18; latIdx++) { //first row already calculated, so start at idx 1

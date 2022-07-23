@@ -167,9 +167,9 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
-        if(DoubleMath.fuzzyEquals(lat, 	28.2099, 0.1) && DoubleMath.fuzzyEquals(lon, -177.3868, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, 	55.0, 0.1) && DoubleMath.fuzzyEquals(lon, -163.8889, 0.1)) {
             int breakpoint = 1;
-            System.out.println("a");
+            //System.out.println("zzz: set center point");
         }
 
 
@@ -207,30 +207,64 @@ public class GridParent extends GridCell {
         double centerLon = (leftLongitude + rightLongitude) / 2;
         boolean ttt = false;
         //if(DoubleMath.fuzzyEquals(centerLat, 65.0, 0.1) && DoubleMath.fuzzyEquals(centerLon, -135.0, 0.1)) {
-        if(DoubleMath.fuzzyEquals(centerLat, 	28.2099, 0.1) && DoubleMath.fuzzyEquals(centerLon, -177.3868, 0.1)) {
+        if(DoubleMath.fuzzyEquals(centerLat, 	55.0, 0.1) && DoubleMath.fuzzyEquals(centerLon, -163.8889, 0.1)) {
             ttt = true;
+            System.out.println("zzz: init center parent: " + centerLat + ", " + centerLon +
+                    " origin: " + originCenterPointLat + " " + originCenterPointLon +
+                    " direction: " + dir + " origin in water: " + originCenterPointInWater);
             int breakpoint = 1;
-            System.out.println("aaa");
         }
         if (dir == ApproachDirection.FROM_HORIZONTAL) {
             //check for edges from the left, right, and middle subnodes
             for(int i = 0; i < 3; i++) {
                 edgeIds.addAll(lowerLevelCells[1][i].getAllContainedEdgeIDs());
             }
+            boolean noException;
+            do {
+                noException = true;
+                int times = 0;
+                try {
+                    for (Integer edgeId : edgeIds) {
+                        if (IntersectionHelper.crossesLatitudeWithException(CoastlineWays.getStartLatByEdgeIdx(edgeId),
+                                CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
+                                CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
+                            centerInWater = !centerInWater;
+                            if(ttt) {
+                    /*System.out.println("ppp: intersect: " + edgeId + " " + CoastlineWays.getStartLatByEdgeIdx(edgeId) +
+                            " " + CoastlineWays.getStartLonByEdgeIdx(edgeId) +
+                            " " + CoastlineWays.getDestLatByEdgeIdx(edgeId) +
+                            " " + CoastlineWays.getDestLonByEdgeIdx(edgeId));*/
 
-            for (Integer edgeId : edgeIds) {
-                if (IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(edgeId),
-                        CoastlineWays.getStartLonByEdgeIdx(edgeId), CoastlineWays.getDestLatByEdgeIdx(edgeId),
-                        CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, originCenterPointLon, centerLon)) {
-                    centerInWater = !centerInWater;
+                                System.out.println("    {\n" +
+                                        "      \"type\": \"Feature\",\n" +
+                                        "      \"properties\": {},\n" +
+                                        "      \"geometry\": {\n" +
+                                        "        \"type\": \"LineString\",\n" +
+                                        "        \"coordinates\": [\n" +
+                                        "          [\n" + CoastlineWays.getStartLonByEdgeIdx(edgeId) + ", " + CoastlineWays.getStartLatByEdgeIdx(edgeId)
+                                        + "], [" + CoastlineWays.getDestLonByEdgeIdx(edgeId) +
+                                        ", " + CoastlineWays.getDestLatByEdgeIdx(edgeId) + "          ]\n" +
+                                        "        ]\n" +
+                                        "      }\n" +
+                                        "    },\n");
+                            }
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("ttt: caught exception4 " + times);
+                    times++;
+                    centerLat += 0.000001;
+                    noException = false;
+                    centerInWater = originCenterPointInWater;
                 }
-            }
+            } while(!noException);
         } else {  //vertical approach
             for(int i = 0; i < 3; i++) {
                 edgeIds.addAll(lowerLevelCells[i][1].getAllContainedEdgeIDs());
             }
 
             boolean noException;
+            int times = 0;
             do {
                 noException = true;
                 try {
@@ -240,16 +274,29 @@ public class GridParent extends GridCell {
                                 CoastlineWays.getDestLonByEdgeIdx(edgeId), centerLat, centerLon,
                                 originCenterPointLat, originCenterPointLon)) {
                             if(ttt) {
-                                System.out.println("intersect: " + edgeId + " " + CoastlineWays.getStartLatByEdgeIdx(edgeId) +
+                                System.out.println("zzz: intersect: " + edgeId + " " + CoastlineWays.getStartLatByEdgeIdx(edgeId) +
                                         " " + CoastlineWays.getStartLonByEdgeIdx(edgeId) +
                                         " " + CoastlineWays.getDestLatByEdgeIdx(edgeId) +
                                         " " + CoastlineWays.getDestLonByEdgeIdx(edgeId));
+                                System.out.println("    {\n" +
+                                        "      \"type\": \"Feature\",\n" +
+                                        "      \"properties\": {},\n" +
+                                        "      \"geometry\": {\n" +
+                                        "        \"type\": \"LineString\",\n" +
+                                        "        \"coordinates\": [\n" +
+                                        "          [\n" + CoastlineWays.getStartLonByEdgeIdx(edgeId) + ", " + CoastlineWays.getStartLatByEdgeIdx(edgeId)
+                                        + "], [" + CoastlineWays.getDestLonByEdgeIdx(edgeId) +
+                                        ", " + CoastlineWays.getDestLatByEdgeIdx(edgeId) + "          ]\n" +
+                                        "        ]\n" +
+                                        "      }\n" +
+                                        "    },\n");
                             }
                             centerInWater = !centerInWater;
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    System.out.println("ttt: caught exception2");
+                    System.out.println("ttt: caught exception2 " + times);
+                    times++;
                     originCenterPointLon += 0.000001;
                     noException = false;
                     centerInWater = originCenterPointInWater;

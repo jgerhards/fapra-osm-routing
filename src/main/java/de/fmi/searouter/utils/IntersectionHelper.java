@@ -124,9 +124,11 @@ public class IntersectionHelper {
             double latDestA, double lonDestA,
             double latSourceB, double lonSourceB,
             double latDestB, double lonDestB) throws IllegalArgumentException {
-        if(DoubleMath.fuzzyEquals(lonSourceA, lonDestA, 0.0000001) &&
+        /*if(DoubleMath.fuzzyEquals(lonSourceA, lonDestA, 0.0000001) &&
                 DoubleMath.fuzzyEquals(lonDestA, lonSourceB, 0.0000001) &&
-                DoubleMath.fuzzyEquals(lonSourceB, lonDestB, 0.0000001)) {
+                DoubleMath.fuzzyEquals(lonSourceB, lonDestB, 0.0000001)) {*/
+        if(DoubleMath.fuzzyEquals(lonSourceA, lonDestB, 0.0000001) ||
+                    DoubleMath.fuzzyEquals(lonDestA, lonDestB, 0.0000001)) {
             System.out.println("bbbbbbbbbbbb");
             throw new IllegalArgumentException();
         }
@@ -197,23 +199,39 @@ public class IntersectionHelper {
         return radianCoord *  180 / Math.PI;
     }
 
+    public static boolean crossesLatitudeWithException(double pointALat, double pointALon, double pointBLat,
+                                          double pointBLon, double latToIntersect, double lonValStart, double lonValDest)
+    throws IllegalArgumentException{
+        if(DoubleMath.fuzzyEquals(pointALat, latToIntersect, 0.0000001) ||
+                DoubleMath.fuzzyEquals(pointBLat, latToIntersect, 0.0000001)) {
+            System.out.println("ooooooooooooo");
+            throw new IllegalArgumentException();
+        }
+        return crossesLatitude(pointALat, pointALon, pointBLat, pointBLon, latToIntersect, lonValStart, lonValDest);
+    }
 
-    /**
-     * Checks if an arc defined by start point A (pointALat, pointALon) and
-     * destination point B (pointBLat, pointBLon) intersects with a given longitude
-     * latitudeToCheck.
-     * <p>
-     * Source: https://edwilliams.org/avform147.htm#Par
-     *
-     * @param pointALat         |
-     * @param pointALon         |
-     * @param pointBLat         |  x--------------------x
-     * @param pointBLon         |
-     * @param latToIntersect
-     * @return
-     */
+
+        /**
+         * Checks if an arc defined by start point A (pointALat, pointALon) and
+         * destination point B (pointBLat, pointBLon) intersects with a given longitude
+         * latitudeToCheck.
+         * <p>
+         * Source: https://edwilliams.org/avform147.htm#Par
+         *
+         * @param pointALat         |
+         * @param pointALon         |
+         * @param pointBLat         |  x--------------------x
+         * @param pointBLon         |
+         * @param latToIntersect
+         * @return
+         */
     public static boolean crossesLatitude(double pointALat, double pointALon, double pointBLat,
                                    double pointBLon, double latToIntersect, double lonValStart, double lonValDest) {
+        if(DoubleMath.fuzzyEquals(pointALat, latToIntersect, 0.0000001) ||
+                DoubleMath.fuzzyEquals(pointBLat, latToIntersect, 0.0000001)) {
+            return true;
+        }
+
         pointALat = degreeCoordinateToRadian(pointALat);
         pointBLat = degreeCoordinateToRadian(pointBLat);
         pointALon = degreeCoordinateToRadian(pointALon);
@@ -221,6 +239,12 @@ public class IntersectionHelper {
         latToIntersect = degreeCoordinateToRadian(latToIntersect);
         lonValStart = degreeCoordinateToRadian(lonValStart);
         lonValDest = degreeCoordinateToRadian(lonValDest);
+
+        double latMax = Math.max(pointALat, pointBLat);
+        double latMin = Math.min(pointALat, pointBLat);
+        if(!pointLonBetweenLongitudes(latToIntersect, latMin, latMax)) {
+            return false;
+        }
 
         double lonDiff = pointALon - pointBLon;
         double A = Math.sin(pointALat) * Math.cos(pointBLat) * Math.cos(latToIntersect) * Math.sin(lonDiff);
@@ -253,6 +277,13 @@ public class IntersectionHelper {
 
     private static boolean pointLonBetweenLongitudes(double lonToCheck, double minLon, double maxLon) {
         boolean retVal = false;
+
+        if(DoubleMath.fuzzyEquals(lonToCheck, minLon, 0.0000001) &&
+                DoubleMath.fuzzyEquals(minLon, maxLon, 0.0000001)) {
+            //System.out.println("ccc");
+            return true;
+        }
+
         if(maxLon > 175.0 && minLon < -175) { //special case with wraparound is to be considered
             retVal = (lonToCheck < 180.0 && lonToCheck > maxLon) || (lonToCheck > -180.0 && lonToCheck < minLon);
         } else {

@@ -3,6 +3,7 @@ package de.fmi.searouter.coastlinegrid;
 import de.fmi.searouter.importdata.CoastlineWay;
 import de.fmi.searouter.importdata.Point;
 
+import java.io.*;
 import java.util.List;
 
 public class CoastlineWays {
@@ -13,6 +14,65 @@ public class CoastlineWays {
 
     private static float[] pointLon;
     private static float[] pointLat;
+
+    private static final String filename = "CoastlineWays.ser";
+
+    public static void storeData() {
+        CoastlineWriter writer = new CoastlineWriter(edgePosStart, pointLat, pointLon);
+
+        // Serialization
+        try
+        {
+            //Saving of object in a file
+            FileOutputStream file = new FileOutputStream(filename);
+            ObjectOutputStream out = new ObjectOutputStream(file);
+
+            // Method for serialization of object
+            out.writeObject(writer);
+
+            out.close();
+            file.close();
+
+            System.out.println("Object has been serialized");
+
+        }
+
+        catch(IOException ex)
+        {
+            System.out.println("IOException is caught");
+            System.exit(0);
+        }
+    }
+
+    public static void getData() {
+        try
+        {
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream(filename);
+            ObjectInputStream in = new ObjectInputStream(file);
+
+            // Method for deserialization of object
+            CoastlineWriter writer = (CoastlineWriter)in.readObject();
+
+            in.close();
+            file.close();
+
+            System.out.println("Object has been deserialized ");
+            edgePosStart = writer.getEdgePosStart();
+            pointLat = writer.getPointLat();
+            pointLon = writer.getPointLon();
+       }
+
+        catch(IOException ex)
+        {
+            System.out.println("IOException is caught");
+        }
+
+        catch(ClassNotFoundException ex)
+        {
+            System.out.println("ClassNotFoundException is caught");
+        }
+    }
 
     public static void initEdges(List<CoastlineWay> importedCoastlines) {
 
@@ -90,4 +150,5 @@ public class CoastlineWays {
     public static int getNumberOfEdges() {
         return edgePosStart.length;
     }
+
 }
