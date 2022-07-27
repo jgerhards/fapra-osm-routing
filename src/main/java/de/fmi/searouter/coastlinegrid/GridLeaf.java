@@ -34,7 +34,7 @@ public class GridLeaf extends GridCell {
         this.lonCenterPoint = lon;
         this.centerPointInWater = isInWater;
 
-        if(DoubleMath.fuzzyEquals(latCenterPoint, 55.0, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 		-163.8889, 0.001)) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, 			-53.6831, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint,-73.6420, 0.001)) {
             int breakpoint = 1;
             System.out.println("ppp: set center leaf");
         }
@@ -45,7 +45,7 @@ public class GridLeaf extends GridCell {
                                 boolean originCenterPointInWater, Set<Integer> allEdgeIds,
                                 ApproachDirection dir) {
         boolean printIntersects = false;
-        if(DoubleMath.fuzzyEquals(latCenterPoint, 		55.0, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint, 		-163.8889, 0.001)) {
+        if(DoubleMath.fuzzyEquals(latCenterPoint, 			-53.6831, 0.001) && DoubleMath.fuzzyEquals(lonCenterPoint,-73.6420, 0.001)) {
             int breakpoint = 1;
             System.out.println("ppp: init center leaf: " + latCenterPoint + ", " + lonCenterPoint +
                     " origin: " + originCenterPointLat + " " + originCenterPointLon +

@@ -232,6 +232,11 @@ public class IntersectionHelper {
             return true;
         }
 
+        if(Math.max(pointALat, pointBLat) < latToIntersect || Math.min(pointALat, pointBLat) > latToIntersect) {
+            return false;
+        }
+
+        double pointAOriginalLat = pointALat;
         pointALat = degreeCoordinateToRadian(pointALat);
         pointBLat = degreeCoordinateToRadian(pointBLat);
         pointALon = degreeCoordinateToRadian(pointALon);

@@ -167,7 +167,7 @@ public class GridParent extends GridCell {
     public void setCenterPoint(double lat, double lon, boolean isInWater) {
         this.centerPointLat = lat;
         this.centerPointLon = lon;
-        if(DoubleMath.fuzzyEquals(lat, 	55.0, 0.1) && DoubleMath.fuzzyEquals(lon, -163.8889, 0.1)) {
+        if(DoubleMath.fuzzyEquals(lat, -53.51851851851852, 0.0001) && DoubleMath.fuzzyEquals(lon,-73.64197530864197, 0.0001)) {
             int breakpoint = 1;
             //System.out.println("zzz: set center point");
         }
@@ -207,7 +207,7 @@ public class GridParent extends GridCell {
         double centerLon = (leftLongitude + rightLongitude) / 2;
         boolean ttt = false;
         //if(DoubleMath.fuzzyEquals(centerLat, 65.0, 0.1) && DoubleMath.fuzzyEquals(centerLon, -135.0, 0.1)) {
-        if(DoubleMath.fuzzyEquals(centerLat, 	55.0, 0.1) && DoubleMath.fuzzyEquals(centerLon, -163.8889, 0.1)) {
+        if(DoubleMath.fuzzyEquals(centerLat, -53.51851851851852, 0.0001) && DoubleMath.fuzzyEquals(centerLon,-73.64197530864197, 0.0001)) {
             ttt = true;
             System.out.println("zzz: init center parent: " + centerLat + ", " + centerLon +
                     " origin: " + originCenterPointLat + " " + originCenterPointLon +

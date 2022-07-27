@@ -219,8 +219,8 @@ public class GridCreator {
         test = IntersectionHelper.crossesLatitude(52.0371, 	-174.9236, 52.0367, 	-174.9236,
                 52.03703703703704, -175.0, -174.87654320987656);
         System.out.println(test);
-        test = IntersectionHelper.crossesLatitude(52.0367, 	-174.9236,52.0371, 	-174.9236,
-                52.03703703703704, -175.0, -174.87654320987656);
+        test = IntersectionHelper.crossesLatitude(-53.518513, 	-73.53756,-53.518517, 	-73.53756,
+                -53.51851851851852, -73.64197530864197, -73.5185185185185);
         System.out.println(test);
         //System.exit(0);
 
@@ -270,7 +270,7 @@ public class GridCreator {
                 System.out.println("ppp: found" + i);
             }
         }
-        System.exit(0);*/
+        System.exit(0);/*
        /* Map<Float, Map<Float, List<Float[]>>> checkerMap = new HashMap();
         int numOfEdges = CoastlineWays.getNumberOfEdges();
         for(int i = 0; i < numOfEdges; i++) {

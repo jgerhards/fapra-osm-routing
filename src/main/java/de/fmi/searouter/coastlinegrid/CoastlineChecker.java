@@ -158,7 +158,7 @@ public final class CoastlineChecker implements Serializable {
             lat += 10.0;
         }
         double lon = -175.0;
-        for(int i = 0; i < 36; i++) {
+        for(int i = 0; i < 36; i++) { //full size 36
             centerPointLon[i] = lon;
             lon += 10.0;
         }
