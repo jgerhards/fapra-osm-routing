@@ -17,7 +17,12 @@ public final class CoastlineChecker implements Serializable {
     private static final long serialVersionUID = 13424412415L;
 
     private static CoastlineChecker INSTANCE;
-    private static GridCell[][] topLevelGrid;
+    private GridCell[][] topLevelGrid;
+
+    //todo: remove
+    public static void setCC(CoastlineChecker ttt) {
+        INSTANCE = ttt;
+    }
 
     public static CoastlineChecker getInstance() {
         if (INSTANCE == null) {
@@ -234,14 +239,24 @@ public final class CoastlineChecker implements Serializable {
         // Calculate the grid cell indices for the cell array depending on lat/lon
         if(lat == 90) {
             latIdx = 17;
+        } else if (lat == -90) {
+            latIdx = 0;
+        } else if (lat > 0) {
+            latIdx = (int) (((lat) - (lat % 10)) / 10) + 9;
         } else {
-            latIdx = (int) (((lat + 90) - (lat % 10)) / 10);
+            float tmpLat = lat * (-1);
+            latIdx = (int) (8 - (((tmpLat) - (tmpLat % 10)) / 10));
         }
 
         if(lon == 180) {
             lonIdx = 35;
+        } else if (lon == -180) {
+            lonIdx = 0;
+        } else if (lon > 0) {
+            lonIdx = (int) (((lon) - (lon % 10)) / 10) + 18;
         } else {
-            lonIdx = (int) (((lon + 180) - (lon % 10)) / 10);
+            float tmpLon = lon * (-1);
+            lonIdx = (int) (17 - (((tmpLon) - (tmpLon % 10)) / 10));
         }
 
         return topLevelGrid[latIdx][lonIdx].isPointInWater(lat, lon);
