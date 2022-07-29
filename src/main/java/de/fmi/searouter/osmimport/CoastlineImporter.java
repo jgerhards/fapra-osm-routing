@@ -2,10 +2,8 @@ package de.fmi.searouter.osmimport;
 
 import com.wolt.osm.parallelpbf.ParallelBinaryParser;
 import com.wolt.osm.parallelpbf.entity.Header;
-import de.fmi.searouter.domain.CoastlineWay;
-import de.fmi.searouter.domain.Point;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import de.fmi.searouter.importdata.CoastlineWay;
+import de.fmi.searouter.importdata.Point;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -31,62 +29,6 @@ public class CoastlineImporter {
         this.coastLineWays = new ArrayList<>();
     }
 
-    /**
-     * Merges {@link CoastlineWay} objects by updating the objects with their previous and last
-     * neighbor ways which form together a polygon.
-     *
-     * @param coastlinesToMerge A list of CoastlineWays which should be merged
-     */
-    private void mergeCoastlines(List<CoastlineWay> coastlinesToMerge) {
-
-        // Track whether a merge was already performed for a CoastlineWay obj with this boolean array, true=merged
-        boolean[] alreadyMerged = new boolean[coastlinesToMerge.size()];
-        Arrays.fill(alreadyMerged,false);
-
-        boolean mergeStatusChanged = false;
-
-        do {
-            mergeStatusChanged = false;
-            int coastlineSize = coastlinesToMerge.size();
-
-            // Merge coastlines
-            for (int i = 0; i < coastlineSize; i++) {
-                if (alreadyMerged[i]) {
-                    continue;
-                }
-
-                for (int j = 0; j < coastlineSize; j++) {
-
-                    if (alreadyMerged[i] || alreadyMerged[j] || i == j) {
-                        continue;
-                    }
-
-                    CoastlineWay coastlineOne = coastlinesToMerge.get(i);
-                    CoastlineWay coastlineTwo = coastlinesToMerge.get(j);
-
-                    // Check whether merge can be performed and if yes perform it
-                    int mergeResult = coastlineOne.mergeCoastlinesIfPossible(coastlineTwo);
-
-                    if (mergeResult == 1) {
-                        alreadyMerged[j] = true;
-                        mergeStatusChanged = true;
-                    }  else if (mergeResult == 2) {
-                        alreadyMerged[i] = true;
-                        mergeStatusChanged = true;
-                    }
-
-                }
-            }
-        } while(mergeStatusChanged);
-
-        // Remove coastlines which are no polygon starts
-        for (int i = coastlinesToMerge.size()-1; i >= 0; i--) {
-            if (alreadyMerged[i]) {
-                coastlinesToMerge.remove(i);
-            }
-        }
-
-    }
 
     /**
      * Imports osm coastlines from a given pbf file.
@@ -117,14 +59,13 @@ public class CoastlineImporter {
      * @return True if a way is a coastline as defined by OSm
      */
     private static boolean isCoastlineEntity(com.wolt.osm.parallelpbf.entity.Way way) {
-        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0;
+        return "coastline".equals(way.getTags().get("natural")) && way.getNodes().size() > 0 &&
+                !"bogus".equals(way.getTags().get("coastline"));
     }
 
     private void onCompletion() {
         // Empty the nodes list to save memory
         this.allNodes = new HashMap<>();
-
-        mergeCoastlines(this.coastLineWays);
     }
 
     /**
@@ -134,6 +75,9 @@ public class CoastlineImporter {
      */
     private void processWay(com.wolt.osm.parallelpbf.entity.Way way) {
         if (isCoastlineEntity(way)) {
+            if (way.getId() == 233045662) {
+                int breakpoint = 1;
+            }
             CoastlineWay cWay = new CoastlineWay(way);
             for (int i = 0; i < way.getNodes().size(); i++) {
                 Point node = this.allNodes.get(way.getNodes().get(i));
@@ -141,7 +85,6 @@ public class CoastlineImporter {
                     cWay.getPoints().add(node);
                 }
             }
-            cWay.updateAfterGet();
             this.coastLineWays.add(cWay);
         }
 

@@ -1,7 +1,7 @@
 package de.fmi.searouter.rest;
 
-import de.fmi.searouter.domain.RoutingRequest;
-import de.fmi.searouter.grid.Grid;
+import de.fmi.searouter.router.RoutingRequest;
+import de.fmi.searouter.dijkstragrid.Grid;
 import de.fmi.searouter.router.DijkstraRouter;
 import de.fmi.searouter.router.RoutingResult;
 import org.springframework.beans.factory.annotation.Autowired;
