@@ -3,11 +3,12 @@ package de.fmi.searouter.coastlinegrid;
 import de.fmi.searouter.dijkstragrid.GridNode;
 import de.fmi.searouter.importdata.Point;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public abstract class GridCell {
+public abstract class GridCell implements Serializable {
 
     public enum ApproachDirection {
         FROM_HORIZONTAL, FROM_VERTICAL

@@ -8,10 +8,7 @@ import de.fmi.searouter.utils.GeoJsonConverter;
 import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.osmimport.CoastlineImporter;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -55,8 +52,6 @@ public class GridCreator {
      * Creates the grid graph for the Dijkstra routing. Fills the {@link Grid}, {@link Node} and {@link Edge}
      * data structures.
      *
-     * @param coastlinePolygons All coastline polygons represented as {@link CoastlineWay} that should be considered
-     *                          for a point-in-polygon check
      * @throws InterruptedException If something with the threads went wrong
      */
     public static void createGrid() throws InterruptedException {
@@ -327,9 +322,63 @@ public class GridCreator {
                 checkerMap.get(values[0]).get(values[1]).add(valuesDest);
             }
         }*/
-        coastlineChecker = CoastlineChecker.getInstance();
+        if(false) {
+            coastlineChecker = CoastlineChecker.getInstance();
 
-        for(int latIdx = 0; latIdx < 18; latIdx++) {
+            // Serialization
+            try
+            {
+                //Saving of object in a file
+                FileOutputStream file = new FileOutputStream("coastlineChecker.ser");
+                ObjectOutputStream out = new ObjectOutputStream(file);
+
+                // Method for serialization of object
+                out.writeObject(CoastlineChecker.getInstance());
+
+                out.close();
+                file.close();
+
+                System.out.println("Object has been serialized");
+
+            }
+
+            catch(IOException ex)
+            {
+                System.out.println("IOException is caught");
+                System.exit(0);
+            }
+        } else {
+            try
+            {
+                // Reading the object from a file
+                FileInputStream file = new FileInputStream("coastlineChecker.ser");
+                ObjectInputStream in = new ObjectInputStream(file);
+
+                // Method for deserialization of object
+                coastlineChecker = (CoastlineChecker) in.readObject();
+
+                in.close();
+                file.close();
+
+                System.out.println("Object has been deserialized ");
+                CoastlineChecker.setCC(coastlineChecker);
+            }
+
+            catch(IOException ex)
+            {
+                System.out.println("IOException is caught");
+            }
+
+            catch(ClassNotFoundException ex)
+            {
+                System.out.println("ClassNotFoundException is caught");
+            }
+        }
+
+        /*boolean testCoastlineCheck = CoastlineChecker.getInstance().pointInWater(31.68f,-88.74f);
+        System.out.println("sss: " + testCoastlineCheck);*/
+
+        /*for(int latIdx = 0; latIdx < 18; latIdx++) {
             List<GridNode> centerPoints = CoastlineChecker.getInstance().getAllCenterPoints(latIdx);
 
             String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
@@ -337,7 +386,7 @@ public class GridCreator {
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
             writer.write(json);
             writer.close();
-        }
+        }*/
 
         /*String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
         BufferedWriter writer2 = new BufferedWriter(new FileWriter("ways.json"));

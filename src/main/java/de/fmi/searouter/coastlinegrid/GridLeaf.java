@@ -151,9 +151,10 @@ public class GridLeaf extends GridCell {
         boolean pointInWater = centerPointInWater;
 
         for (int i = 0; i < edgeCount; i++) {
+            int idx = edgeIds[i];
             if (IntersectionHelper.arcsIntersect(lat, lon, latCenterPoint, lonCenterPoint,
-                    CoastlineWays.getStartLatByEdgeIdx(i), CoastlineWays.getStartLonByEdgeIdx(i),
-                    CoastlineWays.getDestLatByEdgeIdx(i), CoastlineWays.getDestLonByEdgeIdx(i))
+                    CoastlineWays.getStartLatByEdgeIdx(idx), CoastlineWays.getStartLonByEdgeIdx(idx),
+                    CoastlineWays.getDestLatByEdgeIdx(idx), CoastlineWays.getDestLonByEdgeIdx(idx))
             ) {
                 pointInWater = !pointInWater;
             }
