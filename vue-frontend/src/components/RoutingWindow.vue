@@ -152,6 +152,7 @@ export default {
         .then((response) => {
           this.responseData = response.data;
 
+          // This is what gets displayed in the browser when the result is finished
           alert(
               "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
           );

@@ -12,8 +12,10 @@ import java.util.*;
  * a graph representation. Provides in addition methods for grid operations.
  */
 public class Grid {
-
     // Stores for each node id the position in the Edge array where the edges for the respective nodes start.
+    // To get all outgoing edge IDs of a node one can call Grid.offset[nodeToHandleId] and then iterate over
+    // the {@link Edge} array until the index Grid.offset[nodeToHandleId + 1] is reached (this is the beginning
+    // of another nodes outgoing edges).
     public static int[] offset;
 
     /**

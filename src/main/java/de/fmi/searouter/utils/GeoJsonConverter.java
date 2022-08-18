@@ -94,6 +94,12 @@ public class GeoJsonConverter {
         return featureCollection;
     }
 
+    /**
+     * Returns the GeoJSON representation of multiple {@link GridNode GridNodes}.
+     *
+     * @param nodes The GridNodes to get the GeoJSON representation of.
+     * @return A {@link JSONObject} representing the GridNodes.
+     */
     public static JSONObject osmNodesToGeoJSON(List<GridNode> nodes) {
         // Outer FeatureCollection object (top-level obj)
         JSONObject featureCollection = new JSONObject();
@@ -110,6 +116,12 @@ public class GeoJsonConverter {
         return featureCollection;
     }
 
+    /**
+     * Returns the GeoJSON representation of one {@link GridNode}.
+     *
+     * @param node The GridNode to get the GeoJSON feature representation of.
+     * @return A JSONObject representing the GridNdde in GeoJSON.
+     */
     public static JSONObject gridNodeToGeoJSONFeature(GridNode node) {
         JSONObject topLevelobj = new JSONObject();
 

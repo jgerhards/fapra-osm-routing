@@ -3,8 +3,8 @@ package de.fmi.searouter.dijkstragrid;
 import java.math.BigDecimal;
 
 /**
- * This is an temporary object used for building up the final adjaceny array structure
- * when self-generating the graph grid structure.
+ * This is an object used temporarily when to store information used for building the adjacency array structure
+ * of the graph grid structure.
  */
 public class GridNode {
 
@@ -19,8 +19,8 @@ public class GridNode {
     }
 
     /**
-     * Calculates the grid node neighbor laying in the north (if this node would be on water)
-     * @param latitudeOffset The offset between two neighbor nodes for the south/north
+     * Calculates the grid node neighbor to the north
+     * @param latitudeOffset The offset between two neighbor nodes between the north/south
      * @return A new {@link GridNode} object representing the neighbor node.
      */
     public GridNode calcNorthernNode(double latitudeOffset) {
@@ -28,7 +28,8 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).add(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
+        //check if resulting node "too far north"
+        if (nLatitude.doubleValue() > 90.0) {
             return null;
         }
 
@@ -36,8 +37,8 @@ public class GridNode {
     }
 
     /**
-     * Calculates the grid node neighbor laying in the south (if this node would be on water)
-     * @param latitudeOffset The offset between two neighbor nodes for the south/north
+     * Calculates the grid node neighbor to the south
+     * @param latitudeOffset The offset between two neighbor nodes between the north/south
      * @return A new {@link GridNode} object representing the neighbor node.
      */
     public GridNode calcSouthernNode(double latitudeOffset) {
@@ -45,7 +46,8 @@ public class GridNode {
 
         BigDecimal nLatitude = BigDecimal.valueOf(latitude).subtract(offset);
 
-        if (nLatitude.doubleValue() > 90.0 || nLatitude.doubleValue() < -90.0) {
+        //check if resulting node "too far south"
+        if (nLatitude.doubleValue() < -90.0) {
             return null;
         }
 
@@ -53,8 +55,8 @@ public class GridNode {
     }
 
     /**
-     * Calculates the grid node neighbor laying in the east (if this node would be on water)
-     * @param longitudeOffset The offset between two neighbor nodes for the east/west
+     * Calculates the grid node neighbor to the east
+     * @param longitudeOffset The offset between two neighbor nodes between the east/west
      * @return A new {@link GridNode} object representing the neighbor node.
      */
     public GridNode calcEasternNode(double longitudeOffset) {
@@ -62,10 +64,7 @@ public class GridNode {
 
         BigDecimal nLongitude = BigDecimal.valueOf(longitude).add(offset);
 
-        if (nLongitude.doubleValue() < -180.0) {
-           // nLongitude = nLongitude % 180;
-           nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
-        } else if (nLongitude.doubleValue() > 180) {
+        if (nLongitude.doubleValue() > 180) {
             nLongitude = BigDecimal.valueOf(-180).add(nLongitude.remainder(BigDecimal.valueOf(180)));
         }
 
@@ -73,8 +72,8 @@ public class GridNode {
     }
 
     /**
-     * Calculates the grid node neighbor laying in the west (if this node would be on water)
-     * @param longitudeOffset The offset between two neighbor nodes for the east/west
+     * Calculates the grid node neighbor laying to the west
+     * @param longitudeOffset The offset between two neighbor nodes between the east/west
      * @return A new {@link GridNode} object representing the neighbor node.
      */
     public GridNode calcWesternNode(double longitudeOffset) {
@@ -85,8 +84,6 @@ public class GridNode {
         if (nLongitude.doubleValue() < -180.0) {
             // nLongitude = nLongitude % 180;
             nLongitude = nLongitude.remainder(BigDecimal.valueOf(180));
-        } else if (nLongitude.doubleValue() > 180) {
-            nLongitude = BigDecimal.valueOf(-180).add(nLongitude.remainder(BigDecimal.valueOf(180)));
         }
 
         return new GridNode(latitude, nLongitude.doubleValue());

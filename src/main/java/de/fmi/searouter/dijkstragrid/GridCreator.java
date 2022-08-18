@@ -1,80 +1,84 @@
 package de.fmi.searouter.dijkstragrid;
 
-import com.google.common.math.DoubleMath;
-import de.fmi.searouter.coastlinegrid.CoastlineChecker;
+import de.fmi.searouter.coastlinegrid.PointInWaterChecker;
 import de.fmi.searouter.coastlinegrid.CoastlineWays;
-import de.fmi.searouter.importdata.CoastlineWay;
-import de.fmi.searouter.utils.GeoJsonConverter;
 import de.fmi.searouter.utils.IntersectionHelper;
-import de.fmi.searouter.osmimport.CoastlineImporter;
 
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 
 /**
- * Contains logic for creating a grid graph which nodes are distributed equally over the latitude
- * and longitudes of a world map.
+ * Contains logic for creating a grid graph whose nodes are distributed equally over the latitudes
+ * and longitudes of a world map. Note: This distance is not equidistant, as longitude and latitude are simply divided.
  */
 public class GridCreator {
 
-    protected static List<GridNode> gridNodes;
-
-    // Used for creating the grid. <Latitude, <Longitude, GridNode>>
-    public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
-
-    // Resolution of the grid
+    /**
+     * Resolution of the grid (DIM_LAT * DIM_LON = number of vertices in the graph if each vertex would be on water)
+     */
     private static final int DIMENSION_LATITUDE = 500;
     private static final int DIMENSION_LONGITUDE = 2000;
 
-    // Difference between latitude/longitude coordinates between two neighbor grid nodes
-    public static double coordinate_step_latitude;
-    public static double coordinate_step_longitude;
-
-    // All polygons have a point-in-polygon check object
-    private static CoastlineChecker coastlineChecker;
+    /**
+     * The name of the file where the final calculated grid graph should be exported (created on root-level of project)
+     */
+    public static final String GRID_FMI_FILE_NAME = "exported_grid.fmi";
 
     /**
-     * Checks whether a given coordinate point is on water or on land.
-     *
-     * @param latitude The latitude of point P to check.
-     * @param longitude The longitude of point P to check.
-     * @return True: Point on water, False: Water on land
+     * Stores all calculated graph nodes that are situated on water.
+     * Protected in order to be accessible from {@link NodeCreateWorkerThread}.
      */
-    public static boolean isPointOnWater(double latitude, double longitude) {
-        if (coastlineChecker.pointInWater((float) latitude, (float) longitude)) {
-            return true;
-        }
-        return false;
-    }
+    protected static List<GridNode> gridNodes;
 
     /**
-     * Creates the grid graph for the Dijkstra routing. Fills the {@link Grid}, {@link Node} and {@link Edge}
-     * data structures.
-     *
-     * @throws InterruptedException If something with the threads went wrong
+     * Used for retrieving already created GridNode references by latitude and longitude.
+     * <Latitude, <Longitude, GridNode>>
      */
-    public static void createGrid() throws InterruptedException {
-        gridNodes = new ArrayList<>();
+    public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
+
+    /**
+     * Difference between latitude/longitude coordinates between two neighbor grid nodes
+     */
+    protected static double coordinate_step_latitude;
+    protected static double coordinate_step_longitude;
+
+    /**
+     * The number of threads that should use to concurrently performing the point-in-water check
+     */
+    private static final int NUMBER_OF_THREADS_FOR_IN_WATER_CHECK = 15;
+
+    /**
+     * Initializes the GridCreator by creating GridNodes (the vertices of the graph) for all points that
+     * are in water and therefore relevant for the graph creation. The created nodes
+     * are stored in the data structures {@link #gridNodes} and {@link #coordinateNodeStore}.
+     *
+     * @throws InterruptedException If something with the concurrent calculation of the point-in-water check fails.
+     */
+    private static void initGridCreator() throws InterruptedException {
+        gridNodes = Collections.synchronizedList(new ArrayList<>());
 
         coordinateNodeStore = new HashMap<>();
 
+        // Calculate the numeric distance of the grid nodes in degrees
         coordinate_step_latitude = (double) 180 / DIMENSION_LATITUDE;
         coordinate_step_longitude = (double) 360 / DIMENSION_LONGITUDE;
-        System.out.println(coordinate_step_latitude);
-        System.out.println(coordinate_step_longitude);
 
+        // We use BigDecimals here to allow the usage of the coordinateNodeStore HashMap where it is necessary
+        // to have an exact equals() functionality for comparing the used keys. Tests showed that the overhead
+        // of using BigDecimal instead of double has no relevant effect on the calculation time here.
         BigDecimal coordinateStepLat = BigDecimal.valueOf(coordinate_step_latitude);
 
         BigDecimal latEnd = BigDecimal.valueOf(-90);
 
-        // Precalculate all latitudes that should be checked
-        int numberOfThreads = 15;
+        // Precalculate all latitudes that should be checked and assign those latitudes equally distributed to
+        // a number of worker threads. The threads will then calculate the point-in-water check on their
+        // assigned points using a multi-level grid strategy.
+        int numberOfThreads = NUMBER_OF_THREADS_FOR_IN_WATER_CHECK;
         List<NodeCreateWorkerThread> threads = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
             threads.add(new NodeCreateWorkerThread());
         }
-
         int count = 0;
         for (BigDecimal lat = BigDecimal.valueOf(90.0); lat.compareTo(latEnd) >= 0; lat = lat.subtract(coordinateStepLat)) {
             int threadToAssign = count % numberOfThreads;
@@ -89,12 +93,23 @@ public class GridCreator {
         for (NodeCreateWorkerThread n : threads) {
             n.join();
         }
+    }
+
+
+    /**
+     * Creates the grid graph for the Dijkstra routing. Fills the {@link Grid}, {@link Node} and {@link Edge}
+     * data structures.
+     *
+     * @throws InterruptedException If something with the threads went wrong
+     */
+    public static void createGrid() throws InterruptedException {
+        initGridCreator();
 
         // Create Node arrays
         double[] latitude = new double[gridNodes.size()];
         double[] longitude = new double[gridNodes.size()];
 
-        // Assign ids to nodes and fill up Node data structure
+        // Assign new ids to nodes and fill up Node data structure
         for (int id = 0; id < gridNodes.size(); id++) {
             gridNodes.get(id).setId(id);
             latitude[id] = gridNodes.get(id).getLatitude();
@@ -106,13 +121,13 @@ public class GridCreator {
         List<Integer> dynamicDestNode = new ArrayList<>();
         List<Integer> dynamicDist = new ArrayList<>();
 
-        int[] offsets = new int[gridNodes.size() + 1];
-
         // For every node, check if neighbour nodes are existing and if yes add it as edge
         for (int nodeIdx = 0; nodeIdx < gridNodes.size(); nodeIdx++) {
             GridNode currNode = gridNodes.get(nodeIdx);
 
-            // Calculate the lat/longs where a neighbour node should be. The Objects do not belong to the grid
+            // Calculate the lat/longs where a neighbour node should be. The created objects do not belong to the grid
+            // and are only needed temporarily for checking if those candidate neighbor nodes are actually on water
+            // and therefore relevant
             GridNode eastCalcNode = currNode.calcEasternNode(coordinate_step_longitude);
             GridNode westCalcNode = currNode.calcWesternNode(coordinate_step_longitude);
             GridNode northCalcNode = currNode.calcNorthernNode(coordinate_step_latitude);
@@ -140,16 +155,11 @@ public class GridCreator {
 
             List<GridNode> neighbourNodes = Arrays.asList(east, west, north, south);
 
-            // Update the offset according to the number of edges
-            if (nodeIdx == 0) {
-                offsets[nodeIdx] = 0;
-            } else {
-                offsets[nodeIdx] = dynamicStartNode.size();
-            }
-
             // For all existing neighbour nodes: Add the information to the dynamic edge list
             for (GridNode node : neighbourNodes) {
                 if (node != null) {
+                    // Neighbor node is on water and therefore a valid vertice of the grpah to which
+                    // an edge should be created
                     dynamicStartNode.add(nodeIdx);
                     dynamicDestNode.add(node.getId());
                     dynamicDist.add((int) IntersectionHelper.getDistance(
@@ -160,9 +170,7 @@ public class GridCreator {
             }
         }
 
-        offsets[offsets.length - 1] = dynamicStartNode.size();
-
-        // Convert dynamic Edge data structures to static arrays
+        // Convert dynamic Edge data structures to static arrays of the more efficient routing data structures
         int[] startNode = new int[dynamicStartNode.size()];
         int[] destNode = new int[dynamicDestNode.size()];
         int[] dist = new int[dynamicDist.size()];
@@ -172,29 +180,35 @@ public class GridCreator {
             dist[i] = dynamicDist.get(i);
         }
 
-        // Fill the Node and Edge classes
+        // Fill the Node and Edge classes. These classes together represent our calculated graph.
         Node.setLatitude(latitude);
         Node.setLongitude(longitude);
         Edge.setStartNode(startNode);
         Edge.setDestNode(destNode);
         Edge.setDist(dist);
 
-
-        try {
-            Grid.exportToFmiFile("exported_grid.fmi");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
+        // Export the whole graph
+        exportGridAsFMIFile();
     }
 
     /**
-     * Finds a known {@link GridNode} by its coordinates.
+     * Exports the pre-processed graph to a text file with the ending .fmi. The file will
+     * be created on the top level of this project with the name {@link #GRID_FMI_FILE_NAME}.
+     */
+    private static void exportGridAsFMIFile() {
+        try {
+            Grid.exportToFmiFile(GRID_FMI_FILE_NAME);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Finds a {@link GridNode} that is known to be on water by its coordinates.
      *
-     * @param latitude The latitude coordinate of the GridNode to search for
+     * @param latitude  The latitude coordinate of the GridNode to search for
      * @param longitude The longitude coordinate of the GridNode to search for.
-     * @return The searched {@link GridNode} object or null if not found
+     * @return The searched {@link GridNode} object or null if such a node is not found
      */
     private static GridNode getNodeByLatLong(double latitude, double longitude) {
         if (coordinateNodeStore.containsKey(latitude) && coordinateNodeStore.get(latitude).containsKey(longitude)) {
@@ -205,210 +219,30 @@ public class GridCreator {
 
     /**
      * Entry point for the pre-processing part of this project.
+     *
      * @param args Not used
      */
-    public static void main(String[] args) throws IOException {
-
-        boolean test = IntersectionHelper.arcsIntersect(5.0, 10.0000, 6.0, 10.0,
-                4.0, 10.0, 9.0, 10.0);
-        test = IntersectionHelper.crossesLatitude(52.0371, 	-174.9236, 52.0367, 	-174.9236,
-                52.03703703703704, -175.0, -174.87654320987656);
-        System.out.println(test);
-        test = IntersectionHelper.crossesLatitude(-53.518513, 	-73.53756,-53.518517, 	-73.53756,
-                -53.51851851851852, -73.64197530864197, -73.5185185185185);
-        System.out.println(test);
-        //System.exit(0);
-
+    public static void main(String[] args) {
+        // Start time of the whole pre-processing for tracking time statistics
         Date startTime = new Date();
-        if(false) {
-            // Import coastlines
-            CoastlineImporter importer = new CoastlineImporter();
-            List<CoastlineWay> coastlines = new ArrayList<>();
 
-            try {
-                //coastlines = importer.importPBF("planet-coastlines.pbf");
-                //coastlines = importer.importPBF("antarctica-latest.osm.pbf");
-                //coastlines = importer.importPBF("south-america-latest.osm.pbf");
-                coastlines = importer.importPBF("planet-coastlinespbf-cleaned.pbf");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        // Import the OSM coastline information
+        CoastlineWays.initCoastlineWays();
 
-            CoastlineWays.initEdges(coastlines);
-            coastlines = null;
-            CoastlineWays.storeData();
-        } else {
-            CoastlineWays.getData();
-        }
+        // Initialize the multi-level grid of the CoastlineChecker
+        PointInWaterChecker.initPointInWaterChecker();
 
-        System.out.println(CoastlineWays.getNumberOfEdges());
-
-        /*test = IntersectionHelper.crossesLatitude(CoastlineWays.getStartLatByEdgeIdx(30875904), CoastlineWays.getStartLonByEdgeIdx(30875904),
-                CoastlineWays.getDestLatByEdgeIdx(30875904), CoastlineWays.getDestLonByEdgeIdx(30875904),
-                55.0, -163.9566832780838, -163.8888888888889);
-        System.out.println(test);
-        System.exit(0);*/
-
-        /*int numOfEdges = CoastlineWays.getNumberOfEdges();
-        for(int i = 0; i < numOfEdges; i++) {
-            if(DoubleMath.fuzzyEquals(CoastlineWays.getStartLatByEdgeIdx(i), 			55.0001891, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLonByEdgeIdx(i), 		-163.9566860, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLatByEdgeIdx(i), 	55.0000002, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLonByEdgeIdx(i), 			-163.9570449, 0.0001)
-            ) {
-                System.out.println("ppp: found " + i);
-            } else if(DoubleMath.fuzzyEquals(CoastlineWays.getDestLatByEdgeIdx(i), 	55.0000002, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getDestLonByEdgeIdx(i), 			-163.9570449, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLatByEdgeIdx(i), 		55.0001891, 0.0001) &&
-                    DoubleMath.fuzzyEquals(CoastlineWays.getStartLonByEdgeIdx(i), 		-163.9566860, 0.0001)
-            ) {
-                System.out.println("ppp: found" + i);
-            }
-        }
-        System.exit(0);/*
-       /* Map<Float, Map<Float, List<Float[]>>> checkerMap = new HashMap();
-        int numOfEdges = CoastlineWays.getNumberOfEdges();
-        for(int i = 0; i < numOfEdges; i++) {
-            Float values[] = new Float[]{CoastlineWays.getStartLatByEdgeIdx(i),
-                    CoastlineWays.getStartLonByEdgeIdx(i)};
-            if(checkerMap.containsKey(values[0])) {
-                if(checkerMap.get(values[0]).containsKey(values[1])) {
-                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                            CoastlineWays.getDestLonByEdgeIdx(i)};
-                    for(Float[] arr : checkerMap.get(values[0]).get(values[1])) {
-                        if(arr[0].equals(valuesDest[0]) && arr[1].equals(valuesDest[1])) {
-                            System.out.println("equal pair found");
-                            System.exit(0);
-                        }
-                    }
-                } else {
-                    checkerMap.get(values[0]).put(values[1], new ArrayList<>());
-                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                            CoastlineWays.getDestLonByEdgeIdx(i)};
-                    checkerMap.get(values[0]).get(values[1]).add(valuesDest);
-                }
-            } else {
-                checkerMap.put(values[0], new HashMap<>());
-                checkerMap.get(values[0]).put(values[1], new ArrayList<>());
-                Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                        CoastlineWays.getDestLonByEdgeIdx(i)};
-                checkerMap.get(values[0]).get(values[1]).add(valuesDest);
-            }
-
-
-            values = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                    CoastlineWays.getDestLonByEdgeIdx(i)};
-            if(checkerMap.containsKey(values[0])) {
-                if(checkerMap.get(values[0]).containsKey(values[1])) {
-                    Float valuesDest[] = new Float[]{CoastlineWays.getStartLatByEdgeIdx(i),
-                            CoastlineWays.getStartLonByEdgeIdx(i)};
-                    for(Float[] arr : checkerMap.get(values[0]).get(values[1])) {
-                        if(arr[0].equals(valuesDest[0]) && arr[1].equals(valuesDest[1])) {
-                            System.out.println("equal pair found");
-                            System.exit(0);
-                        }
-                    }
-                } else {
-                    checkerMap.get(values[0]).put(values[1], new ArrayList<>());
-                    Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                            CoastlineWays.getDestLonByEdgeIdx(i)};
-                    checkerMap.get(values[0]).get(values[1]).add(valuesDest);
-                }
-            } else {
-                checkerMap.put(values[0], new HashMap<>());
-                checkerMap.get(values[0]).put(values[1], new ArrayList<>());
-                Float valuesDest[] = new Float[]{CoastlineWays.getDestLatByEdgeIdx(i),
-                        CoastlineWays.getDestLonByEdgeIdx(i)};
-                checkerMap.get(values[0]).get(values[1]).add(valuesDest);
-            }
-        }*/
-        if(false) {
-            coastlineChecker = CoastlineChecker.getInstance();
-
-            // Serialization
-            try
-            {
-                //Saving of object in a file
-                FileOutputStream file = new FileOutputStream("coastlineChecker.ser");
-                ObjectOutputStream out = new ObjectOutputStream(file);
-
-                // Method for serialization of object
-                out.writeObject(CoastlineChecker.getInstance());
-
-                out.close();
-                file.close();
-
-                System.out.println("Object has been serialized");
-
-            }
-
-            catch(IOException ex)
-            {
-                System.out.println("IOException is caught");
-                System.exit(0);
-            }
-        } else {
-            try
-            {
-                // Reading the object from a file
-                FileInputStream file = new FileInputStream("coastlineChecker.ser");
-                ObjectInputStream in = new ObjectInputStream(file);
-
-                // Method for deserialization of object
-                coastlineChecker = (CoastlineChecker) in.readObject();
-
-                in.close();
-                file.close();
-
-                System.out.println("Object has been deserialized ");
-                CoastlineChecker.setCC(coastlineChecker);
-            }
-
-            catch(IOException ex)
-            {
-                System.out.println("IOException is caught");
-            }
-
-            catch(ClassNotFoundException ex)
-            {
-                System.out.println("ClassNotFoundException is caught");
-            }
-        }
-
-        /*boolean testCoastlineCheck = CoastlineChecker.getInstance().pointInWater(31.68f,-88.74f);
-        System.out.println("sss: " + testCoastlineCheck);*/
-
-        /*for(int latIdx = 0; latIdx < 18; latIdx++) {
-            List<GridNode> centerPoints = CoastlineChecker.getInstance().getAllCenterPoints(latIdx);
-
-            String json = GeoJsonConverter.osmNodesToGeoJSON(centerPoints).toString(1);
-            String fileName = "centerpoints" + latIdx + ".json";
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-            writer.write(json);
-            writer.close();
-        }*/
-
-        /*String json2 = GeoJsonConverter.coastlineWayToGeoJSON(coastlines).toString(1);
-        BufferedWriter writer2 = new BufferedWriter(new FileWriter("ways.json"));
-        writer2.write(json2);
-        writer2.close();*/
-
-        /*String json3 = GeoJsonConverter.coastlineWaysToGeoJSON().toString(0);
-        BufferedWriter writer3 = new BufferedWriter(new FileWriter("ways2.json"));
-        writer3.write(json3);
-        writer3.close();*/
-
+        // Create dijkstra grid for later use
         try {
             GridCreator.createGrid();
         } catch (InterruptedException e) {
             e.printStackTrace();
+            System.exit(-1);
         }
 
+        // Calculate the needed time for the pre-processing for time statistics in minutes
         Date endTime = new Date();
-        long timeDiffMin = ((endTime.getTime() - startTime.getTime())/1000)/60;
-        System.out.println("ttt: runtime: " + timeDiffMin);
-
+        long timeDiffMin = ((endTime.getTime() - startTime.getTime()) / 1000) / 60;
+        System.out.println("Preprocessing finished. Runtime in minutes: " + timeDiffMin);
     }
-
-
 }
