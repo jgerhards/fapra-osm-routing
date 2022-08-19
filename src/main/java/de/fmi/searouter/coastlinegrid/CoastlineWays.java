@@ -98,7 +98,7 @@ public class CoastlineWays {
             out.close();
             file.close();
 
-            System.out.println("Object has been serialized");
+            System.out.println("Coastline ways have been serialized");
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -122,7 +122,7 @@ public class CoastlineWays {
             in.close();
             file.close();
 
-            System.out.println("Object has been deserialized ");
+            System.out.println("Coastline ways have been deserialized ");
             edgePosStart = writer.getEdgePosStart();
             pointLat = writer.getPointLat();
             pointLon = writer.getPointLon();

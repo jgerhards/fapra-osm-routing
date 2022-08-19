@@ -14,7 +14,7 @@ import java.util.Set;
  * For the decision whether a given point is on land or on water a ray casting algorithm is used in combination
  * with a pre-computed center point of each GridCell for which the water/land status is already pre-computed.
  */
-public final class PointInWaterChecker {
+public final class PointInWaterChecker implements Serializable{
     //information on the initial point given to calculate the grid used to determine if a point is on land or in water.
     private static final double INITIAL_POINT_LAT = -83.0;
     private static final double INITIAL_POINT_LON = -170.0;
@@ -61,6 +61,7 @@ public final class PointInWaterChecker {
                 file.close();
 
                 System.out.println("PointInWaterChecker has been serialized");
+                INSTANCE = pointInWaterChecker;
 
             } catch (IOException ex) {
                 ex.printStackTrace();

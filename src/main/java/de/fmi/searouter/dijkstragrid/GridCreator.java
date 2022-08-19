@@ -7,6 +7,7 @@ import de.fmi.searouter.utils.IntersectionHelper;
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Contains logic for creating a grid graph whose nodes are distributed equally over the latitudes
@@ -35,7 +36,7 @@ public class GridCreator {
      * Used for retrieving already created GridNode references by latitude and longitude.
      * <Latitude, <Longitude, GridNode>>
      */
-    public static Map<Double, Map<Double, GridNode>> coordinateNodeStore;
+    public static ConcurrentHashMap<Double, Map<Double, GridNode>> coordinateNodeStore;
 
     /**
      * Difference between latitude/longitude coordinates between two neighbor grid nodes
@@ -58,7 +59,7 @@ public class GridCreator {
     private static void initGridCreator() throws InterruptedException {
         gridNodes = Collections.synchronizedList(new ArrayList<>());
 
-        coordinateNodeStore = new HashMap<>();
+        coordinateNodeStore = new ConcurrentHashMap<>();
 
         // Calculate the numeric distance of the grid nodes in degrees
         coordinate_step_latitude = (double) 180 / DIMENSION_LATITUDE;
@@ -243,6 +244,7 @@ public class GridCreator {
         // Calculate the needed time for the pre-processing for time statistics in minutes
         Date endTime = new Date();
         long timeDiffMin = ((endTime.getTime() - startTime.getTime()) / 1000) / 60;
-        System.out.println("Preprocessing finished. Runtime in minutes: " + timeDiffMin);
+        long timeDiffSec = ((endTime.getTime() - startTime.getTime()) / 1000) % 60;
+        System.out.println("Preprocessing finished. Runtime: " + timeDiffMin + ":" + timeDiffSec);
     }
 }

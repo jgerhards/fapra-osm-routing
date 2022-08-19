@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Thread which is responsible to perform a point-in-polygon check for {@link GridNode}s
@@ -59,9 +60,7 @@ public class NodeCreateWorkerThread extends Thread {
 
                 // Add the node to the central data structures in the GridCreator
                 GridCreator.gridNodes.add(node);
-                if (!GridCreator.coordinateNodeStore.containsKey(lat.doubleValue())) {
-                    GridCreator.coordinateNodeStore.put(lat.doubleValue(), new HashMap<>());
-                }
+                GridCreator.coordinateNodeStore.putIfAbsent(lat.doubleValue(), new ConcurrentHashMap<>());
                 GridCreator.coordinateNodeStore.get(lat.doubleValue()).put(longitude.doubleValue(), node);
 
             }
