@@ -1,7 +1,7 @@
 package de.fmi.searouter.dijkstragrid;
 
 /**
- * Efficient storage for Node entites that represent grids on the Dijkstra grid graph {@link Grid}.
+ * Efficient storage for Node entities that represent grids on the Dijkstra grid graph {@link Grid}.
  */
 public class Node {
 

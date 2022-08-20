@@ -2,11 +2,14 @@ package de.fmi.searouter.coastlinegrid;
 
 import java.io.Serializable;
 
+/**
+ * Helper class for enabling a (de)serialization mechanism of the static {@link CoastlineWays} class.
+ */
 class CoastlineWriter implements Serializable {
-    private int[] edgePosStart;
 
-    private float[] pointLon;
-    private float[] pointLat;
+    private final int[] edgePosStart;
+    private final float[] pointLon;
+    private final float[] pointLat;
 
     public int[] getEdgePosStart() {
         return edgePosStart;

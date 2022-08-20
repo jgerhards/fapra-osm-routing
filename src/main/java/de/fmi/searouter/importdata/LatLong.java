@@ -1,7 +1,8 @@
 package de.fmi.searouter.importdata;
 
 /**
- * Object with latitude and longitude values for JSON mapping to the REST Api.
+ * Stores latitude and longitude values for a JSON unmarshalling needed for the
+ * HTTP API implementation.
  */
 public class LatLong {
 
