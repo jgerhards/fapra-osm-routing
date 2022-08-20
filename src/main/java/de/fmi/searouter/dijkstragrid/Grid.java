@@ -155,6 +155,49 @@ public class Grid {
 
                 edgeList.add(edge);
             }
+            
+            // Sort edges by start ids
+            edgeList.sort(new Comparator<TmpEdge>() {
+                @Override
+                public int compare(TmpEdge o1, TmpEdge o2) {
+                    return Integer.compare(o1.startNode, o2.startNode);
+                }
+            });
+
+            // Build an adjacency map for the following operations
+            Map<Integer, List<TmpEdge>> adjacenceMap = new HashMap<>();
+            for (int edgeIdx = 0; edgeIdx < noEdges; edgeIdx++) {
+                int currStartNodeID = edgeList.get(edgeIdx).startNode;
+                if (!adjacenceMap.containsKey(currStartNodeID)) {
+                    adjacenceMap.put(currStartNodeID, new ArrayList<>());
+                }
+
+                adjacenceMap.get(currStartNodeID).add(edgeList.get(edgeIdx));
+            }
+
+            // Assure that the graph is undirected by adding missing unidirectional edges
+            List<TmpEdge> additionalEdgesThatWereMissing = new ArrayList<>();
+            for (Map.Entry<Integer, List<TmpEdge>> e : adjacenceMap.entrySet()) {
+
+                List<TmpEdge> reverseEdgeStartNodesToCheck = e.getValue();
+                boolean oppositeEdgeFound = false;
+
+                for (TmpEdge revEdge : reverseEdgeStartNodesToCheck) {
+                    List<TmpEdge> toCheck = adjacenceMap.get(revEdge.destNode);
+                    for (TmpEdge edges : toCheck) {
+                        if (edges.startNode == revEdge.destNode && edges.destNode == revEdge.startNode) {
+                            oppositeEdgeFound = true;
+                            break;
+                        }
+                    }
+                    if (!oppositeEdgeFound) {
+                        additionalEdgesThatWereMissing.add(new TmpEdge(revEdge.destNode, revEdge.startNode, revEdge.dist));
+                        System.out.println("Added edge " + revEdge.destNode + " | " + revEdge.startNode);
+                    }
+                }
+
+            }
+            edgeList.addAll(additionalEdgesThatWereMissing);
 
             // Sort edges by start ids
             edgeList.sort(new Comparator<TmpEdge>() {
