@@ -28,5 +28,4 @@ public class Node {
         return Node.latitude.length;
     }
 
-
 }
