@@ -66,31 +66,21 @@ public class DynamicGrid {
         return currentEdgeIds[startNode][position];
     }
 
-    public static void removeEdge(int nodeA, int nodeB, int edgeIdA) {
-        int positionA = -1; // -1 so it crashes if an unexpected error occurs ttt
-        for (int i = 0; i < currentEdgeCount[nodeA]; i++) {
-            if(currentEdgeIds[nodeA][i] == edgeIdA) {
-                positionA = i;
+    public static void removeBackwardsEdge(int startId, int destId) {
+        int position = -1; // -1 so it crashes if an unexpected error occurs ttt
+        for (int i = 0; i < currentEdgeCount[destId]; i++) {
+            if(Edges.getDest(currentEdgeIds[destId][i]) == startId) {
+                position = i;
                 break;
             }
         }
-        currentEdgeIds[nodeA][positionA] = currentEdgeIds[nodeA][currentEdgeCount[nodeA] - 1];
-        currentEdgeCount[nodeA]--;
-
-        int positionB = -1; // -1 so it crashes if an unexpected error occurs ttt
-        for (int i = 0; i < currentEdgeCount[nodeB]; i++) {
-            if(Edges.getDest(currentEdgeIds[nodeB][i]) == edgeIdA) {
-                positionB = i;
-                break;
-            }
-        }
-        currentEdgeIds[nodeB][positionB] = currentEdgeIds[nodeB][currentEdgeCount[nodeB] - 1];
-        currentEdgeCount[nodeB]--;
+        currentEdgeIds[destId][position] = currentEdgeIds[destId][currentEdgeCount[destId] - 1];
+        currentEdgeCount[destId]--;
     }
 
     public static void removeNode(int nodeId) {
         for (int i = 0; i < currentEdgeCount[nodeId]; i++) {
-            removeEdge(nodeId, Edges.getDest(currentEdgeIds[nodeId][i]), currentEdgeIds[nodeId][i]);
+            removeBackwardsEdge(nodeId, Edges.getDest(currentEdgeIds[nodeId][i]));
         }
         currentEdgeCount[nodeId] = 0;
         currentEdgeIds[nodeId] = null;

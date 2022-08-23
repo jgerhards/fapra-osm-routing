@@ -10,7 +10,7 @@ public class CHDijkstraHeap {
     private final int SIZE_INCREASE = 5;
 
     //for each node, the position of it in the heap, based on the index
-    private final int[] heapPosition;
+    private int[] heapPosition;
     //the array representing the heap
     private int[] idHeapArray;
     private int currentSize;
@@ -58,8 +58,9 @@ public class CHDijkstraHeap {
         if(deleteIdx < currentSize) {
             System.arraycopy(containedIds, deleteIdx + 1, containedIds, deleteIdx, currentSize - deleteIdx);
             System.arraycopy(distances, deleteIdx + 1, distances, deleteIdx, currentSize - deleteIdx);
+            System.arraycopy(heapPosition, deleteIdx + 1, heapPosition, deleteIdx, currentSize - deleteIdx);
         }
-        distances[currentSize] = Integer.MAX_VALUE;
+        containedIds[currentSize] = Integer.MAX_VALUE;
         return returnValue;
     }
 
@@ -73,18 +74,23 @@ public class CHDijkstraHeap {
         if(idx >= 0) {
             distances[idx] = distance;
             //update, do not add again
-            heapifyBottomUp(heapPosition[id]);
+            heapifyBottomUp(heapPosition[idx]);
         } else {
             if(currentSize == idHeapArray.length) {
                 grow();
             }
             int insertIdx = (idx + 1) * (-1);
+            if(currentSize == 3) {
+                //todo: remove
+                System.out.println("a");
+            }
             System.arraycopy(containedIds, insertIdx, containedIds, insertIdx + 1, currentSize - insertIdx);
             containedIds[insertIdx] = id;
             System.arraycopy(distances, insertIdx, distances, insertIdx + 1, currentSize - insertIdx);
             distances[insertIdx] = distance;
             idHeapArray[currentSize] = id;
-            heapPosition[id] = currentSize;
+            System.arraycopy(heapPosition, insertIdx, heapPosition, insertIdx + 1, currentSize - insertIdx);
+            heapPosition[insertIdx] = currentSize;
             heapifyBottomUp(currentSize);
             currentSize++;
         }
@@ -168,6 +174,8 @@ public class CHDijkstraHeap {
         idHeapArray = Arrays.copyOf(idHeapArray, oldLen + SIZE_INCREASE);
         distances = Arrays.copyOf(distances, oldLen + SIZE_INCREASE);
         containedIds = Arrays.copyOf(containedIds, oldLen + SIZE_INCREASE);
+        Arrays.fill(containedIds, oldLen, containedIds.length, Integer.MAX_VALUE);
+        heapPosition = Arrays.copyOf(heapPosition, oldLen + SIZE_INCREASE);
         Arrays.fill(containedIds, oldLen, containedIds.length, Integer.MAX_VALUE); //make sure binary search works
     }
 
@@ -181,6 +189,12 @@ public class CHDijkstraHeap {
     private int compareValues(int firstID, int secondID) {
         int positionIdx1 = Arrays.binarySearch(containedIds, idHeapArray[firstID]);
         int positionIdx2 = Arrays.binarySearch(containedIds, idHeapArray[secondID]);
+        if(positionIdx1 < 0) { //todo: remove
+            System.out.println("ttt: negative idx: " + idHeapArray[firstID]);
+        }
+        if(positionIdx2 < 0) { //todo: remove
+            System.out.println("ttt: negative idx: " + idHeapArray[secondID]);
+        }
         if(distances[positionIdx1] == distances[positionIdx2]) {
             return 0;
         } else if(distances[positionIdx1] > distances[positionIdx2]) {

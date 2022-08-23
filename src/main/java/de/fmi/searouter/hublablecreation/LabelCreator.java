@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class LabelCreator {
     private static final String FMI_FILE_NAME = "exported_grid.fmi";
+    private static CHDijkstra dijkstra;
 
     private static void contractSingleNode(int nodeId) {
         //get all relevant edge ids
@@ -18,9 +19,21 @@ public class LabelCreator {
         for (int i = 0; i < edgeCount; i++) {
             neighbors[i] = Edges.getDest(edges[i]);
         }
+
+        for (int neighbourId : neighbors) {
+            dijkstra.calculateNew(neighbourId, neighbors);
+            int numOfShortcuts = dijkstra.findShortcuts(nodeId);
+            int[] shortcuts = dijkstra.getShortcuts();
+            for (int i = 0; i < numOfShortcuts; i++) {
+                int idx = i * 4;
+                Edges.addShortcutEdge(neighbourId, shortcuts[idx], shortcuts[idx + 1],
+                        shortcuts[idx + 2], shortcuts[idx + 3]);
+            }
+        }
     }
 
     private static void calculateCH() {
+        LabelCreator.dijkstra = new CHDijkstra();
         // first, get a random order in which the nodes are contracted
         int  originalNodeCount = Nodes.getSize();
         int[] calcOrder = new int[originalNodeCount];
@@ -29,9 +42,8 @@ public class LabelCreator {
         }
 
         //shuffle somewhat randomly, no perfection required
-        Random rnd = ThreadLocalRandom.current();
-        for (int i = 0; i < originalNodeCount; i++)
-        {
+        Random rnd = new Random(123);
+        for (int i = 0; i < originalNodeCount; i++) {
             int index = rnd.nextInt(originalNodeCount - 1);
             // Simple swap
             int tmp = calcOrder[index];
@@ -39,7 +51,19 @@ public class LabelCreator {
             calcOrder[i] = tmp;
         }
 
+        //set ranks of nodes
+        int[] ranks = new int[originalNodeCount];
+        for (int i = 0; i < originalNodeCount; i++) {
+            ranks[calcOrder[i]] = i;
+        }
+        Nodes.setRanks(ranks);
+
         //for every node, calculate contraction
+        for (int i = 0; i < originalNodeCount; i++) {
+            int nodeID = calcOrder[i];
+            contractSingleNode(nodeID);
+            DynamicGrid.removeNode(nodeID);
+        }
     }
 
     public static void main(String[] args) {

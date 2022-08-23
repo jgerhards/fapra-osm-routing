@@ -79,6 +79,7 @@ public class Edges {
         Edges.shortcutEdgeStart = new int[shortcutEdgeSizeIncrease];
         Edges.shortcutEdgeDest = new int[shortcutEdgeSizeIncrease];
         Edges.shortcutEdgeDist = new int[shortcutEdgeSizeIncrease];
+        Edges.shortcutEdgeParts = new int[shortcutEdgeSizeIncrease * 2];
     }
 
     public static int addShortcutEdge(int start, int dest, int dist, int firstEdgeUsed, int secondEdgeUsed) {
@@ -103,7 +104,7 @@ public class Edges {
         shortcutEdgeStart = Arrays.copyOf(shortcutEdgeStart, oldLen + shortcutEdgeSizeIncrease);
         shortcutEdgeDest = Arrays.copyOf(shortcutEdgeDest, oldLen + shortcutEdgeSizeIncrease);
         shortcutEdgeDist = Arrays.copyOf(shortcutEdgeDist, oldLen + shortcutEdgeSizeIncrease);
-        shortcutEdgeParts = Arrays.copyOf(shortcutEdgeParts, (oldLen + shortcutEdgeSizeIncrease) * 2);
+        shortcutEdgeParts = Arrays.copyOf(shortcutEdgeParts, oldLen + (shortcutEdgeSizeIncrease * 2));
     }
 
     public static void setOriginalEdgeStart(int[] originalEdgeStart) {
