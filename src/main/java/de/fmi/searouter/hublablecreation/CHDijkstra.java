@@ -1,8 +1,10 @@
 package de.fmi.searouter.hublablecreation;
 
+import de.fmi.searouter.utils.IntArrayList;
+
 import java.util.Arrays;
 
-public class CHDijkstra {
+public class CHDijkstra extends Thread{
     private static final int INITIAL_ARRAY_SIZE = 10;
     private static final int SIZE_INCREASE = 5;
     private static final int MULTIPLE_STEP_NUMBER = 10;
@@ -13,8 +15,9 @@ public class CHDijkstra {
     private int[] distances;
     private int[] neighbours;
     // format: destId, distance, edgeId1, edgeId2 --> next (meaning three fields per shortcut)
-    private int[] shortcuts;
+    private IntArrayList shortcuts;
     private int initialNode;
+    private IntArrayList intermediateNodes;
     private int foundIdCount;
     private CHDijkstraHeap heap;
 
@@ -23,22 +26,49 @@ public class CHDijkstra {
         distances = new int[INITIAL_ARRAY_SIZE];
         previousNodes = new int[INITIAL_ARRAY_SIZE];
         previousEdges = new int[INITIAL_ARRAY_SIZE];
-        shortcuts = new int[INITIAL_ARRAY_SIZE * 4];
+        shortcuts = new IntArrayList(INITIAL_ARRAY_SIZE * 4);
         heap = new CHDijkstraHeap();
         foundIdCount = 0;
+        intermediateNodes = new IntArrayList(5000);
     }
 
-    public void calculateNew(int initialNode, int[] neighbours) {
-        if(initialNode == 647860) {
-            System.out.println("a4");
+    public void addNodeId(int id) {
+        intermediateNodes.add(id);
+    }
+
+    public void run() {
+        shortcuts.clear();
+        int nodeNum = intermediateNodes.getLen();
+        for (int nodeIdx = 0; nodeIdx < nodeNum; nodeIdx++) {
+            int currentNode = intermediateNodes.get(nodeIdx);
+            //get all relevant edge ids
+            int edgeCount = DynamicGrid.getCurrentEdgeCount(currentNode);
+            int[] edges = DynamicGrid.getCurrentEdges(currentNode);
+
+            //get all neighbor node ids
+            int[] neighbours = new int[edgeCount];
+            for (int i = 0; i < edgeCount; i++) {
+                neighbours[i] = Edges.getDest(edges[i]);
+            }
+
+            for (int neighbourId : neighbours) {
+                nextCalc(neighbourId, neighbours);
+                addShortcuts(currentNode);
+            }
         }
+        intermediateNodes.clear();
+    }
+
+    public IntArrayList getShortcuts() {
+        return shortcuts;
+    }
+
+    private void nextCalc(int initialNode, int[] neighbours) {
+        this.neighbours = neighbours;
+        this.initialNode = initialNode;
         Arrays.fill(foundIds, Integer.MAX_VALUE); //make sure binary search works
         Arrays.fill(distances, 0);
         heap.reset();
-
-        //store information for later
-        this.neighbours = neighbours;
-        this.initialNode = initialNode;
 
         foundIds[0] = initialNode;
         distances[0] = 0;
@@ -50,9 +80,12 @@ public class CHDijkstra {
         }
     }
 
-    public int findShortcuts(int nodeId) {
-        int numOfShortcuts = 0;
+    private void addShortcuts(int nodeId) {
         int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
+        if(previousNodes[nodeIdx] != initialNode) {
+            //in this case, no shortcut from the initial node
+            return;
+        }
         for (int neighbourId : neighbours) {
             int neighbourIdx = Arrays.binarySearch(foundIds, neighbourId);
             if(neighbourId == initialNode) {
@@ -63,28 +96,13 @@ public class CHDijkstra {
             }
             if(previousNodes[neighbourIdx] == nodeId) {
                 // this means a shortcut exists. This consists of exactly two edges (X-->nodeId-->Y)
-                int nextShortcutIdx = (numOfShortcuts * 4);
-                numOfShortcuts++;
-                if(numOfShortcuts * 4 >= shortcuts.length) {
-                    growShortcutArray();
-                }
-                shortcuts[nextShortcutIdx] = neighbourId;
-                shortcuts[nextShortcutIdx + 1] = distances[neighbourIdx];
-                shortcuts[nextShortcutIdx + 2] = previousEdges[neighbourIdx];
-                shortcuts[nextShortcutIdx + 3] = previousEdges[nodeIdx];
+                shortcuts.add(initialNode);
+                shortcuts.add(neighbourId);
+                shortcuts.add(distances[neighbourIdx]);
+                shortcuts.add(previousEdges[neighbourIdx]);
+                shortcuts.add(previousEdges[nodeIdx]);
             }
         }
-
-        return numOfShortcuts;
-    }
-
-    public int[] getShortcuts() {
-        return shortcuts;
-    }
-
-    private void growShortcutArray() {
-        int oldLen = shortcuts.length;
-        shortcuts = Arrays.copyOf(shortcuts, oldLen + (SIZE_INCREASE * 4));
     }
 
     private void multipleNextSteps() {

@@ -283,4 +283,36 @@ public class DynamicGrid {
 
         }
     }
+
+    public static int[][] getCurrentEdgeIds() {
+        return currentEdgeIds;
+    }
+
+    public static int[] getCurrentEdgeCount() {
+        return currentEdgeCount;
+    }
+
+    public static int[][] getAllEdgeIds() {
+        return allEdgeIds;
+    }
+
+    public static int[] getAllEdgeCount() {
+        return allEdgeCount;
+    }
+
+    public static void setCurrentEdgeIds(int[][] currentEdgeIds) {
+        DynamicGrid.currentEdgeIds = currentEdgeIds;
+    }
+
+    public static void setCurrentEdgeCount(int[] currentEdgeCount) {
+        DynamicGrid.currentEdgeCount = currentEdgeCount;
+    }
+
+    public static void setAllEdgeIds(int[][] allEdgeIds) {
+        DynamicGrid.allEdgeIds = allEdgeIds;
+    }
+
+    public static void setAllEdgeCount(int[] allEdgeCount) {
+        DynamicGrid.allEdgeCount = allEdgeCount;
+    }
 }

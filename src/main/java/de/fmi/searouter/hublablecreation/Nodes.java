@@ -2,8 +2,6 @@ package de.fmi.searouter.hublablecreation;
 
 import de.fmi.searouter.dijkstragrid.Node;
 
-import java.util.Arrays;
-
 /**
  * Efficient storage for Node entities used while calculating contraction hierarchies as a first step to get hub labels.
  * todo: In contrast to {@link Node}, this class can track which nodes have been removed from the graph so far.
@@ -12,7 +10,7 @@ import java.util.Arrays;
 public class Nodes {
     private static double[] latitude;
     private static double[] longitude;
-    private static int[] rank;
+    private static int[] levels;
     //private static boolean[] wasRemoved;
 
     /**
@@ -64,12 +62,12 @@ public class Nodes {
         Arrays.fill(wasRemoved, false);
     }*/
 
-    public static int getNodeRank(int i) {
-        return Nodes.rank[i];
+    public static int setNodeLevel(int node, int lvl) {
+        levels[node] = lvl;
     }
 
-    public static void setRanks(int[] rank) {
-        Nodes.rank = rank;
+    public static void setLevels(int[] levels) {
+        Nodes.levels = levels;
     }
 
     public static void setLatitude(double[] latitude) {
@@ -82,5 +80,17 @@ public class Nodes {
 
     public static int getSize() {
         return Nodes.latitude.length;
+    }
+
+    public static double[] getLatitude() {
+        return latitude;
+    }
+
+    public static double[] getLongitude() {
+        return longitude;
+    }
+
+    public static int[] getLevels() {
+        return levels;
     }
 }

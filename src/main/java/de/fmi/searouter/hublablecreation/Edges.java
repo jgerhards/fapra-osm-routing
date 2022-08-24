@@ -118,4 +118,72 @@ public class Edges {
     public static void setOriginalEdgeDist(int[] originalEdgeDist) {
         Edges.originalEdgeDist = originalEdgeDist;
     }
+
+    public static void setNumOfOriginalEdges(int numOfOriginalEdges) {
+        Edges.numOfOriginalEdges = numOfOriginalEdges;
+    }
+
+    public static void setShortcutEdgeStart(int[] shortcutEdgeStart) {
+        Edges.shortcutEdgeStart = shortcutEdgeStart;
+    }
+
+    public static void setShortcutEdgeDest(int[] shortcutEdgeDest) {
+        Edges.shortcutEdgeDest = shortcutEdgeDest;
+    }
+
+    public static void setShortcutEdgeDist(int[] shortcutEdgeDist) {
+        Edges.shortcutEdgeDist = shortcutEdgeDist;
+    }
+
+    public static void setShortcutEdgeParts(int[] shortcutEdgeParts) {
+        Edges.shortcutEdgeParts = shortcutEdgeParts;
+    }
+
+    public static void setNextShortcutId(int nextShortcutId) {
+        Edges.nextShortcutId = nextShortcutId;
+    }
+
+    public static void setShortcutEdgeSizeIncrease(int shortcutEdgeSizeIncrease) {
+        Edges.shortcutEdgeSizeIncrease = shortcutEdgeSizeIncrease;
+    }
+
+    public static int[] getOriginalEdgeStart() {
+        return originalEdgeStart;
+    }
+
+    public static int[] getOriginalEdgeDest() {
+        return originalEdgeDest;
+    }
+
+    public static int[] getOriginalEdgeDist() {
+        return originalEdgeDist;
+    }
+
+    public static int getNumOfOriginalEdges() {
+        return numOfOriginalEdges;
+    }
+
+    public static int[] getShortcutEdgeStart() {
+        return shortcutEdgeStart;
+    }
+
+    public static int[] getShortcutEdgeDest() {
+        return shortcutEdgeDest;
+    }
+
+    public static int[] getShortcutEdgeDist() {
+        return shortcutEdgeDist;
+    }
+
+    public static int[] getShortcutEdgeParts() {
+        return shortcutEdgeParts;
+    }
+
+    public static int getNextShortcutId() {
+        return nextShortcutId;
+    }
+
+    public static int getShortcutEdgeSizeIncrease() {
+        return shortcutEdgeSizeIncrease;
+    }
 }

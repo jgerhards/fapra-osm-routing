@@ -1,74 +1,109 @@
 package de.fmi.searouter.hublablecreation;
 
+import de.fmi.searouter.utils.IntArrayList;
+
 import java.io.IOException;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 public class LabelCreator {
     private static final String FMI_FILE_NAME = "exported_grid.fmi";
-    private static CHDijkstra dijkstra;
+    private static final int THREAD_NUM = 32;
+    private static boolean[] contracted;
+    private static boolean[] isNeighbour;
+    private static int nonContractedNum;
+    private static int nodeCount;
+    private static IntArrayList nodesToCalc = new IntArrayList(50000);
+    private static List<CHDijkstra> threads;
 
-    private static void contractSingleNode(int nodeId) {
-        //get all relevant edge ids
-        int edgeCount = DynamicGrid.getCurrentEdgeCount(nodeId);
-        int[] edges = DynamicGrid.getCurrentEdges(nodeId);
-
-        //get all neighbor node ids
-        int[] neighbors = new int[edgeCount];
-        for (int i = 0; i < edgeCount; i++) {
-            neighbors[i] = Edges.getDest(edges[i]);
+    private static void calcNextLvl(int lvl) {
+        nodesToCalc.clear();
+        Arrays.fill(isNeighbour, false);
+        for (int i = 0; i < nodeCount; i++) {
+            if(!contracted[i] && !isNeighbour[i]) {
+                contracted[i] = true;
+                isNeighbour[i] = true;
+                nonContractedNum--;
+                int edgeCount = DynamicGrid.getCurrentEdgeCount(i);
+                int[] edges = DynamicGrid.getCurrentEdges(i);
+                for (int j = 0; j < edgeCount; j++) {
+                    isNeighbour[Edges.getDest(edges[i])] = true;
+                }
+                nodesToCalc.add(i);
+                Nodes.setNodeLevel(i, lvl);
+            }
         }
 
-        for (int neighbourId : neighbors) {
-            dijkstra.calculateNew(neighbourId, neighbors);
-            int numOfShortcuts = dijkstra.findShortcuts(nodeId);
-            //System.out.println("ttt: num of shortcuts: " + numOfShortcuts);
-            int[] shortcuts = dijkstra.getShortcuts();
-            for (int i = 0; i < numOfShortcuts; i++) {
-                int idx = i * 4;
-                int firstEdgeId = Edges.addShortcutEdge(neighbourId, shortcuts[idx], shortcuts[idx + 1],
-                        shortcuts[idx + 2], shortcuts[idx + 3]);
-                int secondEdgeId = Edges.addShortcutEdge(shortcuts[idx], neighbourId, shortcuts[idx + 1],
-                        shortcuts[idx + 2], shortcuts[idx + 3]);
-                DynamicGrid.addEdges(neighbourId, firstEdgeId, shortcuts[idx], secondEdgeId);
+        int calcNum = nodesToCalc.getLen();
+        for (int i = 0; i < calcNum; i++) {
+            threads.get(i % THREAD_NUM).addNodeId(nodesToCalc.get(i));
+        }
+
+        for (int i = 0; i < THREAD_NUM; i++) {
+            threads.get(i).start();
+        }
+        for (int i = 0; i < THREAD_NUM; i++) {
+            try {
+                threads.get(i).join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (int i = 0; i < THREAD_NUM; i++) {
+            CHDijkstra thread = threads.get(i);
+            IntArrayList shortcuts = thread.getShortcuts();
+            int numOfShortcuts = shortcuts.getLen();
+            for (int j = 0; j < numOfShortcuts; j++) {
+                int idx = j * 5;
+                int firstEdgeId = Edges.addShortcutEdge(shortcuts.get(idx), shortcuts.get(idx + 1),
+                        shortcuts.get(idx + 2), shortcuts.get(idx + 3), shortcuts.get(idx + 4));
+                DynamicGrid.addEdges(shortcuts.get(idx), firstEdgeId, shortcuts[idx], secondEdgeId); //todo: hier neue edge einfügen und alten knoten löschen?
             }
         }
     }
 
     private static void calculateCH() {
-        LabelCreator.dijkstra = new CHDijkstra();
+        threads = new ArrayList<>();
+        for (int i = 0; i < THREAD_NUM; i++) {
+            threads.add(new CHDijkstra());
+        }
         // first, get a random order in which the nodes are contracted
-        int  originalNodeCount = Nodes.getSize();
-        int[] calcOrder = new int[originalNodeCount];
-        for (int i = 0; i < originalNodeCount; i++) {
+        nodeCount = Nodes.getSize();
+        int[] calcOrder = new int[nodeCount];
+        for (int i = 0; i < nodeCount; i++) {
             calcOrder[i] = i;
         }
 
         //shuffle somewhat randomly, no perfection required
         Random rnd = new Random(123);
-        for (int i = 0; i < originalNodeCount; i++) {
-            int index = rnd.nextInt(originalNodeCount - 1);
+        for (int i = 0; i < nodeCount; i++) {
+            int index = rnd.nextInt(nodeCount - 1);
             // Simple swap
             int tmp = calcOrder[index];
             calcOrder[index] = calcOrder[i];
             calcOrder[i] = tmp;
         }
 
-        //set ranks of nodes
-        int[] ranks = new int[originalNodeCount];
-        for (int i = 0; i < originalNodeCount; i++) {
-            ranks[calcOrder[i]] = i;
-        }
-        Nodes.setRanks(ranks);
+        //at the start, no nodes were contracted
+        nonContractedNum = nodeCount;
+        contracted = new boolean[nodeCount];
+        Arrays.fill(contracted, false);
+        isNeighbour = new boolean[nodeCount];
 
+        int multiThreshold = nodeCount - 10000;
+        int lvl = 0;
+        while(nonContractedNum > multiThreshold) {
+            calcNextLvl(lvl);
+            lvl++;
+        }
         //for every node, calculate contraction
-        for (int i = 0; i < originalNodeCount; i++) {
+        for (int i = 0; i < nodeCount; i++) {
             if(i == 660554) {
                 System.out.println("a6");
             }
             int nodeID = calcOrder[i];
             System.out.println("ttt:-------------------------------------------------------- " + nodeID + ", i: " + i);
-            contractSingleNode(nodeID);
+            calcNextLvl();
             DynamicGrid.removeNode(nodeID);
         }
     }
@@ -84,7 +119,10 @@ public class LabelCreator {
             System.exit(-1);
         }
 
-        calculateCH();
+        if(!CHData.readData()) {
+            calculateCH();
+            CHData.storeData();
+        }
 
         // Calculate the needed time for the pre-processing for time statistics in minutes
         Date endTime = new Date();
