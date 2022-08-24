@@ -77,6 +77,10 @@ public class DijkstraRouter implements Router {
 
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
 
+                if(nodeTouched[destinationVertexId]) {
+                    continue;
+                }
+
                 // Calculate the distance to the destination vertex using the current edge
                 int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandleId] + Edge.getDist(neighbourEdgeId);
 

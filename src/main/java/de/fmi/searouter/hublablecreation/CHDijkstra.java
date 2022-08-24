@@ -29,7 +29,9 @@ public class CHDijkstra {
     }
 
     public void calculateNew(int initialNode, int[] neighbours) {
-        System.out.println("ttt:-----------------------------------------------------------------");
+        if(initialNode == 647860) {
+            System.out.println("a4");
+        }
         Arrays.fill(foundIds, Integer.MAX_VALUE); //make sure binary search works
         Arrays.fill(distances, 0);
         heap.reset();
@@ -55,6 +57,9 @@ public class CHDijkstra {
             int neighbourIdx = Arrays.binarySearch(foundIds, neighbourId);
             if(neighbourId == initialNode) {
                 continue;
+            }
+            if(neighbourIdx < 0) {
+                System.out.println("ttt: stelle 1: " + allNodesFound(neighbours)); //todo: here
             }
             if(previousNodes[neighbourIdx] == nodeId) {
                 // this means a shortcut exists. This consists of exactly two edges (X-->nodeId-->Y)
@@ -96,13 +101,13 @@ public class CHDijkstra {
         }
 
         int nodeId = heap.getNext();
-        int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
-        if(nodeIdx < 0) {
-            System.out.println("ttt: invalid node " + nodeId);
-            System.exit(-1);
+
+        if(nodeId == 3092) {
+            System.out.println("a3");
         }
 
         int edgeCount = DynamicGrid.getCurrentEdgeCount(nodeId);
+        //System.out.println("ttt: current edges count: " + edgeCount);
         int[] edgeIds = DynamicGrid.getCurrentEdges(nodeId);
         for (int i = 0; i < edgeCount; i++) {
             int edgeId = edgeIds[i];
@@ -111,7 +116,11 @@ public class CHDijkstra {
             int destNodeIdx = addNodeIfNecessary(destNode);
 
             // Calculate the distance to the destination node using the current edge
+            int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
             int newDistanceOverThisEdgeToDestVertex = distances[nodeIdx] + Edges.getDist(edgeId);
+            if(newDistanceOverThisEdgeToDestVertex == -1) {
+                System.out.println("a1");
+            }
 
             // If the new calculated distance to the destination node is lower as the previously known
             // update the corresponding data structures
@@ -138,7 +147,7 @@ public class CHDijkstra {
             }
             nodeIdx = (nodeIdx + 1) * (-1);
             if(foundIdCount - nodeIdx < 0) {
-                System.out.println("a");
+                System.out.println("a2");
             }
             System.arraycopy(foundIds, nodeIdx, foundIds, nodeIdx + 1, foundIdCount - nodeIdx);
             foundIds[nodeIdx] = nodeId;

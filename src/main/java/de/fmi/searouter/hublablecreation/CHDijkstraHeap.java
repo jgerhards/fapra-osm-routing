@@ -80,10 +80,10 @@ public class CHDijkstraHeap {
                 grow();
             }
             int insertIdx = (idx + 1) * (-1);
-            if(currentSize == 3) {
+            /*if(currentSize == 3) {
                 //todo: remove
-                System.out.println("a");
-            }
+                System.out.println("a5");
+            }*/
             System.arraycopy(containedIds, insertIdx, containedIds, insertIdx + 1, currentSize - insertIdx);
             containedIds[insertIdx] = id;
             System.arraycopy(distances, insertIdx, distances, insertIdx + 1, currentSize - insertIdx);

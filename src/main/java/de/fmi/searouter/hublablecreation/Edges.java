@@ -104,7 +104,7 @@ public class Edges {
         shortcutEdgeStart = Arrays.copyOf(shortcutEdgeStart, oldLen + shortcutEdgeSizeIncrease);
         shortcutEdgeDest = Arrays.copyOf(shortcutEdgeDest, oldLen + shortcutEdgeSizeIncrease);
         shortcutEdgeDist = Arrays.copyOf(shortcutEdgeDist, oldLen + shortcutEdgeSizeIncrease);
-        shortcutEdgeParts = Arrays.copyOf(shortcutEdgeParts, oldLen + (shortcutEdgeSizeIncrease * 2));
+        shortcutEdgeParts = Arrays.copyOf(shortcutEdgeParts, (oldLen + shortcutEdgeSizeIncrease) * 2);
     }
 
     public static void setOriginalEdgeStart(int[] originalEdgeStart) {

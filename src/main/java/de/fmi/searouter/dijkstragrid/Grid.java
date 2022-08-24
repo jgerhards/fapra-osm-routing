@@ -191,6 +191,7 @@ public class Grid {
                         }
                     }
                     if (!oppositeEdgeFound) {
+                        noEdges++;
                         additionalEdgesThatWereMissing.add(new TmpEdge(revEdge.destNode, revEdge.startNode, revEdge.dist));
                         System.out.println("Added edge " + revEdge.destNode + " | " + revEdge.startNode);
                     }

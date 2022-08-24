@@ -3,7 +3,6 @@ package de.fmi.searouter.hublablecreation;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class LabelCreator {
     private static final String FMI_FILE_NAME = "exported_grid.fmi";
@@ -23,11 +22,15 @@ public class LabelCreator {
         for (int neighbourId : neighbors) {
             dijkstra.calculateNew(neighbourId, neighbors);
             int numOfShortcuts = dijkstra.findShortcuts(nodeId);
+            //System.out.println("ttt: num of shortcuts: " + numOfShortcuts);
             int[] shortcuts = dijkstra.getShortcuts();
             for (int i = 0; i < numOfShortcuts; i++) {
                 int idx = i * 4;
-                Edges.addShortcutEdge(neighbourId, shortcuts[idx], shortcuts[idx + 1],
+                int firstEdgeId = Edges.addShortcutEdge(neighbourId, shortcuts[idx], shortcuts[idx + 1],
                         shortcuts[idx + 2], shortcuts[idx + 3]);
+                int secondEdgeId = Edges.addShortcutEdge(shortcuts[idx], neighbourId, shortcuts[idx + 1],
+                        shortcuts[idx + 2], shortcuts[idx + 3]);
+                DynamicGrid.addEdges(neighbourId, firstEdgeId, shortcuts[idx], secondEdgeId);
             }
         }
     }
@@ -60,7 +63,11 @@ public class LabelCreator {
 
         //for every node, calculate contraction
         for (int i = 0; i < originalNodeCount; i++) {
+            if(i == 660554) {
+                System.out.println("a6");
+            }
             int nodeID = calcOrder[i];
+            System.out.println("ttt:-------------------------------------------------------- " + nodeID + ", i: " + i);
             contractSingleNode(nodeID);
             DynamicGrid.removeNode(nodeID);
         }

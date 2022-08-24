@@ -30,7 +30,7 @@ public class DynamicGrid {
         return currentEdgeCount[nodeId];
     }
 
-    public static void addEdge(int nodeA, int edgeIdA, int nodeB, int edgeIdB) {
+    public static void addEdges(int nodeA, int edgeIdA, int nodeB, int edgeIdB) {
         if(currentEdgeIds[nodeA].length == currentEdgeCount[nodeA]) {
             growCurrent(nodeA);
         }
@@ -223,6 +223,7 @@ public class DynamicGrid {
                         }
                     }
                     if (!oppositeEdgeFound) {
+                        noEdges++;
                         additionalEdgesThatWereMissing.add(new DynamicGrid.TmpEdge(revEdge.destNode, revEdge.startNode, revEdge.dist));
                         System.out.println("Added edge " + revEdge.destNode + " | " + revEdge.startNode);
                     }
