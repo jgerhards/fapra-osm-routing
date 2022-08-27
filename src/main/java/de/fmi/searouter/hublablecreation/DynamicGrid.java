@@ -16,10 +16,33 @@ public class DynamicGrid {
     private static int[] allEdgeCount;
 
     public static void initializeEdges(int[][] edges, int[]edgeCount) {
+        System.out.println("ttt: grid init");
         DynamicGrid.currentEdgeIds = edges;
         DynamicGrid.currentEdgeCount = edgeCount;
         DynamicGrid.allEdgeIds = Arrays.stream(edges).map(int[]::clone).toArray(int[][]::new);
         DynamicGrid.allEdgeCount = Arrays.copyOf(edgeCount, edgeCount.length);
+    }
+
+    public static void testStartEdges() {
+        for (int i = Nodes.getSize() - 1; i >= 0 ; i--) {
+            for (int j = 0; j < currentEdgeCount[i]; j++) {
+                int edgeId = currentEdgeIds[i][j];
+                int otherEdgeLen = getBackwardsEdgeDist(i, Edges.getDest(edgeId));
+                if(Edges.getDist(edgeId) != otherEdgeLen) {
+                    System.out.println("ttt");
+                    System.exit(-100);
+                }
+            }
+        }
+    }
+
+    private static int getBackwardsEdgeDist(int start, int dest) {
+        for (int i = 0; i < currentEdgeCount[dest]; i++) {
+            if(Edges.getDest(currentEdgeIds[dest][i]) == start) {
+                return Edges.getDist(currentEdgeIds[dest][i]);
+            }
+        }
+        return -1;
     }
 
     public static int[] getCurrentEdges(int nodeId) {
@@ -30,29 +53,26 @@ public class DynamicGrid {
         return currentEdgeCount[nodeId];
     }
 
-    public static void addEdges(int nodeA, int edgeIdA, int nodeB, int edgeIdB) {
-        if(currentEdgeIds[nodeA].length == currentEdgeCount[nodeA]) {
-            growCurrent(nodeA);
+    public static int[] getAllEdges(int nodeId) {
+        return allEdgeIds[nodeId];
+    }
+
+    public static int getAllEdgeCount(int nodeId) {
+        return allEdgeCount[nodeId];
+    }
+
+    public static void addEdge(int nodeId, int edgeId) {
+        if(currentEdgeIds[nodeId].length == currentEdgeCount[nodeId]) {
+            growCurrent(nodeId);
         }
-        if(currentEdgeIds[nodeB].length == currentEdgeCount[nodeB]) {
-            growCurrent(nodeB);
-        }
-        if(allEdgeIds[nodeA].length == allEdgeCount[nodeA]) {
-            growAll(nodeA);
-        }
-        if(allEdgeIds[nodeB].length == allEdgeCount[nodeB]) {
-            growAll(nodeB);
+        if(allEdgeIds[nodeId].length == allEdgeCount[nodeId]) {
+            growAll(nodeId);
         }
 
-        currentEdgeIds[nodeA][currentEdgeCount[nodeA]] = edgeIdA;
-        currentEdgeCount[nodeA]++;
-        allEdgeIds[nodeA][allEdgeCount[nodeA]] = edgeIdA;
-        allEdgeCount[nodeA]++;
-
-        currentEdgeIds[nodeB][currentEdgeCount[nodeB]] = edgeIdB;
-        currentEdgeCount[nodeB]++;
-        allEdgeIds[nodeB][allEdgeCount[nodeB]] = edgeIdB;
-        allEdgeCount[nodeB]++;
+        currentEdgeIds[nodeId][currentEdgeCount[nodeId]] = edgeId;
+        currentEdgeCount[nodeId]++;
+        allEdgeIds[nodeId][allEdgeCount[nodeId]] = edgeId;
+        allEdgeCount[nodeId]++;
     }
 
     public static int getEdgeId(int startNode, int destNode) {
@@ -73,6 +93,9 @@ public class DynamicGrid {
                 position = i;
                 break;
             }
+        }
+        if(position == -1) {
+            System.out.println("a 11");
         }
         currentEdgeIds[destId][position] = currentEdgeIds[destId][currentEdgeCount[destId] - 1];
         currentEdgeCount[destId]--;
@@ -251,6 +274,7 @@ public class DynamicGrid {
 
             Nodes.setLatitude(latitude);
             Nodes.setLongitude(longitude);
+            Nodes.initializeLvls(noNodes);
 
 
             int[] startNode = new int[noEdges];

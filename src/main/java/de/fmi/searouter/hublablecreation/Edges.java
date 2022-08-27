@@ -41,7 +41,7 @@ public class Edges {
 
     public static int getStart(int i) {
         // todo: is this function even needed? find out by using **debug output**
-        System.out.println("ttt: getSTart used, do not delete");
+        System.out.println("ttt: getStart used, do not delete");
         if(i < numOfOriginalEdges) {
             return originalEdgeStart[i];
         } else {

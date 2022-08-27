@@ -13,17 +13,19 @@ public class CHDijkstra extends Thread{
     private int[] previousNodes;
     private int[] previousEdges;
     private int[] distances;
+    private boolean[] finalDistance;
     private int[] neighbours;
     // format: destId, distance, edgeId1, edgeId2 --> next (meaning three fields per shortcut)
-    private IntArrayList shortcuts;
+    private final IntArrayList shortcuts;
     private int initialNode;
-    private IntArrayList intermediateNodes;
+    private final IntArrayList intermediateNodes;
     private int foundIdCount;
-    private CHDijkstraHeap heap;
+    private final CHDijkstraHeap heap;
 
     public CHDijkstra() {
         foundIds = new int[INITIAL_ARRAY_SIZE];
         distances = new int[INITIAL_ARRAY_SIZE];
+        finalDistance = new boolean[INITIAL_ARRAY_SIZE];
         previousNodes = new int[INITIAL_ARRAY_SIZE];
         previousEdges = new int[INITIAL_ARRAY_SIZE];
         shortcuts = new IntArrayList(INITIAL_ARRAY_SIZE * 4);
@@ -41,8 +43,16 @@ public class CHDijkstra extends Thread{
         int nodeNum = intermediateNodes.getLen();
         for (int nodeIdx = 0; nodeIdx < nodeNum; nodeIdx++) {
             int currentNode = intermediateNodes.get(nodeIdx);
+            if(currentNode == 3096) {
+                System.out.println("a 12");
+            }
+            //System.out.println("ttt:-------------------------------------------------------- " + currentNode);
             //get all relevant edge ids
             int edgeCount = DynamicGrid.getCurrentEdgeCount(currentNode);
+            if(edgeCount < 2) {
+                //no need to check further, no shortcut can possibly be made
+                continue;
+            }
             int[] edges = DynamicGrid.getCurrentEdges(currentNode);
 
             //get all neighbor node ids
@@ -52,7 +62,7 @@ public class CHDijkstra extends Thread{
             }
 
             for (int neighbourId : neighbours) {
-                nextCalc(neighbourId, neighbours);
+                nextCalc(neighbourId, neighbours, currentNode);
                 addShortcuts(currentNode);
             }
         }
@@ -63,7 +73,10 @@ public class CHDijkstra extends Thread{
         return shortcuts;
     }
 
-    private void nextCalc(int initialNode, int[] neighbours) {
+    private void nextCalc(int initialNode, int[] neighbours, int preferredNode) {
+        if(initialNode == 50162) {
+            System.out.println("a8");
+        }
         this.neighbours = neighbours;
         this.initialNode = initialNode;
         Arrays.fill(foundIds, Integer.MAX_VALUE); //make sure binary search works
@@ -76,7 +89,10 @@ public class CHDijkstra extends Thread{
         heap.add(initialNode, 0);
 
         while(!allNodesFound(neighbours) && !heap.isEmpty()) {
-            multipleNextSteps();
+            if(initialNode == 50162) {
+                System.out.println("a9");
+            }
+            multipleNextSteps(preferredNode);
         }
     }
 
@@ -105,24 +121,24 @@ public class CHDijkstra extends Thread{
         }
     }
 
-    private void multipleNextSteps() {
+    private void multipleNextSteps(int preferredNode) {
         for (int i = 0; i < MULTIPLE_STEP_NUMBER; i++) {
-            if(!nextStep()) { //next step calculated in this call
+            if(!nextStep(preferredNode)) { //next step calculated in this call
                 break;
             }
         }
     }
 
-    private boolean nextStep() {
+    private boolean nextStep(int preferredNode) {
         if(heap.isEmpty()) {
             return false;
         }
 
         int nodeId = heap.getNext();
 
-        if(nodeId == 3092) {
+        /*if(nodeId == 3092) {
             System.out.println("a3");
-        }
+        }*/
 
         int edgeCount = DynamicGrid.getCurrentEdgeCount(nodeId);
         //System.out.println("ttt: current edges count: " + edgeCount);
@@ -135,6 +151,7 @@ public class CHDijkstra extends Thread{
 
             // Calculate the distance to the destination node using the current edge
             int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
+            finalDistance[nodeIdx] = true;
             int newDistanceOverThisEdgeToDestVertex = distances[nodeIdx] + Edges.getDist(edgeId);
             if(newDistanceOverThisEdgeToDestVertex == -1) {
                 System.out.println("a1");
@@ -148,6 +165,12 @@ public class CHDijkstra extends Thread{
                 previousEdges[destNodeIdx] = edgeId;
                 heap.add(destNode, newDistanceOverThisEdgeToDestVertex);
                 //System.out.println("ttt: heap adds node " + destNode); todo: remove
+            } else if (nodeId == preferredNode && newDistanceOverThisEdgeToDestVertex == distances[destNodeIdx]) {
+                //in this case we prefer the way over the note to be contracted
+                distances[destNodeIdx] = newDistanceOverThisEdgeToDestVertex;
+                previousNodes[destNodeIdx] = nodeId;
+                previousEdges[destNodeIdx] = edgeId;
+                heap.add(destNode, newDistanceOverThisEdgeToDestVertex);
             }
 
         }
@@ -170,6 +193,8 @@ public class CHDijkstra extends Thread{
             System.arraycopy(foundIds, nodeIdx, foundIds, nodeIdx + 1, foundIdCount - nodeIdx);
             foundIds[nodeIdx] = nodeId;
             System.arraycopy(distances, nodeIdx, distances, nodeIdx + 1, foundIdCount - nodeIdx);
+            System.arraycopy(finalDistance, nodeIdx, finalDistance, nodeIdx + 1, foundIdCount - nodeIdx);
+            finalDistance[nodeIdx] = false;
             distances[nodeIdx] = -1;
             System.arraycopy(previousNodes, nodeIdx, previousNodes, nodeIdx + 1, foundIdCount - nodeIdx);
             System.arraycopy(previousEdges, nodeIdx, previousEdges, nodeIdx + 1, foundIdCount - nodeIdx);
@@ -183,13 +208,17 @@ public class CHDijkstra extends Thread{
         foundIds = Arrays.copyOf(foundIds, oldLen + SIZE_INCREASE);
         Arrays.fill(foundIds, oldLen, foundIds.length, Integer.MAX_VALUE);
         distances = Arrays.copyOf(distances, oldLen + SIZE_INCREASE);
+        finalDistance = Arrays.copyOf(finalDistance, oldLen + SIZE_INCREASE);
         previousNodes = Arrays.copyOf(previousNodes, oldLen + SIZE_INCREASE);
         previousEdges = Arrays.copyOf(previousEdges, oldLen + SIZE_INCREASE);
     }
 
     private boolean allNodesFound(int[] nodes) {
         for (int id : nodes) {
-            if(Arrays.binarySearch(foundIds, id) < 0) {
+            int idx = Arrays.binarySearch(foundIds, id);
+            if(idx < 0) {
+                return false;
+            } else if(!finalDistance[idx]) {
                 return false;
             }
         }

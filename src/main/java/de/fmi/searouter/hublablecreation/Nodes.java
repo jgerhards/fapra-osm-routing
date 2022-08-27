@@ -36,6 +36,10 @@ public class Nodes {
         return longitude[i];
     }
 
+    public static  int getNodeLvl(int nodeId) {
+        return levels[nodeId];
+    }
+
     /**
      * Checks if a node was removed from a graph.
      * @param i The id of the node
@@ -62,8 +66,12 @@ public class Nodes {
         Arrays.fill(wasRemoved, false);
     }*/
 
-    public static int setNodeLevel(int node, int lvl) {
+    public static void setNodeLevel(int node, int lvl) {
         levels[node] = lvl;
+    }
+
+    public static void initializeLvls(int nodeNum) {
+        levels = new int[nodeNum];
     }
 
     public static void setLevels(int[] levels) {
