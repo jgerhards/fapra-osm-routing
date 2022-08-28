@@ -96,6 +96,7 @@ public class HLDijkstra extends Thread{
         for (int nodeId = startNodeId; nodeId < endNodeId; nodeId++) {
             System.out.println("ttt: current thread state: " + (nodeId - startNodeId) + ", " + (endNodeId-startNodeId));
             calcLabels(nodeId);
+            System.out.println("ttt: len: " + Labels.getLabelNodes()[nodeId].size());
         }
     }
 }
