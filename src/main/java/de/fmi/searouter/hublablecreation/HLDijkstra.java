@@ -2,24 +2,27 @@ package de.fmi.searouter.hublablecreation;
 
 import de.fmi.searouter.utils.OrderedBoolSet;
 import de.fmi.searouter.utils.OrderedIntSet;
+import org.springframework.core.annotation.Order;
 
 public class HLDijkstra extends Thread{
-    private final int startNodeId;
-    private final int endNodeId;
+    private final int startNodeIdx;
+    private final int endNodeIdx;
     private final CHDijkstraHeap heap; //we can reuse this class here
     private final OrderedIntSet foundIds;
     private final OrderedBoolSet idDistanceFinal;
     private final OrderedIntSet distances;
     private final OrderedIntSet firstEdgeId;
+    private final int[] calcOrder;
 
-    public HLDijkstra(int startNodeId, int endNodeId) {
-        this.startNodeId = startNodeId;
-        this.endNodeId = endNodeId;
+    public HLDijkstra(int startNodeIdx, int endNodeIdx, int[] calcOrder) {
+        this.startNodeIdx = startNodeIdx;
+        this.endNodeIdx = endNodeIdx;
+        this.calcOrder = calcOrder;
         heap = new CHDijkstraHeap();
-        foundIds = new OrderedIntSet(true, 30, 20);
-        distances = new OrderedIntSet(false, 30, 20);
-        firstEdgeId = new OrderedIntSet(false, 30, 20);
-        idDistanceFinal = new OrderedBoolSet(30, 20);
+        foundIds = new OrderedIntSet(true, 1000, 2000);
+        distances = new OrderedIntSet(false, 1000, 2000);
+        firstEdgeId = new OrderedIntSet(false, 1000, 2000);
+        idDistanceFinal = new OrderedBoolSet(1000, 2000);
     }
 
     private void calcLabels(int nodeId) {
@@ -80,23 +83,33 @@ public class HLDijkstra extends Thread{
         writeLabels(nodeId);
     }
 
-    public void writeLabels(int nodeId) {
-        int labelCount = foundIds.size();
-        for (int i = 0; i < labelCount; i++) {
-            if(!idDistanceFinal.get(i)) {
-                System.out.println("ttt: error");
-                System.exit(-1);
+    private void writeLabels(int nodeId) {
+        removeRedundancies(nodeId);
+        //System.out.println("ttt: labelcount: " + foundIds.size());
+        Labels.addLabels(nodeId, foundIds.toArray(), firstEdgeId.toArray(), distances.toArray());
+    }
+
+    private void removeRedundancies(int nodeId) {
+        int idx = 0;
+        OrderedIntSet labels = foundIds;
+        while(idx < labels.size()) {
+            int labelNode = labels.get(idx);
+            if(labelNode != nodeId && Labels.isRedundant(labels.get(idx), distances.get(idx), foundIds, distances)) {
+                labels.removeAtIdx(idx);
+                distances.removeAtIdx(idx);
+                firstEdgeId.removeAtIdx(idx);
+            } else {
+                idx++;
             }
-            Labels.addLabel(nodeId, foundIds.get(i), firstEdgeId.get(i), distances.get(i));
         }
     }
 
     @Override
     public void run() {
-        for (int nodeId = startNodeId; nodeId < endNodeId; nodeId++) {
-            System.out.println("ttt: current thread state: " + (nodeId - startNodeId) + ", " + (endNodeId-startNodeId));
-            calcLabels(nodeId);
-            System.out.println("ttt: len: " + Labels.getLabelNodes()[nodeId].size());
+        for (int nodeIdx = startNodeIdx; nodeIdx < endNodeIdx; nodeIdx++) {
+            //System.out.println("ttt: current thread state: " + (nodeIdx - startNodeIdx) + ", " + (endNodeIdx - startNodeIdx));
+            calcLabels(calcOrder[nodeIdx]);
+            //System.out.println("ttt: len: " + Labels.getLabelNodes()[calcOrder[nodeIdx]].length);
         }
     }
 }

@@ -4,12 +4,12 @@ import de.fmi.searouter.utils.OrderedIntSet;
 
 import java.io.*;
 
-public class TmpLabelData {
+public class TmpLabelData implements Serializable{
     public static final String SERIALIZATION_FILE_NAME = "tmp_label_data.ser";
 
-    private OrderedIntSet[] labelNodes;
-    private OrderedIntSet[] labelEdges;
-    private OrderedIntSet[] labelDist;
+    private int[][] labelNodes;
+    private int[][] labelEdges;
+    private int[][] labelDist;
 
     public static void storeData() {
         TmpLabelData data = new TmpLabelData();

@@ -96,6 +96,12 @@ public class OrderedIntSet implements Serializable {
         }
     }
 
+    public int[] toArray() {
+        int[] asArray = new int[elementCount];
+        System.arraycopy(elements, 0, asArray, 0, elementCount);
+        return asArray;
+    }
+
     private void grow() {
         int oldLen = elements.length;
         elements = Arrays.copyOf(elements, oldLen + sizeIncrease);

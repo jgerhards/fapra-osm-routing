@@ -2,8 +2,9 @@ package de.fmi.searouter.hublablecreation;
 
 import de.fmi.searouter.utils.IntArrayList;
 import de.fmi.searouter.utils.IntArraySet;
+import de.fmi.searouter.utils.OrderedIntSet;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class LabelCreator {
@@ -118,27 +119,109 @@ public class LabelCreator {
         }
     }
 
-    private static void calcInitialLabels() {
-        HLDijkstra[] threads = new HLDijkstra[NUM_OF_THREADS];
-        int numOfNodes = Nodes.getSize() / NUM_OF_THREADS;
-        int startIdx = 0;
-        for (int i = 1; i < NUM_OF_THREADS; i++) { //note: start at 1
-            int endIdx = startIdx + numOfNodes;
-            threads[i] = new HLDijkstra(startIdx, endIdx);
-            startIdx = endIdx;
-        }
-        threads[0] = new HLDijkstra(startIdx, Nodes.getSize());
+    private static void calcLabels() {
+        String CI_FILE_NAME = "test1.ser";
+        String CO_FILE_NAME = "test2.ser";
+        OrderedIntSet changeIndices = null;
+        if(false) {
+            changeIndices = createHLCalcOrder();
 
-        for (int i = 0; i < NUM_OF_THREADS; i++) {
-            threads[i].start();
-        }
-        for (int i = 0; i < NUM_OF_THREADS; i++) {
             try {
-                threads[i].join();
-            } catch (InterruptedException e) {
+                ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(CI_FILE_NAME));
+                out.writeObject(changeIndices);
+                out.flush();
+                out.close();
+                out = new ObjectOutputStream(new FileOutputStream(CO_FILE_NAME));
+                out.writeObject(calcOrder);
+                out.flush();
+                out.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                ObjectInputStream in = new ObjectInputStream(new FileInputStream(CI_FILE_NAME));
+                changeIndices = (OrderedIntSet) in.readObject();
+                in.close();
+                in = new ObjectInputStream(new FileInputStream(CO_FILE_NAME));
+                calcOrder = (int[]) in.readObject();
+                in.close();
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        int indicesCount = changeIndices.size();
+        List<Thread> threadList = new ArrayList<>();
+
+        for (int i = 0; i < indicesCount - 3; i++) {  //todo: hier nicht alles berechnet
+            System.out.println("ttt: iteration " + i);
+            threadList.clear();
+            int startIdx = changeIndices.get(i);
+            int endIdx = changeIndices.get(i + 1);
+            int threadNum = endIdx - startIdx;
+            System.out.println("ttt: threadnum = " + threadNum);
+            if(threadNum > NUM_OF_THREADS) {
+                int numOfNodes = threadNum / NUM_OF_THREADS;
+                int threadStartIdx = startIdx;
+                for (int j = 1; j < NUM_OF_THREADS; j++) {
+                    int threadEndIdx = threadStartIdx + numOfNodes;
+                    threadList.add(new HLDijkstra(threadStartIdx, threadEndIdx, calcOrder));
+                    threadStartIdx = threadEndIdx;
+                }
+                threadList.add(new HLDijkstra(threadStartIdx, endIdx, calcOrder));
+            } else {
+                for (int j = startIdx; j < endIdx; j++) {
+                    threadList.add(new HLDijkstra(j, j + 1, calcOrder));
+                }
+            }
+
+            for(Thread thread : threadList) {
+                thread.start();
+            }
+            for(Thread thread : threadList) {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private static OrderedIntSet createHLCalcOrder() {
+        calcOrder = new int[Nodes.getSize()];
+        int n = calcOrder.length;
+        for (int i = 0; i < n; i++) {
+            calcOrder[i] = i;
+        }
+
+        int temp = 0;
+        for(int i=0; i < n; i++){
+            System.out.println("ttt: i: " + i);
+            for(int j=1; j < (n-i); j++){
+                if(Nodes.getNodeLvl(calcOrder[j-1]) < Nodes.getNodeLvl(calcOrder[j])){
+                    //swap elements
+                    temp = calcOrder[j-1];
+                    calcOrder[j-1] = calcOrder[j];
+                    calcOrder[j] = temp;
+                }
+
+            }
+        }
+
+        OrderedIntSet changeIndices = new OrderedIntSet(false, 600, 10);
+        int prevLvl = 0;
+        changeIndices.insertTail(0);
+        for (int i = 0; i < n; i++) {
+            int currLvl = Nodes.getNodeLvl(calcOrder[i]);
+            if(currLvl < prevLvl) {
+                System.out.println("ttt: lvlchange: " + i);
+                changeIndices.insertTail(i);
+            }
+            prevLvl = currLvl;
+        }
+        changeIndices.insertTail(n);
+        return changeIndices;
     }
 
     public static void main(String[] args) {
@@ -147,6 +230,12 @@ public class LabelCreator {
 
         if(false) { //todo: used for testing, delete when no longer needed
             //DynamicGrid.testStartEdges();
+            CHData.readData();
+            System.out.println("ttt: test 1: " + Nodes.getNodeLvl(2));
+            createHLCalcOrder();
+            System.out.println("ttt: calc finished: " + Nodes.getNodeLvl(calcOrder[0]) + " " +
+                    Nodes.getNodeLvl(calcOrder[600000]));
+            System.exit(0);
 
             // link: https://jlazarsfeld.github.io/ch.150.project/sections/8-contraction/
             //the line directly below can be added in order to force calculation order. insert in calculateCH function
@@ -178,7 +267,7 @@ public class LabelCreator {
             System.out.println(Arrays.toString(Edges.getShortcutEdgeDist()));
 
             Labels.initialize(noNodes);
-            HLDijkstra testDijkstra = new HLDijkstra(0, 5);
+            HLDijkstra testDijkstra = new HLDijkstra(0, 5, calcOrder);
             testDijkstra.start();
             try {
                 testDijkstra.join();
@@ -201,8 +290,10 @@ public class LabelCreator {
         }
 
         if(!TmpLabelData.readData()) {
+        //if(true) {
+            //System.exit(0);
             Labels.initialize(Nodes.getSize());
-            calcInitialLabels();
+            calcLabels();
             TmpLabelData.storeData();
         }
 
@@ -210,6 +301,8 @@ public class LabelCreator {
         Date endTime = new Date();
         long timeDiffMin = ((endTime.getTime() - startTime.getTime()) / 1000) / 60;
         long timeDiffSec = ((endTime.getTime() - startTime.getTime()) / 1000) % 60;
+        long heapSize = Runtime.getRuntime().totalMemory();
         System.out.println("Preprocessing finished. Runtime: " + timeDiffMin + ":" + timeDiffSec);
+        System.out.println("Heapsize: " + heapSize);
     }
 }
