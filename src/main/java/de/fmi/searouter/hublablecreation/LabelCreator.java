@@ -1,5 +1,7 @@
 package de.fmi.searouter.hublablecreation;
 
+import de.fmi.searouter.hublabeldata.HubLEdges;
+import de.fmi.searouter.hublabeldata.HubLNodes;
 import de.fmi.searouter.utils.IntArrayList;
 import de.fmi.searouter.utils.IntArraySet;
 import de.fmi.searouter.utils.OrderedIntSet;
@@ -9,6 +11,7 @@ import java.util.*;
 
 public class LabelCreator {
     private static final String FMI_FILE_NAME = "exported_grid.fmi";
+    private static final String HL_FILE_NAME = "hl_data.ser";
     private static final int NUM_OF_THREADS = 32;
     private static boolean[] contracted;
     private static boolean[] isNeighbour;
@@ -224,6 +227,18 @@ public class LabelCreator {
         return changeIndices;
     }
 
+    private static void serializeHubLData() {
+        HubLEdges.initialize();
+        HubLNodes.initHlLvl(2);
+        HubLNodes.initNodeData();
+        HubLNodes.initEdgeInfo();
+        try {
+            HubLNodes.initLabelInfo();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         // Start time of the whole pre-processing for tracking time statistics
         Date startTime = new Date();
@@ -290,12 +305,12 @@ public class LabelCreator {
         }
 
         if(!TmpLabelData.readData()) {
-        //if(true) {
-            //System.exit(0);
             Labels.initialize(Nodes.getSize());
             calcLabels();
             TmpLabelData.storeData();
         }
+
+        serializeHubLData();
 
         // Calculate the needed time for the pre-processing for time statistics in minutes
         Date endTime = new Date();
