@@ -30,7 +30,7 @@ public class SearouterApplication {
 		}
 
 		/*for (int i = 0; i < 600000; i++) {
-			if(HubLNodes.nodeHasLabels(i)) {
+			if(!HubLNodes.nodeHasLabels(i)) {
 				System.out.println("ttt: coord: " + HubLNodes.getLat(i) + ", " + HubLNodes.getLong(i));
 			}
 		}*/

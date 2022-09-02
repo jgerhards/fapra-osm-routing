@@ -6,8 +6,8 @@ import de.fmi.searouter.router.DijkstraRouter;
 import java.util.Arrays;
 
 public class CHDijkstraHeap {
-    private final int INITIAL_SIZE = 10;
-    private final int SIZE_INCREASE = 5;
+    private int INITIAL_SIZE = 10;
+    private int SIZE_INCREASE = 5;
 
     //for each node, the position of it in the heap, based on the index
     private int[] heapPosition;
@@ -25,6 +25,21 @@ public class CHDijkstraHeap {
         this.distances = new int[INITIAL_SIZE];
         currentSize = 0;
         Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
+    }
+
+    public CHDijkstraHeap(int initialSize, int sizeIncrease) {
+        INITIAL_SIZE = initialSize;
+        SIZE_INCREASE = sizeIncrease;
+        this.heapPosition = new int[INITIAL_SIZE];
+        this.idHeapArray = new int[INITIAL_SIZE];
+        this.containedIds = new int[INITIAL_SIZE];
+        this.distances = new int[INITIAL_SIZE];
+        currentSize = 0;
+        Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
+    }
+
+    public boolean contains(int nodeId) {
+        return (Arrays.binarySearch(containedIds, nodeId) >= 0);
     }
 
     public void reset() {
@@ -80,10 +95,6 @@ public class CHDijkstraHeap {
                 grow();
             }
             int insertIdx = (idx + 1) * (-1);
-            /*if(currentSize == 3) {
-                //todo: remove
-                System.out.println("a5");
-            }*/
             System.arraycopy(containedIds, insertIdx, containedIds, insertIdx + 1, currentSize - insertIdx);
             containedIds[insertIdx] = id;
             System.arraycopy(distances, insertIdx, distances, insertIdx + 1, currentSize - insertIdx);
@@ -189,12 +200,6 @@ public class CHDijkstraHeap {
     private int compareValues(int firstID, int secondID) {
         int positionIdx1 = Arrays.binarySearch(containedIds, idHeapArray[firstID]);
         int positionIdx2 = Arrays.binarySearch(containedIds, idHeapArray[secondID]);
-        if(positionIdx1 < 0) { //todo: remove
-            System.out.println("ttt: negative idx: " + idHeapArray[firstID]);
-        }
-        if(positionIdx2 < 0) { //todo: remove
-            System.out.println("ttt: negative idx: " + idHeapArray[secondID]);
-        }
         if(distances[positionIdx1] == distances[positionIdx2]) {
             return 0;
         } else if(distances[positionIdx1] > distances[positionIdx2]) {

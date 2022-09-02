@@ -20,9 +20,6 @@ public class OrderedIntSet implements Serializable {
     }
 
     public void insertTail(int toAdd) {
-        if(orderedBySorting) {
-            throw new IllegalStateException();
-        }
         if(elementCount == elements.length) {
             grow();
         }
@@ -36,9 +33,6 @@ public class OrderedIntSet implements Serializable {
     }
 
     public void insertAtIdx(int toAdd, int idx) {
-        if(orderedBySorting) {
-            throw new IllegalStateException();
-        }
         if(elementCount == elements.length) {
             grow();
         }
@@ -48,9 +42,6 @@ public class OrderedIntSet implements Serializable {
     }
 
     public int insertSorted(int toAdd) {
-        if(!orderedBySorting) {
-            throw new IllegalStateException();
-        }
         if(elementCount == elements.length) {
             grow();
         }
@@ -87,6 +78,17 @@ public class OrderedIntSet implements Serializable {
 
     public void updateValue(int newVal, int idx) {
         elements[idx] = newVal;
+    }
+
+    public void makeSpace(int numOfElements) {
+        int oldLen = elements.length;
+        int freeElements = oldLen - elementCount;
+        if(freeElements < numOfElements) {
+            elements = Arrays.copyOf(elements, elements.length + numOfElements);
+            if(orderedBySorting) {
+                Arrays.fill(elements, oldLen, elements.length, Integer.MAX_VALUE);
+            }
+        }
     }
 
     public void clear() {

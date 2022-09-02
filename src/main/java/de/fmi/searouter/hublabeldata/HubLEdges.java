@@ -17,7 +17,7 @@ public class HubLEdges {
     }
 
     public static boolean isShortcut(int edgeId) {
-        return edgeId < firstShortcutIdx;
+        return edgeId >= firstShortcutIdx;
     }
 
     public static int getSecondShortcut(int edgeId) {
@@ -37,7 +37,7 @@ public class HubLEdges {
         int originalEdgeCount = Edges.getNumOfOriginalEdges();
         firstShortcutIdx = originalEdgeCount;
         int shortcutCount = edgeCount - originalEdgeCount;
-        shortcutParts = new int[shortcutCount];
+        shortcutParts = new int[shortcutCount * 2];
 
         int[] tmpDest = Edges.getOriginalEdgeDest();
         int[] tmpDist = Edges.getOriginalEdgeDist();
@@ -50,7 +50,7 @@ public class HubLEdges {
         System.arraycopy(tmpDist, 0, dist, originalEdgeCount, edgeCount - originalEdgeCount);
 
         int[] tmpShortcutParts = Edges.getShortcutEdgeParts();
-        System.arraycopy(tmpShortcutParts, 0, shortcutParts, 0, shortcutCount);
+        System.arraycopy(tmpShortcutParts, 0, shortcutParts, 0, (shortcutCount * 2));
     }
 
     public static int[] getDest() {

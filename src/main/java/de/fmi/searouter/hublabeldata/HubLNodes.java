@@ -33,6 +33,10 @@ public class HubLNodes {
         return longitudes[nodeID];
     }
 
+    public static double getLvl(int nodeID) {
+        return levels[nodeID];
+    }
+
     public static int getLabelNode(int nodeId) {
         return labelNode[nodeId];
     }
@@ -51,6 +55,14 @@ public class HubLNodes {
 
     public static int getLabelOffset(int nodeId) {
         return labelOffset[nodeId];
+    }
+
+    public static int getEdgeOffset(int nodeId) {
+        return edgesOffset[nodeId];
+    }
+
+    public static int getEdge(int edgeIdx) {
+        return edges[edgeIdx];
     }
 
     public static void initHlLvl(int lvl) {
