@@ -18,7 +18,7 @@ public class CHDijkstraHeap {
     private int[] containedIds;
     private int[] distances;
 
-    protected CHDijkstraHeap() {
+    public CHDijkstraHeap() {
         this.heapPosition = new int[INITIAL_SIZE];
         this.idHeapArray = new int[INITIAL_SIZE];
         this.containedIds = new int[INITIAL_SIZE];
@@ -27,7 +27,7 @@ public class CHDijkstraHeap {
         Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
     }
 
-    protected void reset() {
+    public void reset() {
         currentSize = 0;
         Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
     }
@@ -36,7 +36,7 @@ public class CHDijkstraHeap {
      * checks if the heap is empty
      * @return true if no more elements are contained on the heap, else false
      */
-    protected boolean isEmpty() {
+    public boolean isEmpty() {
         return (currentSize == 0);
     }
 
@@ -45,7 +45,7 @@ public class CHDijkstraHeap {
      * the remaining array to a heap.
      * @return the id of the node with the shortest distance
      */
-    protected int getNext() {
+    public int getNext() {
         int returnValue = idHeapArray[0];
 
         int deleteIdx = Arrays.binarySearch(containedIds, idHeapArray[0]);
@@ -69,7 +69,7 @@ public class CHDijkstraHeap {
      * (for example after an update).
      * @param id the id to add
      */
-    protected void add(int id, int distance) {
+    public void add(int id, int distance) {
         int idx = Arrays.binarySearch(containedIds, id);
         if(idx >= 0) {
             distances[idx] = distance;

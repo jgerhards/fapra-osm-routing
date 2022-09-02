@@ -39,11 +39,12 @@ public class CHDijkstra extends Thread{
     }
 
     public void run() {
+        System.out.println("ttt: run called");
         shortcuts.clear();
         int nodeNum = intermediateNodes.getLen();
         for (int nodeIdx = 0; nodeIdx < nodeNum; nodeIdx++) {
             int currentNode = intermediateNodes.get(nodeIdx);
-            if(currentNode == 3096) {
+            if(currentNode == 5) {
                 System.out.println("a 12");
             }
             //System.out.println("ttt:-------------------------------------------------------- " + currentNode);
@@ -98,6 +99,9 @@ public class CHDijkstra extends Thread{
 
     private void addShortcuts(int nodeId) {
         int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
+        if(nodeIdx < 0 ){
+            System.out.println("ttt: nodeId: " + nodeId + " " + initialNode);
+        }
         if(previousNodes[nodeIdx] != initialNode) {
             //in this case, no shortcut from the initial node
             return;

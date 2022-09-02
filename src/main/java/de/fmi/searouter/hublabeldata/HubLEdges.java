@@ -8,6 +8,28 @@ public class HubLEdges {
     private static int firstShortcutIdx;
     private static int[] shortcutParts;
 
+    public static int getDest(int edgeId) {
+        return dest[edgeId];
+    }
+
+    public static int getDist(int edgeId) {
+        return dist[edgeId];
+    }
+
+    public static boolean isShortcut(int edgeId) {
+        return edgeId < firstShortcutIdx;
+    }
+
+    public static int getSecondShortcut(int edgeId) {
+        int idx = (edgeId - firstShortcutIdx) * 2;
+        return shortcutParts[idx];
+    }
+
+    public static int getFirstShortcut(int edgeId) {
+        int idx = ((edgeId - firstShortcutIdx) * 2) + 1;
+        return shortcutParts[idx];
+    }
+
     public static void initialize() {
         int edgeCount = Edges.getNextShortcutId();
         dest = new int[edgeCount];
@@ -29,5 +51,37 @@ public class HubLEdges {
 
         int[] tmpShortcutParts = Edges.getShortcutEdgeParts();
         System.arraycopy(tmpShortcutParts, 0, shortcutParts, 0, shortcutCount);
+    }
+
+    public static int[] getDest() {
+        return dest;
+    }
+
+    public static int[] getDist() {
+        return dist;
+    }
+
+    public static int getFirstShortcutIdx() {
+        return firstShortcutIdx;
+    }
+
+    public static int[] getShortcutParts() {
+        return shortcutParts;
+    }
+
+    public static void setDest(int[] dest) {
+        HubLEdges.dest = dest;
+    }
+
+    public static void setDist(int[] dist) {
+        HubLEdges.dist = dist;
+    }
+
+    public static void setFirstShortcutIdx(int firstShortcutIdx) {
+        HubLEdges.firstShortcutIdx = firstShortcutIdx;
+    }
+
+    public static void setShortcutParts(int[] shortcutParts) {
+        HubLEdges.shortcutParts = shortcutParts;
     }
 }

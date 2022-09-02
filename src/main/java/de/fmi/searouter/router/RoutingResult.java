@@ -1,6 +1,7 @@
 package de.fmi.searouter.router;
 
 import de.fmi.searouter.dijkstragrid.Node;
+import de.fmi.searouter.hublabeldata.HubLNodes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,15 +33,38 @@ public class RoutingResult {
      */
     private double calculationTimeInMs;
 
+    private boolean routeFound;
+
+    private static boolean useHubLabelRouter;
+
+    public static void setHLRouterUse(boolean useHubLabelRouter) {
+        RoutingResult.useHubLabelRouter = useHubLabelRouter;
+    }
+
+    public boolean routeFound() {
+        return routeFound;
+    }
+
     public RoutingResult(List<Integer> path, int overallDistance, double calculationTimeInMs) {
         this.setPath(path);
         this.overallDistance = overallDistance;
         this.calculationTimeInMs = calculationTimeInMs;
+        this.routeFound = true;
     }
 
-    public RoutingResult(List<Integer> path, int overallDistance) {
+    public RoutingResult(double calculationTimeInMs, boolean routeFound) {
+        this.calculationTimeInMs = calculationTimeInMs;
+        this.routeFound = routeFound;
+    }
+
+    public RoutingResult() {
+        this.routeFound = false;
+    }
+
+    public RoutingResult(List<Integer> path, int overallDistance, boolean routeFound) {
         this.setPath(path);
         this.overallDistance = overallDistance;
+        this.routeFound = routeFound;
     }
 
     public List<Integer> getPath() {
@@ -56,8 +80,13 @@ public class RoutingResult {
         this.pathCoordinates = new ArrayList<>();
         for (Integer nodeIdx : path) {
             List<Double> coord = new ArrayList<>();
-            coord.add(Node.getLatitude(nodeIdx));
-            coord.add(Node.getLongitude(nodeIdx));
+            if(!useHubLabelRouter) {
+                coord.add(Node.getLatitude(nodeIdx));
+                coord.add(Node.getLongitude(nodeIdx));
+            } else {
+                coord.add(HubLNodes.getLat(nodeIdx));
+                coord.add(HubLNodes.getLong(nodeIdx));
+            }
             this.pathCoordinates.add(coord);
         }
     }

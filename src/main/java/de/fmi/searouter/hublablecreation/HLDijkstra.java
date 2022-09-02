@@ -1,5 +1,7 @@
 package de.fmi.searouter.hublablecreation;
 
+import de.fmi.searouter.hublabeldata.HubLNodes;
+import de.fmi.searouter.utils.IntersectionHelper;
 import de.fmi.searouter.utils.OrderedBoolSet;
 import de.fmi.searouter.utils.OrderedIntSet;
 import org.springframework.core.annotation.Order;
@@ -39,6 +41,9 @@ public class HLDijkstra extends Thread{
         heap.add(nodeId, 0);
         while(!heap.isEmpty()) {
             int currNode = heap.getNext();
+            /*if(currNode == 586677) {
+                System.out.println("ttt: found node");
+            }*/
             int currNodeIdx = foundIds.getIdx(currNode);
             idDistanceFinal.updateValue(true, currNodeIdx);
             int edgeCount = DynamicGrid.getAllEdgeCount(currNode);
@@ -49,6 +54,9 @@ public class HLDijkstra extends Thread{
             for (int i = 0; i < edgeCount; i++) {
                 int edgeId = edgeIds[i];
                 int destNode = Edges.getDest(edgeId);
+                /*if(destNode == 586677 && edgeId == 7034900) {
+                    System.out.println("ttt: found node 2");
+                }*/
                 if(nodeLvl > Nodes.getNodeLvl(destNode)) {
                     continue;
                 }
@@ -61,12 +69,22 @@ public class HLDijkstra extends Thread{
                         int oldDistance = distances.get(destNodeIdx);
                         int newDistance = currDistance + Edges.getDist(edgeId);
                         if(oldDistance > newDistance) {
+                            /*if(destNode == 586677) {
+                                double actualDistance = IntersectionHelper.getDistance(Nodes.getLatitude(destNode), Nodes.getLongitude(destNode),
+                                        Nodes.getLatitude(currNode), Nodes.getLongitude(currNode));
+                                System.out.println("ttt: update node dist: " + edgeId + ", new first edge: "
+                                        + firstEdgeId.get(currNodeIdx) + " new dist: " + newDistance);
+                            }*/
+                            //System.out.println("ttt: found if clause for dest " + destNode);
                             distances.updateValue(newDistance, destNodeIdx);
                             firstEdgeId.updateValue(firstEdgeId.get(currNodeIdx), destNodeIdx);
                             heap.add(destNode, newDistance);
                         }
                     }
                 } else {
+                    /*if(destNode == 586677) {
+                        System.out.println("ttt: init node dist: " + edgeId + " " + (currNode == nodeId));
+                    }*/
                     destNodeIdx = foundIds.insertSorted(destNode);
                     int distance = currDistance + Edges.getDist(edgeId);
                     distances.insertAtIdx(distance, destNodeIdx);
@@ -74,8 +92,11 @@ public class HLDijkstra extends Thread{
                     if(currNode == nodeId) {
                         firstEdgeId.insertAtIdx(edgeId, destNodeIdx);
                     } else {
+                        //use old currNodeIdx on purpose here since nothing has been inserted so far
                         firstEdgeId.insertAtIdx(firstEdgeId.get(currNodeIdx), destNodeIdx);
                     }
+                    //currNodeIdx has to be updated as we added an element
+                    currNodeIdx = foundIds.getIdx(currNode);
                     heap.add(destNode, distance);
                 }
             }

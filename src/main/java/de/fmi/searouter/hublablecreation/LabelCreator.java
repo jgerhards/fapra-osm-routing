@@ -2,6 +2,8 @@ package de.fmi.searouter.hublablecreation;
 
 import de.fmi.searouter.hublabeldata.HubLEdges;
 import de.fmi.searouter.hublabeldata.HubLNodes;
+import de.fmi.searouter.hublabeldata.HubLStore;
+import de.fmi.searouter.router.HubLRouter;
 import de.fmi.searouter.utils.IntArrayList;
 import de.fmi.searouter.utils.IntArraySet;
 import de.fmi.searouter.utils.OrderedIntSet;
@@ -107,6 +109,9 @@ public class LabelCreator {
             calcOrder[i] = tmp;
         }
 
+        //todo: remove ttt
+        calcOrder = new int[]{1, 4, 3, 2, 0, 5};
+
         //at the start, no nodes are contracted
         nonContractedNum = nodeCount;
         contracted = new boolean[nodeCount];
@@ -157,7 +162,7 @@ public class LabelCreator {
         List<Thread> threadList = new ArrayList<>();
 
         for (int i = 0; i < indicesCount - 3; i++) {  //todo: hier nicht alles berechnet
-            System.out.println("ttt: iteration " + i);
+            System.out.println("ttt: iteration " + i + " time: " + new Date());
             threadList.clear();
             int startIdx = changeIndices.get(i);
             int endIdx = changeIndices.get(i + 1);
@@ -237,6 +242,8 @@ public class LabelCreator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        String filename = "hub_label_data";
+        HubLStore.storeData(filename);
     }
 
     public static void main(String[] args) {
@@ -245,27 +252,27 @@ public class LabelCreator {
 
         if(false) { //todo: used for testing, delete when no longer needed
             //DynamicGrid.testStartEdges();
-            CHData.readData();
+            /*CHData.readData();
             System.out.println("ttt: test 1: " + Nodes.getNodeLvl(2));
             createHLCalcOrder();
             System.out.println("ttt: calc finished: " + Nodes.getNodeLvl(calcOrder[0]) + " " +
                     Nodes.getNodeLvl(calcOrder[600000]));
-            System.exit(0);
+            System.exit(0);*/
 
             // link: https://jlazarsfeld.github.io/ch.150.project/sections/8-contraction/
             //the line directly below can be added in order to force calculation order. insert in calculateCH function
-            calcOrder = new int[]{4, 2, 1, 3, 0};
-            Nodes.setLatitude(new double[]{1.0, 2.0, 3.0, 4.0, 5.0});
-            Nodes.initializeLvls(5);
-            Edges.setNumOfOriginalEdges(5);
-            int[] startNode = new int[]{0, 2, 1, 2, 2, 3, 1, 4, 3, 4};
+            //calcOrder = new int[]{4, 2, 1, 3, 0};
+            Nodes.setLatitude(new double[]{0.0, 1.0, 2.0, 3.0, 4.0, 5.0});
+            Nodes.initializeLvls(6);
+            Edges.setNumOfOriginalEdges(14);
+            int[] startNode = new int[]{0, 2, 1, 2, 2, 3, 1, 4, 3, 4, 5, 2, 5, 4};
             Edges.setOriginalEdgeStart(startNode);
-            Edges.setOriginalEdgeDest(new int[]{2, 0, 2, 1, 3, 2, 4, 1, 4, 3});
-            Edges.setOriginalEdgeDist(new int[]{10, 10, 3, 3, 6, 6, 5, 5, 5, 5});
-            Edges.initializeForShortcutEdges(10);
+            Edges.setOriginalEdgeDest(new int[]{2, 0, 2, 1, 3, 2, 4, 1, 4, 3, 2, 5, 4, 5});
+            Edges.setOriginalEdgeDist(new int[]{10, 10, 3, 3, 6, 6, 5, 5, 5, 5, 100, 100, 5, 5});
+            Edges.initializeForShortcutEdges(14);
 
-            int noNodes = 5;
-            int noEdges = 10;
+            int noNodes = 6;
+            int noEdges = 14;
             // sort edge ids based on start node ids
             int[][] sortedEdges = new int[noNodes][4]; //at most 4 edges are connected
             int[] edgeCounts = new int[noNodes];
@@ -282,7 +289,8 @@ public class LabelCreator {
             System.out.println(Arrays.toString(Edges.getShortcutEdgeDist()));
 
             Labels.initialize(noNodes);
-            HLDijkstra testDijkstra = new HLDijkstra(0, 5, calcOrder);
+            calcOrder = new int[]{2, 4, 0, 3, 1, 5};
+            HLDijkstra testDijkstra = new HLDijkstra(0, 6, calcOrder);
             testDijkstra.start();
             try {
                 testDijkstra.join();
@@ -309,6 +317,16 @@ public class LabelCreator {
             calcLabels();
             TmpLabelData.storeData();
         }
+
+        /*int[] test = new int[]{586638};
+        HLDijkstra thread = new HLDijkstra(0, 1, test);
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.exit(-1);*/
 
         serializeHubLData();
 

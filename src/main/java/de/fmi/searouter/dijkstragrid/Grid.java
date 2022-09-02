@@ -1,5 +1,6 @@
 package de.fmi.searouter.dijkstragrid;
 
+import de.fmi.searouter.hublabeldata.HubLNodes;
 import de.fmi.searouter.utils.IntersectionHelper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -36,31 +37,59 @@ public class Grid {
         List<Integer> candidateNodes = new ArrayList<>();
 
         // Add all node indices to the candidate node list that are within the integer degree plane
-        for (int i = 0; i < Node.getSize(); i++) {
-            if (iLat == (int) Node.getLatitude(i) && iLong == (int) Node.getLongitude(i)) {
-                candidateNodes.add(i);
+        if(offset == null) {
+            for (int i = 0; i < HubLNodes.getNumOfNodes(); i++) {
+                if (iLat == (int) HubLNodes.getLat(i) && iLong == (int) HubLNodes.getLong(i)) {
+                    candidateNodes.add(i);
+                }
             }
-        }
 
-        if (candidateNodes.size() <= 0) {
-            return -1;
-        }
-
-        // For all candidates, calculate the distances to the requested coordinates
-        double minDistance = Double.MAX_VALUE;
-        int minNodeIdx = 0;
-        for (Integer nodeIdx : candidateNodes) {
-            double currDistance = IntersectionHelper.getDistance(
-                    latitude, longitude,
-                    Node.getLatitude(nodeIdx), Node.getLongitude(nodeIdx)
-                    );
-            if (currDistance < minDistance) {
-                minDistance = currDistance;
-                minNodeIdx = nodeIdx;
+            if (candidateNodes.size() <= 0) {
+                return -1;
             }
-        }
 
-        return minNodeIdx;
+            // For all candidates, calculate the distances to the requested coordinates
+            double minDistance = Double.MAX_VALUE;
+            int minNodeIdx = 0;
+            for (Integer nodeIdx : candidateNodes) {
+                double currDistance = IntersectionHelper.getDistance(
+                        latitude, longitude,
+                        HubLNodes.getLat(nodeIdx), HubLNodes.getLong(nodeIdx)
+                );
+                if (currDistance < minDistance) {
+                    minDistance = currDistance;
+                    minNodeIdx = nodeIdx;
+                }
+            }
+
+            return minNodeIdx;
+        } else {
+            for (int i = 0; i < Node.getSize(); i++) {
+                if (iLat == (int) Node.getLatitude(i) && iLong == (int) Node.getLongitude(i)) {
+                    candidateNodes.add(i);
+                }
+            }
+
+            if (candidateNodes.size() <= 0) {
+                return -1;
+            }
+
+            // For all candidates, calculate the distances to the requested coordinates
+            double minDistance = Double.MAX_VALUE;
+            int minNodeIdx = 0;
+            for (Integer nodeIdx : candidateNodes) {
+                double currDistance = IntersectionHelper.getDistance(
+                        latitude, longitude,
+                        Node.getLatitude(nodeIdx), Node.getLongitude(nodeIdx)
+                );
+                if (currDistance < minDistance) {
+                    minDistance = currDistance;
+                    minNodeIdx = nodeIdx;
+                }
+            }
+
+            return minNodeIdx;
+        }
     }
 
 

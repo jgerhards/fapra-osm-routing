@@ -10,7 +10,6 @@ import java.util.*;
 /**
  * class used to create a route when given a start and end node.
  */
-@Component
 public class DijkstraRouter implements Router {
 
     //current distance to the target node
@@ -64,12 +63,14 @@ public class DijkstraRouter implements Router {
         previousNode[startNodeIdx] = startNodeIdx;
         vertexHeap.add(startNodeIdx);
 
+        boolean routeFound = false;
         while (!vertexHeap.isEmpty()) {
             int nodeToHandleId = vertexHeap.getNext();
             nodeTouched[nodeToHandleId] = true;
 
             // Break early if target node reached
             if (nodeToHandleId == destNodeIdx) {
+                routeFound = true;
                 break;
             }
 
@@ -94,21 +95,26 @@ public class DijkstraRouter implements Router {
             }
         }
 
-        // Here, we are done with dijkstra but need to gather all relevant data from the resulting data structures
-        List<Integer> path = new ArrayList<>();
-        int currNodeUnderInvestigation = destNodeIdx;
+        if(routeFound) {
+            // Here, we are done with dijkstra but need to gather all relevant data from the resulting data structures
+            List<Integer> path = new ArrayList<>();
+            int currNodeUnderInvestigation = destNodeIdx;
 
-        path.add(destNodeIdx);
-        while (currNodeUnderInvestigation != startNodeIdx) {
-            int previousNodeIdx = previousNode[currNodeUnderInvestigation];
-            path.add(previousNodeIdx);
-            currNodeUnderInvestigation = previousNodeIdx;
+            path.add(destNodeIdx);
+            while (currNodeUnderInvestigation != startNodeIdx) {
+                int previousNodeIdx = previousNode[currNodeUnderInvestigation];
+                path.add(previousNodeIdx);
+                currNodeUnderInvestigation = previousNodeIdx;
+            }
+
+            // Reverse order of path and save it to array
+            Collections.reverse(path);
+            long stopTime = System.nanoTime();
+
+            return new RoutingResult(path, currDistanceToNode[destNodeIdx], (double) (stopTime - startTime) / 1000000);
+        } else {
+            long stopTime = System.nanoTime();
+            return new RoutingResult((double) (stopTime - startTime) / 1000000, false);
         }
-
-        // Reverse order of path and save it to array
-        Collections.reverse(path);
-        long stopTime = System.nanoTime();
-
-        return new RoutingResult(path, currDistanceToNode[destNodeIdx], (double) (stopTime - startTime) / 1000000);
     }
 }
