@@ -18,6 +18,37 @@ public class RoutingController {
 
     Router router;
 
+    public RoutingController() {
+        //empty
+    }
+
+    public RoutingResult getRoutingResult(RoutingRequest rq) {
+        if(router == null) {
+            if(useHLRouter) {
+                router = new HubLRouter();
+            } else {
+                router = new DijkstraRouter();
+            }
+        }
+
+        int startNodeId = Grid.getNearestGridNodeByCoordinates(rq.getStartPoint().getLatitude(), rq.getStartPoint().getLongitude());
+        int destNodeId = Grid.getNearestGridNodeByCoordinates(rq.getEndPoint().getLatitude(), rq.getEndPoint().getLongitude());
+
+        if (startNodeId < 0) {
+            return null;
+        }
+
+        if (destNodeId < 0) {
+            return null;
+        }
+
+        if (startNodeId == destNodeId) {
+            return new RoutingResult();
+        }
+
+       return router.route(startNodeId, destNodeId);
+    }
+
     @PostMapping("")
     public ResponseEntity getRoute(@RequestBody RoutingRequest routingRequest) {
         if(router == null) {

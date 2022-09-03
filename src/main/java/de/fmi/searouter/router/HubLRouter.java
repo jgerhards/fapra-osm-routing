@@ -62,7 +62,6 @@ public class HubLRouter implements Router{
 
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
-        System.out.println("ttt: hub label router called");
         long startTime = System.nanoTime();
         reset();
         boolean startHasLabels = HubLNodes.nodeHasLabels(startNodeIdx);
@@ -131,7 +130,7 @@ public class HubLRouter implements Router{
             return new RoutingResult();
         }
 
-        if(leftNode != highestLvlNode) {
+        if(startId != highestLvlNode) {
             int nextEdge = HubLNodes.getLabelEdge(idxLeft);
             int nextNode = HubLEdges.getDest(nextEdge);
             edgesLeft.push(nextEdge);
@@ -194,7 +193,7 @@ public class HubLRouter implements Router{
         int leftNode = labelLeft.get(0);
         while(rightIdx < rightMaxIdx && leftIdx < leftSize) {
             if(leftNode == rightNode) {
-                int tmpDist = HubLNodes.getLabelDist(rightIdx) + distRight.get(leftIdx);
+                int tmpDist = HubLNodes.getLabelDist(rightIdx) + distLeft.get(leftIdx);
                 if(tmpDist < currDistance) {
                     highestLvlNode = leftNode;
                     currDistance = tmpDist;
@@ -218,7 +217,7 @@ public class HubLRouter implements Router{
             return new RoutingResult();
         }
 
-        if(rightNode != highestLvlNode) {
+        if(destId != highestLvlNode) {
             int nextEdge = HubLNodes.getLabelEdge(idxRight);
             int nextNode = HubLEdges.getDest(nextEdge);
             edgesRight.push(nextEdge);
@@ -546,14 +545,14 @@ public class HubLRouter implements Router{
         }
 
         //calculate right side of path to max lvl node
-        if(nodeB != highestLvlNode) {
+        if(destId != highestLvlNode) {
             int nextEdge = HubLNodes.getLabelEdge(idxB);
             int nextNode = HubLEdges.getDest(nextEdge);
             edgesRight.push(nextEdge);
             getEdges(nextNode, highestLvlNode, edgesRight);
         }
 
-        if(nodeA != highestLvlNode) {
+        if(startId != highestLvlNode) {
             int nextEdge = HubLNodes.getLabelEdge(idxA);
             int nextNode = HubLEdges.getDest(nextEdge);
             edgesLeft.push(nextEdge);
