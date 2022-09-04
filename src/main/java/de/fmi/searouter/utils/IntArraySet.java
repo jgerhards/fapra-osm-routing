@@ -28,9 +28,6 @@ public class IntArraySet {
             grow();
         }
         idx = (idx + 1) * (-1);
-        if(elementCount - idx < 0) {
-            System.out.println("a a");
-        }
         System.arraycopy(elements, idx, elements, idx + 1, elementCount - idx);
         elements[idx] = toAdd;
         elementCount++;

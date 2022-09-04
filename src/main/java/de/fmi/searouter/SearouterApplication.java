@@ -11,7 +11,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 @SpringBootApplication
@@ -39,16 +41,10 @@ public class SearouterApplication {
 		} else {
 			SpringApplication.run(SearouterApplication.class, args);
 		}
-
-		/*for (int i = 0; i < 600000; i++) {
-			if(!HubLNodes.nodeHasLabels(i)) {
-				System.out.println("ttt: coord: " + HubLNodes.getLat(i) + ", " + HubLNodes.getLong(i));
-			}
-		}*/
 	}
 
 	private static void test() {
-		int testNum = 1000;
+		int testNum = 100000;
 		Random rnd = new Random(123);
 		double[] lats = new double[testNum*2];
 		double[] longs = new double[testNum*2];
@@ -57,6 +53,11 @@ public class SearouterApplication {
 			longs[i] = (-180.0) + (180.0 - (-180.0)) * rnd.nextDouble();
 		}
 
+		List<Double> calcTime = new ArrayList<>(testNum);
+		double minCalcTime = Double.MAX_VALUE;
+		double maxCalcTime = -1.0;
+		int routesFound = 0;
+		List<Integer> distances = new ArrayList<>(testNum);
 		RoutingController controller = new RoutingController();
 		for (int i = 0; i < testNum; i++) {
 			RoutingRequest rq = new RoutingRequest();
@@ -76,8 +77,25 @@ public class SearouterApplication {
 				System.out.println(" Distance: " + res.getOverallDistance() + ", Time: " + res.getCalculationTimeInMs());
 			} else {
 				System.out.println("No route found");
+				continue;
 			}
+
+			if(res.getCalculationTimeInMs() < minCalcTime) {
+				minCalcTime = res.getCalculationTimeInMs();
+			} else if(res.getCalculationTimeInMs() > maxCalcTime) {
+				maxCalcTime = res.getCalculationTimeInMs();
+			}
+			calcTime.add(res.getCalculationTimeInMs());
+			distances.add(res.getOverallDistance());
+			routesFound++;
 		}
+		double avgCalcTime = calcTime.stream().mapToDouble(a -> a).average().orElse(-1.0);
+		double avgDist = distances.stream().mapToInt(a -> a).average().orElse(-1.0);
+		System.out.println("\n\n Data: min calc time: " + minCalcTime
+				+ ", avg calc time: " + avgCalcTime
+				+ ", max calc time: " + maxCalcTime
+				+ ", avg distance: \"" + String.format("%.2f", avgDist)
+				+ "\", routes found: " + routesFound);
 	}
 
 }

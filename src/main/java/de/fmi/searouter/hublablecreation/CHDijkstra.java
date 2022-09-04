@@ -39,15 +39,10 @@ public class CHDijkstra extends Thread{
     }
 
     public void run() {
-        System.out.println("ttt: run called");
         shortcuts.clear();
         int nodeNum = intermediateNodes.getLen();
         for (int nodeIdx = 0; nodeIdx < nodeNum; nodeIdx++) {
             int currentNode = intermediateNodes.get(nodeIdx);
-            if(currentNode == 5) {
-                System.out.println("a 12");
-            }
-            //System.out.println("ttt:-------------------------------------------------------- " + currentNode);
             //get all relevant edge ids
             int edgeCount = DynamicGrid.getCurrentEdgeCount(currentNode);
             if(edgeCount < 2) {
@@ -75,9 +70,6 @@ public class CHDijkstra extends Thread{
     }
 
     private void nextCalc(int initialNode, int[] neighbours, int preferredNode) {
-        if(initialNode == 50162) {
-            System.out.println("a8");
-        }
         this.neighbours = neighbours;
         this.initialNode = initialNode;
         Arrays.fill(foundIds, Integer.MAX_VALUE); //make sure binary search works
@@ -90,18 +82,12 @@ public class CHDijkstra extends Thread{
         heap.add(initialNode, 0);
 
         while(!allNodesFound(neighbours) && !heap.isEmpty()) {
-            if(initialNode == 50162) {
-                System.out.println("a9");
-            }
             multipleNextSteps(preferredNode);
         }
     }
 
     private void addShortcuts(int nodeId) {
         int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
-        if(nodeIdx < 0 ){
-            System.out.println("ttt: nodeId: " + nodeId + " " + initialNode);
-        }
         if(previousNodes[nodeIdx] != initialNode) {
             //in this case, no shortcut from the initial node
             return;
@@ -140,12 +126,7 @@ public class CHDijkstra extends Thread{
 
         int nodeId = heap.getNext();
 
-        /*if(nodeId == 3092) {
-            System.out.println("a3");
-        }*/
-
         int edgeCount = DynamicGrid.getCurrentEdgeCount(nodeId);
-        //System.out.println("ttt: current edges count: " + edgeCount);
         int[] edgeIds = DynamicGrid.getCurrentEdges(nodeId);
         for (int i = 0; i < edgeCount; i++) {
             int edgeId = edgeIds[i];
@@ -157,9 +138,6 @@ public class CHDijkstra extends Thread{
             int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
             finalDistance[nodeIdx] = true;
             int newDistanceOverThisEdgeToDestVertex = distances[nodeIdx] + Edges.getDist(edgeId);
-            if(newDistanceOverThisEdgeToDestVertex == -1) {
-                System.out.println("a1");
-            }
 
             // If the new calculated distance to the destination node is lower as the previously known
             // update the corresponding data structures
@@ -168,7 +146,6 @@ public class CHDijkstra extends Thread{
                 previousNodes[destNodeIdx] = nodeId;
                 previousEdges[destNodeIdx] = edgeId;
                 heap.add(destNode, newDistanceOverThisEdgeToDestVertex);
-                //System.out.println("ttt: heap adds node " + destNode); todo: remove
             } else if (nodeId == preferredNode && newDistanceOverThisEdgeToDestVertex == distances[destNodeIdx]) {
                 //in this case we prefer the way over the note to be contracted
                 distances[destNodeIdx] = newDistanceOverThisEdgeToDestVertex;
@@ -191,9 +168,6 @@ public class CHDijkstra extends Thread{
                 grow();
             }
             nodeIdx = (nodeIdx + 1) * (-1);
-            if(foundIdCount - nodeIdx < 0) {
-                System.out.println("a2");
-            }
             System.arraycopy(foundIds, nodeIdx, foundIds, nodeIdx + 1, foundIdCount - nodeIdx);
             foundIds[nodeIdx] = nodeId;
             System.arraycopy(distances, nodeIdx, distances, nodeIdx + 1, foundIdCount - nodeIdx);

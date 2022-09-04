@@ -284,9 +284,6 @@ public class HubLRouter implements Router{
                 int tmpDist = distLeft.get(leftIdx) + distRight.get(rightIdx);
                 if(tmpDist < currDistance) {
                     highestLvlNode = leftNode;
-                    if(highestLvlNode == 142618) {
-                        System.out.println("a");
-                    }
                     currDistance = tmpDist;
                     idxLeft = leftIdx;
                     idxRight = rightIdx;
@@ -573,9 +570,6 @@ public class HubLRouter implements Router{
             int startIdx = HubLNodes.getLabelOffset(currentNode);
             int endIdx = HubLNodes.getLabelOffset(currentNode + 1);
             int labelIdx = Arrays.binarySearch(HubLNodes.getLabelNode(), startIdx, endIdx, highestLvlNode);
-            if(labelIdx < 0) {
-                System.out.println("a");
-            }
             int edgeId = HubLNodes.getLabelEdge(labelIdx);
             currentNode = HubLEdges.getDest(edgeId);
             edgeStack.push(edgeId);

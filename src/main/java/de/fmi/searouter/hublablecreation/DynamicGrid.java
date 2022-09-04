@@ -94,9 +94,6 @@ public class DynamicGrid {
                 break;
             }
         }
-        if(position == -1) {
-            System.out.println("a 11");
-        }
         currentEdgeIds[destId][position] = currentEdgeIds[destId][currentEdgeCount[destId] - 1];
         currentEdgeCount[destId]--;
     }

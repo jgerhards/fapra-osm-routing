@@ -152,10 +152,10 @@ public class HubLNodes {
                 int[] nodes = tmpLabelNodes[i];
                 int[] edges = tmpLabelEdges[i];
                 int[] dist = tmpLabelDist[i];
-                if(!(IntStream.range(0, nodes.length - 1).noneMatch(idx -> nodes[idx] > nodes[idx + 1]))) {
+                /*if(!(IntStream.range(0, nodes.length - 1).noneMatch(idx -> nodes[idx] > nodes[idx + 1]))) {
                     System.out.println("ttt: error unsorted array");
                     System.exit(-1);
-                }
+                }*/
                 for (int j = 0; j < labelCount; j++) {
                     writer.write(nodes[j] + "\n");
                     writer.write(edges[j] + "\n");
