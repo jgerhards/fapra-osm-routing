@@ -1,10 +1,12 @@
 package de.fmi.searouter.hublabeldata;
 
-import de.fmi.searouter.hublablecreation.CHData;
-
 import java.io.*;
 
+/**
+ * This class is used to store data used by the routing algorithm. Apart from that, it serves no further purpose.
+ */
 public class HubLStore implements Serializable {
+    //fields from HubLNodes
     private int hlLevel;
     private double[] longitudes;
     private double[] latitudes;
@@ -16,11 +18,18 @@ public class HubLStore implements Serializable {
     private int[] labelEdge;
     private int[] labelDist;
 
+    //fields from HubLEdges
     private int[] dest;
     private int[] dist;
     private int firstShortcutIdx;
     private int[] shortcutParts;
 
+    /**
+     * Read data from a file with a given path and insert it into data structures in {@link HubLNodes}
+     * and {@link HubLEdges}.
+     * @param filename the path of the file
+     * @return true if it was successful, false if no such file exists
+     */
     public static boolean readData(String filename) {
         File serializationFile = new File(filename);
         if(!serializationFile.exists()) {
@@ -39,7 +48,7 @@ public class HubLStore implements Serializable {
             file.close();
 
             data.setData();
-            System.out.println("hub label data has been deserialized");
+            System.out.println("Hub label data has been deserialized");
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(-1);
@@ -47,6 +56,10 @@ public class HubLStore implements Serializable {
         return true;
     }
 
+    /**
+     * Store data from data structures in {@link HubLNodes} and {@link HubLEdges} in a file with a given path.
+     * @param filename the path of the file
+     */
     public static void storeData(String filename) {
         HubLStore data = new HubLStore();
         // Serialization
@@ -61,7 +74,7 @@ public class HubLStore implements Serializable {
             out.close();
             file.close();
 
-            System.out.println("CH data has been serialized");
+            System.out.println("Hub label data has been serialized");
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -69,6 +82,9 @@ public class HubLStore implements Serializable {
         }
     }
 
+    /**
+     * Constructor. Takes data from internal structures in order to fill the object fields.
+     */
     private HubLStore() {
         hlLevel = HubLNodes.getHlLevel();
         longitudes = HubLNodes.getLongitudes();
@@ -87,6 +103,9 @@ public class HubLStore implements Serializable {
         shortcutParts = HubLEdges.getShortcutParts();
     }
 
+    /**
+     * Insert data into appropriate data structures.
+     */
     private void setData() {
         HubLNodes.setHlLevel(hlLevel);
         HubLNodes.setLongitudes(longitudes);

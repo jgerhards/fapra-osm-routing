@@ -2,7 +2,7 @@ package de.fmi.searouter.router;
 
 import de.fmi.searouter.hublabeldata.HubLEdges;
 import de.fmi.searouter.hublabeldata.HubLNodes;
-import de.fmi.searouter.hublablecreation.CHDijkstraHeap;
+import de.fmi.searouter.utils.DistanceHeap;
 import de.fmi.searouter.utils.IntStack;
 import de.fmi.searouter.utils.OrderedIntSet;
 
@@ -16,8 +16,8 @@ public class HubLRouter implements Router{
     private final IntStack edgesLeft;
     private final IntStack edgeCalcStack;
 
-    private final CHDijkstraHeap heap;
-    private final CHDijkstraHeap labelHeap;
+    private final DistanceHeap heap;
+    private final DistanceHeap labelHeap;
     private final OrderedIntSet labelLeft;
     private final OrderedIntSet distLeft;
     private final OrderedIntSet edgeLeft;
@@ -44,8 +44,8 @@ public class HubLRouter implements Router{
     }
 
     public HubLRouter() {
-        heap = new CHDijkstraHeap(1000, 1000);
-        labelHeap = new CHDijkstraHeap(1000, 1000);
+        heap = new DistanceHeap(1000, 1000);
+        labelHeap = new DistanceHeap(1000, 1000);
         resultNodes = new IntStack(5000);
         edgesRight = new IntStack(500);
         edgesLeft = new IntStack(500);

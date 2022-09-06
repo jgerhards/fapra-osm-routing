@@ -1,32 +1,53 @@
 package de.fmi.searouter.hublablecreation;
 
-import de.fmi.searouter.hublabeldata.HubLNodes;
-import de.fmi.searouter.utils.IntersectionHelper;
+import de.fmi.searouter.utils.DistanceHeap;
 import de.fmi.searouter.utils.OrderedBoolSet;
 import de.fmi.searouter.utils.OrderedIntSet;
-import org.springframework.core.annotation.Order;
 
+/**
+ * Thread used to generate hub labels based on contraction hierarchy.
+ */
 public class HLDijkstra extends Thread{
+    //the order in which nodes are to be calculated
+    private final int[] calcOrder;
+    //first index whose node id should be calculated by this thread and first index whose should not
     private final int startNodeIdx;
     private final int endNodeIdx;
-    private final CHDijkstraHeap heap; //we can reuse this class here
-    private final OrderedIntSet foundIds;
-    private final OrderedBoolSet idDistanceFinal;
-    private final OrderedIntSet distances;
-    private final OrderedIntSet firstEdgeId;
-    private final int[] calcOrder;
 
+    //heap used during dijkstra part of calculation
+    private final DistanceHeap heap;
+
+    //list of ids found so far. if an id is found at a certain index in this list, associated data can be found in other
+    //lists at the same index.
+    private final OrderedIntSet foundIds;
+    //tracks if the distance to an id is final
+    private final OrderedBoolSet idDistanceFinal;
+    //distances from the initial node to other nodes
+    private final OrderedIntSet distances;
+    //first edge used when navigating from the initial node to a different one
+    private final OrderedIntSet firstEdgeId;
+
+    /**
+     * Constructor. Used to pass initial data about this thread.
+     * @param startNodeIdx the index at which to start (in calc order)
+     * @param endNodeIdx the index at which to stop (in calc order)
+     * @param calcOrder an array containing ids of nodes in the order in which they should be calculated in
+     */
     public HLDijkstra(int startNodeIdx, int endNodeIdx, int[] calcOrder) {
         this.startNodeIdx = startNodeIdx;
         this.endNodeIdx = endNodeIdx;
         this.calcOrder = calcOrder;
-        heap = new CHDijkstraHeap();
+        heap = new DistanceHeap();
         foundIds = new OrderedIntSet(true, 1000, 2000);
         distances = new OrderedIntSet(false, 1000, 2000);
         firstEdgeId = new OrderedIntSet(false, 1000, 2000);
         idDistanceFinal = new OrderedBoolSet(1000, 2000);
     }
 
+    /**
+     * Calculate the labels for a given node.
+     * @param nodeId the id of the node
+     */
     private void calcLabels(int nodeId) {
         foundIds.clear();
         idDistanceFinal.clear();
@@ -41,23 +62,17 @@ public class HLDijkstra extends Thread{
         heap.add(nodeId, 0);
         while(!heap.isEmpty()) {
             int currNode = heap.getNext();
-            /*if(currNode == 586677) {
-                System.out.println("ttt: found node");
-            }*/
             int currNodeIdx = foundIds.getIdx(currNode);
-            idDistanceFinal.updateValue(true, currNodeIdx);
+            idDistanceFinal.updateValue(true, currNodeIdx); //once popped from the heap, the distance is final
             int edgeCount = DynamicGrid.getAllEdgeCount(currNode);
             int[] edgeIds = DynamicGrid.getAllEdges(currNode);
             int nodeLvl = Nodes.getNodeLvl(currNode);
             int currDistance = distances.get(foundIds.getIdx(currNode));
 
-            for (int i = 0; i < edgeCount; i++) {
+            for (int i = 0; i < edgeCount; i++) { //consider all edges of the current node
                 int edgeId = edgeIds[i];
                 int destNode = Edges.getDest(edgeId);
-                /*if(destNode == 586677 && edgeId == 7034900) {
-                    System.out.println("ttt: found node 2");
-                }*/
-                if(nodeLvl > Nodes.getNodeLvl(destNode)) {
+                if(nodeLvl > Nodes.getNodeLvl(destNode)) { //ignore lower lvl nodes
                     continue;
                 }
 
@@ -69,47 +84,48 @@ public class HLDijkstra extends Thread{
                         int oldDistance = distances.get(destNodeIdx);
                         int newDistance = currDistance + Edges.getDist(edgeId);
                         if(oldDistance > newDistance) {
-                            /*if(destNode == 586677) {
-                                double actualDistance = IntersectionHelper.getDistance(Nodes.getLatitude(destNode), Nodes.getLongitude(destNode),
-                                        Nodes.getLatitude(currNode), Nodes.getLongitude(currNode));
-                                System.out.println("ttt: update node dist: " + edgeId + ", new first edge: "
-                                        + firstEdgeId.get(currNodeIdx) + " new dist: " + newDistance);
-                            }*/
-                            //System.out.println("ttt: found if clause for dest " + destNode);
+                            //update to new values
                             distances.updateValue(newDistance, destNodeIdx);
                             firstEdgeId.updateValue(firstEdgeId.get(currNodeIdx), destNodeIdx);
                             heap.add(destNode, newDistance);
                         }
                     }
-                } else {
-                    /*if(destNode == 586677) {
-                        System.out.println("ttt: init node dist: " + edgeId + " " + (currNode == nodeId));
-                    }*/
+                } else { //not contained in foundIds --> new node found
                     destNodeIdx = foundIds.insertSorted(destNode);
                     int distance = currDistance + Edges.getDist(edgeId);
                     distances.insertAtIdx(distance, destNodeIdx);
                     idDistanceFinal.insertAtIdx(false, destNodeIdx);
                     if(currNode == nodeId) {
+                        //if this is true, we look at the initial node --> first edge id is the current edge
                         firstEdgeId.insertAtIdx(edgeId, destNodeIdx);
                     } else {
-                        //use old currNodeIdx on purpose here since nothing has been inserted so far
+                        //use old currNodeIdx on purpose here since nothing has been inserted into this structure so far
                         firstEdgeId.insertAtIdx(firstEdgeId.get(currNodeIdx), destNodeIdx);
                     }
-                    //currNodeIdx has to be updated as we added an element
+                    //currNodeIdx has to be updated as we added an element --> this may have moved currNode
                     currNodeIdx = foundIds.getIdx(currNode);
                     heap.add(destNode, distance);
                 }
             }
         }
-        writeLabels(nodeId);
+        addLabels(nodeId);
     }
 
-    private void writeLabels(int nodeId) {
+    /**
+     * Add labels to the {@link Labels} data structure. Before doing that, remove any redundant labels.
+     * @param nodeId the id of the node to add the labels for
+     */
+    private void addLabels(int nodeId) {
         removeRedundancies(nodeId);
-        //System.out.println("ttt: labelcount: " + foundIds.size());
         Labels.addLabels(nodeId, foundIds.toArray(), firstEdgeId.toArray(), distances.toArray());
     }
 
+    /**
+     * Remove redundant labels of a given node. A label is redundant, if the label node has another label in
+     * common with the given node, where the distance is smaller than or equal to the distance of the
+     * original label.
+     * @param nodeId the id of the node to check the labels of
+     */
     private void removeRedundancies(int nodeId) {
         int idx = 0;
         OrderedIntSet labels = foundIds;
@@ -119,18 +135,20 @@ public class HLDijkstra extends Thread{
                 labels.removeAtIdx(idx);
                 distances.removeAtIdx(idx);
                 firstEdgeId.removeAtIdx(idx);
+                //no need to increase idx, as an element was removed
             } else {
                 idx++;
             }
         }
     }
 
+    /**
+     * Calculate labels for node ids in the calc order array between the indices given for this thread.
+     */
     @Override
     public void run() {
         for (int nodeIdx = startNodeIdx; nodeIdx < endNodeIdx; nodeIdx++) {
-            //System.out.println("ttt: current thread state: " + (nodeIdx - startNodeIdx) + ", " + (endNodeIdx - startNodeIdx));
             calcLabels(calcOrder[nodeIdx]);
-            //System.out.println("ttt: len: " + Labels.getLabelNodes()[calcOrder[nodeIdx]].length);
         }
     }
 }

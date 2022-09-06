@@ -74,18 +74,19 @@ public class DijkstraRouter implements Router {
                 break;
             }
 
-            for (int neighbourEdgeId = Grid.offset[nodeToHandleId]; neighbourEdgeId < Grid.offset[nodeToHandleId + 1]; ++neighbourEdgeId) {
-
+            for(int neighbourEdgeId = Grid.offset[nodeToHandleId]; neighbourEdgeId < Grid.offset[nodeToHandleId + 1];
+                ++neighbourEdgeId) {
                 int destinationVertexId = Edge.getDest(neighbourEdgeId);
-
                 if(nodeTouched[destinationVertexId]) {
                     continue;
                 }
 
                 // Calculate the distance to the destination vertex using the current edge
-                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandleId] + Edge.getDist(neighbourEdgeId);
+                int newDistanceOverThisEdgeToDestVertex = currDistanceToNode[nodeToHandleId] +
+                        Edge.getDist(neighbourEdgeId);
 
-                // If the new calculated distance to the destination vertex is lower as the previously known, update the corresponding data stucutres
+                // If the new calculated distance to the destination vertex is lower as the previously known, update
+                // the corresponding data structures
                 if (newDistanceOverThisEdgeToDestVertex < currDistanceToNode[destinationVertexId]) {
                     currDistanceToNode[destinationVertexId] = newDistanceOverThisEdgeToDestVertex;
                     previousNode[destinationVertexId] = nodeToHandleId;
@@ -111,7 +112,8 @@ public class DijkstraRouter implements Router {
             Collections.reverse(path);
             long stopTime = System.nanoTime();
 
-            return new RoutingResult(path, currDistanceToNode[destNodeIdx], (double) (stopTime - startTime) / 1000000);
+            return new RoutingResult(path, currDistanceToNode[destNodeIdx],
+                    (double) (stopTime - startTime) / 1000000);
         } else {
             long stopTime = System.nanoTime();
             return new RoutingResult((double) (stopTime - startTime) / 1000000, false);

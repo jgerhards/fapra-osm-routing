@@ -6,69 +6,133 @@ import de.fmi.searouter.hublablecreation.Labels;
 import de.fmi.searouter.hublablecreation.Nodes;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
+/**
+ * Contains data about nodes relevant for the hub label routing algorithm.
+ */
 public class HubLNodes {
+    //the first level in which hub labels are present
     private static int hlLevel;
+    //the levels of the nodes
+    private static int[] levels;
+
+    //coordinate data
     private static double[] longitudes;
     private static double[] latitudes;
-    private static int[] levels;
+
+    //offsets in the edges array based on id of nodes
     private static int[] edgesOffset;
+    //edge ids associated with lower level nodes for contraction hierarchies
     private static int[] edges;
+
+    //offsets in the arrays containing label data based on id of nodes
     private static int[] labelOffset;
+    //label data, containing the node, the first edge in that direction and the total distance to the label node
     private static int[] labelNode;
     private static int[] labelEdge;
     private static int[] labelDist;
 
+    /**
+     * Get the total number of nodes.
+     * @return the number of nodes
+     */
     public static int getNumOfNodes() {
         return longitudes.length;
     }
 
+    /**
+     * Get the latitude of a given node.
+     * @param nodeID the id of the node
+     * @return the latitude of the node
+     */
     public static double getLat(int nodeID) {
         return latitudes[nodeID];
     }
 
+    /**
+     * Get the longitude of a given node.
+     * @param nodeID the id of the node
+     * @return the longitude of the node
+     */
     public static double getLong(int nodeID) {
         return longitudes[nodeID];
     }
 
-    public static double getLvl(int nodeID) {
-        return levels[nodeID];
+    /**
+     * Get the node associated with a given label.
+     * @param idx the idx of the label
+     * @return the node associated with the label
+     */
+    public static int getLabelNode(int idx) {
+        return labelNode[idx];
     }
 
-    public static int getLabelNode(int nodeId) {
-        return labelNode[nodeId];
+    /**
+     * Get the edge associated with a given label.
+     * @param idx the idx of the label
+     * @return the edge associated with the label
+     */
+    public static int getLabelEdge(int idx) {
+        return labelEdge[idx];
     }
 
-    public static int getLabelEdge(int nodeId) {
-        return labelEdge[nodeId];
+    /**
+     * Get the distance associated with a given label.
+     * @param idx the idx of the label
+     * @return the distance associated with the label
+     */
+    public static int getLabelDist(int idx) {
+        return labelDist[idx];
     }
 
-    public static int getLabelDist(int nodeId) {
-        return labelDist[nodeId];
-    }
-
+    /**
+     * Check if a given node has labels. If that is not the case, edge data is stored for this node
+     * instead of label data.
+     * @param nodeId the id of the node to check
+     * @return true if label data is available, else false
+     */
     public static boolean nodeHasLabels(int nodeId) {
         return levels[nodeId] >= hlLevel;
     }
 
+    /**
+     * Get the label offset of a given node.
+     * @param nodeId the id of the node
+     * @return the label offset (index) of the node
+     */
     public static int getLabelOffset(int nodeId) {
         return labelOffset[nodeId];
     }
 
+    /**
+     * Get the edge offset of a given node.
+     * @param nodeId the id of the node
+     * @return the edge offset (index) of the node
+     */
     public static int getEdgeOffset(int nodeId) {
         return edgesOffset[nodeId];
     }
 
-    public static int getEdge(int edgeIdx) {
-        return edges[edgeIdx];
+    /**
+     * Get the edge at a given index.
+     * @param idx the idx of the edge
+     * @return the edge id stored at this index
+     */
+    public static int getEdge(int idx) {
+        return edges[idx];
     }
 
+    /**
+     * Initialize the level at which labels are available.
+     * @param lvl the level at which labels are available
+     */
     public static void initHlLvl(int lvl) {
         hlLevel = lvl;
     }
 
+    /**
+     * Initializes data related to nodes used by the hub label algorithm in order to be stored for later use.
+     */
     public static void initNodeData() {
         longitudes = Nodes.getLongitude();
         latitudes = Nodes.getLatitude();
@@ -80,6 +144,10 @@ public class HubLNodes {
         Nodes.setLevels(null);
     }
 
+    /**
+     * Initializes data related to edges used by the routing algorithm (specifically the part based on contraction
+     * hierarchies) in order to be stored for later use.
+     */
     public static void initEdgeInfo() {
         if (longitudes == null) {
             throw new IllegalStateException();
@@ -94,7 +162,7 @@ public class HubLNodes {
         int totalEdgeLen = 0;
         for (int i = 0; i < nodeCount; i++) {
             int nodeLvl = levels[i];
-            if(nodeLvl >= hlLevel) {
+            if(nodeLvl >= hlLevel) { //for these nodes, we store labels, not edges
                 currentGrid[i] = null;
                 edgeCounts[i] = 0;
             } else {
@@ -116,6 +184,7 @@ public class HubLNodes {
             }
         }
 
+        //one more element, as final element makes it easier to iterate over the edges of the last node
         edgesOffset = new int[nodeCount + 1];
         edges = new int[totalEdgeLen];
         int nextOffset = 0;
@@ -127,13 +196,17 @@ public class HubLNodes {
                 nextOffset += nextEdgeCount;
             }
         }
-        edgesOffset[nodeCount] = nextOffset;
+        edgesOffset[nodeCount] = nextOffset; //initialize final element
      }
 
+    /**
+     * Initializes data related to labels used by the hub label algorithm in order to be stored for later use.
+     */
     public static void initLabelInfo() throws IOException {
         int[][] tmpLabelNodes = Labels.getLabelNodes();
         int[][] tmpLabelEdges = Labels.getLabelEdges();
         int[][] tmpLabelDist = Labels.getLabelDist();
+        //remove pointers so garbage collector can free this memory later on
         Labels.setLabelNodes(null);
         Labels.setLabelEdges(null);
         Labels.setLabelDist(null);
@@ -143,8 +216,10 @@ public class HubLNodes {
         BufferedWriter writer = new BufferedWriter(new FileWriter(f));
 
         int nodeCount = tmpLabelNodes.length;
+        //similarly to the edges offset array, add one additional element to simplify iteration over the last node
         labelOffset = new int[nodeCount + 1];
         int nextOffset = 0;
+        //first write to file. This is necessary as otherwise too much RAM is used
         for (int i = 0; i < nodeCount; i++) {
             labelOffset[i] = nextOffset;
             if (tmpLabelNodes[i] != null) {
@@ -152,10 +227,6 @@ public class HubLNodes {
                 int[] nodes = tmpLabelNodes[i];
                 int[] edges = tmpLabelEdges[i];
                 int[] dist = tmpLabelDist[i];
-                /*if(!(IntStream.range(0, nodes.length - 1).noneMatch(idx -> nodes[idx] > nodes[idx + 1]))) {
-                    System.out.println("ttt: error unsorted array");
-                    System.exit(-1);
-                }*/
                 for (int j = 0; j < labelCount; j++) {
                     writer.write(nodes[j] + "\n");
                     writer.write(edges[j] + "\n");
@@ -171,6 +242,7 @@ public class HubLNodes {
         tmpLabelEdges = null;
         tmpLabelDist = null;
 
+        //read back from temp file into new format
         labelNode = new int[nextOffset + 1];
         labelEdge = new int[nextOffset + 1];
         labelDist = new int[nextOffset + 1];
@@ -180,11 +252,15 @@ public class HubLNodes {
             labelEdge[i] = Integer.parseInt(reader.readLine());
             labelDist[i] = Integer.parseInt(reader.readLine());
         }
+        //one additional element in the arrays. The reason for this is that the routing algorithm may overshoot by one
+        //element in some cases in order to improve runtime.
         labelNode[nextOffset] = -1;
         labelEdge[nextOffset] = -1;
         labelDist[nextOffset] = -1;
         reader.close();
     }
+
+    //simple getters and setters for fields. Used when serializing or deserializing data.
 
     public static int getHlLevel() {
         return hlLevel;

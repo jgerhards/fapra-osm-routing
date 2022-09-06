@@ -1,33 +1,47 @@
-package de.fmi.searouter.hublablecreation;
-
-import de.fmi.searouter.dijkstragrid.Node;
-import de.fmi.searouter.router.DijkstraRouter;
+package de.fmi.searouter.utils;
 
 import java.util.Arrays;
 
-public class CHDijkstraHeap {
+/**
+ * Heap based on int arrays (primitive type, not the wrapper object). Priority is based on distance, the elements
+ * returned are the corresponding ids.
+ */
+public class DistanceHeap {
     private int INITIAL_SIZE = 10;
     private int SIZE_INCREASE = 5;
 
+    //ordered array of ids currently contained in the heap
+    private int[] containedIds;
+    //distances associated with the ids. The distance corresponding to an id can be found at the same
+    // index as in containedIds
+    private int[] distances;
     //for each node, the position of it in the heap, based on the index
     private int[] heapPosition;
+
     //the array representing the heap
     private int[] idHeapArray;
+    //the current number of elements on the heap
     private int currentSize;
-    //used when comparing the distances of ids
-    private int[] containedIds;
-    private int[] distances;
 
-    public CHDijkstraHeap() {
+    /**
+     * Constructor. Initializes the data structures used by this object.
+     */
+    public DistanceHeap() {
         this.heapPosition = new int[INITIAL_SIZE];
         this.idHeapArray = new int[INITIAL_SIZE];
         this.containedIds = new int[INITIAL_SIZE];
         this.distances = new int[INITIAL_SIZE];
         currentSize = 0;
-        Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
+        //make sure binary search will work
+        Arrays.fill(containedIds, Integer.MAX_VALUE);
     }
 
-    public CHDijkstraHeap(int initialSize, int sizeIncrease) {
+    /**
+     * Constructor. Initializes the data structures used by this object using configured size parameters.
+     * @param initialSize the initial size of the data structures
+     * @param sizeIncrease the size to increase the data structures by if necessary
+     */
+    public DistanceHeap(int initialSize, int sizeIncrease) {
         INITIAL_SIZE = initialSize;
         SIZE_INCREASE = sizeIncrease;
         this.heapPosition = new int[INITIAL_SIZE];
@@ -35,20 +49,22 @@ public class CHDijkstraHeap {
         this.containedIds = new int[INITIAL_SIZE];
         this.distances = new int[INITIAL_SIZE];
         currentSize = 0;
-        Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
-    }
-
-    public boolean contains(int nodeId) {
-        return (Arrays.binarySearch(containedIds, nodeId) >= 0);
-    }
-
-    public void reset() {
-        currentSize = 0;
-        Arrays.fill(containedIds, Integer.MAX_VALUE); //make sure binary search works
+        //make sure binary search will work
+        Arrays.fill(containedIds, Integer.MAX_VALUE);
     }
 
     /**
-     * checks if the heap is empty
+     * Reset the heap to be empty. After calling this, the heap can be reused without the need to
+     * allocate memory again.
+     */
+    public void reset() {
+        currentSize = 0;
+        //make sure binary search will work
+        Arrays.fill(containedIds, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Check if the heap is empty.
      * @return true if no more elements are contained on the heap, else false
      */
     public boolean isEmpty() {
@@ -56,7 +72,7 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * gets the id of the node with the lowest distance from the start node stored on the heap. Also restores
+     * Get the id of the node with the lowest distance from the start node stored on the heap. Also restores
      * the remaining array to a heap.
      * @return the id of the node with the shortest distance
      */
@@ -80,7 +96,7 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * adds an id to the heap. if the id is already on the heap, updates its position if necessary
+     * Add an id to the heap. if the id is already on the heap, updates its position if necessary
      * (for example after an update).
      * @param id the id to add
      */
@@ -108,7 +124,7 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * restores the heap property of the array after removing the first element.
+     * Restore the heap property of the array after removing the first element.
      * @param n the length of the array
      * @param root the position in the array of the root of the subtree to heapify
      */
@@ -137,7 +153,7 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * restores the heap property of the array after adding another element. also used to update the
+     * Restore the heap property of the array after adding another element. also used to update the
      * position of an id already contained in the array.
      * @param nodeID the position in the array of the node to check
      */
@@ -154,13 +170,13 @@ public class CHDijkstraHeap {
         // for the parent
         if (compareValues(nodeID, parent) < 0) {
             swap(nodeID, parent);
-            // Recursively heapify the parent node
+            // Recursively call heapify the parent node
             heapifyBottomUp(parent);
         }
     }
 
     /**
-     * swaps two elements within the array. Also updates the heap positions of these elements.
+     * Swap two elements within the array. Also updates the heap positions of these elements.
      * @param i the position of the first element
      * @param j the position of the second element
      */
@@ -169,7 +185,7 @@ public class CHDijkstraHeap {
         idHeapArray[i] = idHeapArray[j];
         idHeapArray[j] = tmp;
 
-        //also update positions in heap information
+        //update positions in heap information
         int positionIdxI = Arrays.binarySearch(containedIds, idHeapArray[i]);
         int positionIdxJ = Arrays.binarySearch(containedIds, idHeapArray[j]);
         tmp = heapPosition[positionIdxI];
@@ -178,7 +194,7 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * increases the size of the heap array.
+     * Increases the size of the heap array.
      */
     private void grow() {
         int oldLen = idHeapArray.length;
@@ -191,8 +207,8 @@ public class CHDijkstraHeap {
     }
 
     /**
-     * compares the distances from the start node of elements at specific positions on the heap.
-     * Returns a number indicating the relation of the distances.
+     * Compare the distances from the start node of elements at specific positions on the heap.
+     * Return a number indicating the relation of the distances.
      * @param firstID the first position on the heap
      * @param secondID the first position on the heap
      * @return 0 if equal, 1 if distance of first element is larger, else -1

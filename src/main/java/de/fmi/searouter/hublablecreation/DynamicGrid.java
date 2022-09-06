@@ -9,59 +9,80 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+/**
+ * This class stores the edges associated with every node in the grid. It is possible to add edges and remove nodes
+ * which are currently relevant. In addition, all edges which were at any point associated with each node is
+ * kept track of.
+ */
 public class DynamicGrid {
+    //ids of edges currently associated with nodes
     private static int[][] currentEdgeIds;
+    //number of currently associated edges per node
     private static int[] currentEdgeCount;
+
+
+    //ids of all edges associated with nodes at any point
     private static int[][] allEdgeIds;
+    //number of all associated edges per node
     private static int[] allEdgeCount;
 
+    /**
+     * Initialize the dynamic grid data.
+     * @param edges the current edges to set
+     * @param edgeCount the number of edges per node
+     */
     public static void initializeEdges(int[][] edges, int[]edgeCount) {
-        System.out.println("ttt: grid init");
         DynamicGrid.currentEdgeIds = edges;
         DynamicGrid.currentEdgeCount = edgeCount;
         DynamicGrid.allEdgeIds = Arrays.stream(edges).map(int[]::clone).toArray(int[][]::new);
         DynamicGrid.allEdgeCount = Arrays.copyOf(edgeCount, edgeCount.length);
     }
 
-    public static void testStartEdges() {
-        for (int i = Nodes.getSize() - 1; i >= 0 ; i--) {
-            for (int j = 0; j < currentEdgeCount[i]; j++) {
-                int edgeId = currentEdgeIds[i][j];
-                int otherEdgeLen = getBackwardsEdgeDist(i, Edges.getDest(edgeId));
-                if(Edges.getDist(edgeId) != otherEdgeLen) {
-                    System.out.println("ttt");
-                    System.exit(-100);
-                }
-            }
-        }
-    }
-
-    private static int getBackwardsEdgeDist(int start, int dest) {
-        for (int i = 0; i < currentEdgeCount[dest]; i++) {
-            if(Edges.getDest(currentEdgeIds[dest][i]) == start) {
-                return Edges.getDist(currentEdgeIds[dest][i]);
-            }
-        }
-        return -1;
-    }
-
+    /**
+     * Get current edge id array for a given node. Keep in mind that not all elements are necessarily ids.
+     * In order to find out how many elements (counted from the front) are valid ids, use getCurrentEdgeCount.
+     * @param nodeId the id of the node
+     * @return an array containing current edge ids
+     */
     public static int[] getCurrentEdges(int nodeId) {
         return currentEdgeIds[nodeId];
     }
 
+    /**
+     * Get the number of current edge ids for a given node.
+     * @param nodeId the id of the node
+     * @return the number of current edge ids
+     */
     public static int getCurrentEdgeCount(int nodeId) {
         return currentEdgeCount[nodeId];
     }
 
+    /**
+     * Get all edge id array for a given node. Keep in mind that not all elements are necessarily ids.
+     * In order to find out how many elements (counted from the front) are valid ids, use getAllEdgeCount.
+     * @param nodeId the id of the node
+     * @return an array all current edge ids
+     */
     public static int[] getAllEdges(int nodeId) {
         return allEdgeIds[nodeId];
     }
 
+    /**
+     * Get the number of all edge ids for a given node.
+     * @param nodeId the id of the node
+     * @return the number of all edge ids
+     */
     public static int getAllEdgeCount(int nodeId) {
         return allEdgeCount[nodeId];
     }
 
+    /**
+     * Add an edge id to a node. The id will be tracked both as a current edge and be included in all edges.
+     * @param nodeId the id of the node to add the edge to
+     * @param edgeId the edge id to add
+     */
     public static void addEdge(int nodeId, int edgeId) {
+        //first, check if the current space is large enough
         if(currentEdgeIds[nodeId].length == currentEdgeCount[nodeId]) {
             growCurrent(nodeId);
         }
@@ -75,29 +96,28 @@ public class DynamicGrid {
         allEdgeCount[nodeId]++;
     }
 
-    public static int getEdgeId(int startNode, int destNode) {
-        int position = -1; // -1 so it crashes if an unexpected error occurs ttt
-        for (int i = 0; i < currentEdgeCount[startNode]; i++) {
-            if(Edges.getDest(currentEdgeIds[startNode][i]) == destNode) {
-                position = i;
-                break;
-            }
-        }
-        return currentEdgeIds[startNode][position];
-    }
-
+    /**
+     * Remove an edge going in the opposite direction as a given edge.
+     * @param startId start node id of the given edge
+     * @param destId destination node id of the given edge
+     */
     public static void removeBackwardsEdge(int startId, int destId) {
-        int position = -1; // -1 so it crashes if an unexpected error occurs ttt
+        int position = -1; // -1 so it crashes if an unexpected error occurs
         for (int i = 0; i < currentEdgeCount[destId]; i++) {
             if(Edges.getDest(currentEdgeIds[destId][i]) == startId) {
                 position = i;
                 break;
             }
         }
+        //once we know the indices, delete the element
         currentEdgeIds[destId][position] = currentEdgeIds[destId][currentEdgeCount[destId] - 1];
         currentEdgeCount[destId]--;
     }
 
+    /**
+     * Remove all edges from or to a given node from the current edges in the graph.
+     * @param nodeId the node to remove
+     */
     public static void removeNode(int nodeId) {
         for (int i = 0; i < currentEdgeCount[nodeId]; i++) {
             removeBackwardsEdge(nodeId, Edges.getDest(currentEdgeIds[nodeId][i]));
@@ -106,10 +126,18 @@ public class DynamicGrid {
         currentEdgeIds[nodeId] = null;
     }
 
+    /**
+     * Increase the size of an array for current edges for a given node.
+     * @param nodeId the id of the node
+     */
     private static void growCurrent(int nodeId) {
         currentEdgeIds[nodeId] = Arrays.copyOf(currentEdgeIds[nodeId], currentEdgeIds[nodeId].length * 2);
     }
 
+    /**
+     * Increase the size of an array for all edges for a given node.
+     * @param nodeId the id of the node
+     */
     private static void growAll(int nodeId) {
         allEdgeIds[nodeId] = Arrays.copyOf(allEdgeIds[nodeId], allEdgeIds[nodeId].length * 2);
     }
@@ -273,7 +301,6 @@ public class DynamicGrid {
             Nodes.setLongitude(longitude);
             Nodes.initializeLvls(noNodes);
 
-
             int[] startNode = new int[noEdges];
             int[] destNode = new int[noEdges];
             int[] dist = new int[noEdges];
@@ -299,11 +326,10 @@ public class DynamicGrid {
             }
 
             initializeEdges(sortedEdges, edgeCounts);
-
-            br.close();
-
         }
     }
+
+    //getters and setters for serialization and deserialization
 
     public static int[][] getCurrentEdgeIds() {
         return currentEdgeIds;
