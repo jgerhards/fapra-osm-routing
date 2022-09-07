@@ -33,18 +33,35 @@ public class RoutingResult {
      */
     private double calculationTimeInMs;
 
+    //true if a route was found, else false
     private boolean routeFound;
 
+    //indicates which router is used, this is relevant when determining the corrdinates of nodes on the path
     private static boolean useHubLabelRouter;
 
+    /**
+     * Set which router will be used to generate results
+     * @param useHubLabelRouter true if the hub label router is used, else false
+     */
     public static void setHLRouterUse(boolean useHubLabelRouter) {
         RoutingResult.useHubLabelRouter = useHubLabelRouter;
     }
 
+    /**
+     * Check if a route was found.
+     * @return true if a route was found, else false
+     */
     public boolean routeFound() {
         return routeFound;
     }
 
+    /**
+     * Constructor. Set fields for the path, the distance and the calculation time. Use only if
+     * a path was found.
+     * @param path the path
+     * @param overallDistance the distance of the path
+     * @param calculationTimeInMs the calculation time
+     */
     public RoutingResult(List<Integer> path, int overallDistance, double calculationTimeInMs) {
         this.setPath(path);
         this.overallDistance = overallDistance;
@@ -52,23 +69,34 @@ public class RoutingResult {
         this.routeFound = true;
     }
 
+    /**
+     * Constructor. Includes setting fields for the calculation time and indication if a route was found.
+     * @param calculationTimeInMs the calculation time
+     * @param routeFound true if a path was found, else false
+     */
     public RoutingResult(double calculationTimeInMs, boolean routeFound) {
         this.calculationTimeInMs = calculationTimeInMs;
         this.routeFound = routeFound;
     }
 
+    /**
+     * Constructor. Creates mostly empty result which does not contain a path. Only sets indication that no
+     * route was found.
+     */
     public RoutingResult() {
         this.routeFound = false;
     }
 
+    /**
+     * Constructor. Includes setting fields for the path, overall distance and the indicator whether a route was found.
+     * @param path the path
+     * @param overallDistance the distance of the path
+     * @param routeFound true if a route was found, else false
+     */
     public RoutingResult(List<Integer> path, int overallDistance, boolean routeFound) {
         this.setPath(path);
         this.overallDistance = overallDistance;
         this.routeFound = routeFound;
-    }
-
-    public List<Integer> getPath() {
-        return path;
     }
 
     /**
@@ -91,12 +119,23 @@ public class RoutingResult {
         }
     }
 
-    public int getOverallDistance() {
-        return overallDistance;
+    @Override
+    public String toString() {
+        return "RoutingResult{" +
+                "path=" + path +
+                ", overallDistance=" + overallDistance +
+                ", calculationTimeInMs=" + calculationTimeInMs +
+                '}';
     }
 
-    public void setOverallDistance(int overallDistance) {
-        this.overallDistance = overallDistance;
+    //getters and setters
+
+    public List<Integer> getPath() {
+        return path;
+    }
+
+    public int getOverallDistance() {
+        return overallDistance;
     }
 
     public double getCalculationTimeInMs() {
@@ -113,14 +152,5 @@ public class RoutingResult {
 
     public void setPathCoordinates(List<List<Double>> pathCoordinates) {
         this.pathCoordinates = pathCoordinates;
-    }
-
-    @Override
-    public String toString() {
-        return "RoutingResult{" +
-                "path=" + path +
-                ", overallDistance=" + overallDistance +
-                ", calculationTimeInMs=" + calculationTimeInMs +
-                '}';
     }
 }
