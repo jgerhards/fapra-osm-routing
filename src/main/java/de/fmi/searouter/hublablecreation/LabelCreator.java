@@ -15,10 +15,11 @@ import java.util.*;
  * the hub label routing algorithm.
  */
 public class LabelCreator {
-    private static final String FMI_FILE_NAME = "exported_grid.fmi";
+    private static final String FMI_FILE_NAME = "oceanfmi.sec";
+    //private static final String FMI_FILE_NAME = "exported_grid.fmi";
     private static final String HUB_LABEL_FILE_NAME = "hub_label_data";
     private static final int NUM_OF_THREADS = 32;
-    private static final int NUM_OF_NO_LABEL_LVLS = 2;
+    private static final int NUM_OF_NO_LABEL_LVLS = 1;
 
     //used to keep track of which nodes were contracted using contraction hierarchies
     private static boolean[] contracted;
@@ -270,11 +271,17 @@ public class LabelCreator {
             CHData.storeData();
         }
 
+        System.out.println("step 1 complete");
+
         if(!TmpLabelData.readData()) { //check if temporary label data is already present
             Labels.initialize(Nodes.getNodeCount());
+            System.out.println("step 2.1 complete");
             calcLabels();
+            System.out.println("step 2.2 complete");
             TmpLabelData.storeData();
         }
+
+        System.out.println("step 2 complete");
 
         //bring data into correct format and store it persistently
         serializeHubLData();

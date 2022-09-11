@@ -18,6 +18,7 @@ import java.util.Random;
 public class SearouterApplication {
 	private static boolean USE_HUB_LABEL_ROUTER = true;
 	private static boolean IS_TEST_RUN = true;
+	private static int TEST_NUM_OF_ROUTES = 100000;
 	private static String HUB_LABEL_DATA_FILENAME = "hub_label_data";
 
 	public static void main(String[] args) {
@@ -56,7 +57,7 @@ public class SearouterApplication {
 	}
 
 	private static void test() {
-		int testNum = 100000;
+		int testNum = TEST_NUM_OF_ROUTES;
 		Random rnd = new Random(123);
 		double[] lats = new double[testNum*2];
 		double[] longs = new double[testNum*2];
