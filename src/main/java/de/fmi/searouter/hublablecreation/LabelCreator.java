@@ -142,7 +142,8 @@ public class LabelCreator {
         while(nonContractedNum > 0) {
             calcNextLvl(lvl);
             lvl++;
-            System.out.println("contracting level: " + lvl + ", non contracted nodes: " + nonContractedNum);
+            System.out.println("contracting level: " + lvl + ", non contracted nodes: " + nonContractedNum + " " +
+                    new Date());
         }
     }
 
