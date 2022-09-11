@@ -1,8 +1,5 @@
 package de.fmi.searouter.router;
 
-import de.fmi.searouter.dijkstragrid.Edge;
-import de.fmi.searouter.dijkstragrid.Grid;
-import de.fmi.searouter.dijkstragrid.Node;
 import de.fmi.searouter.hublabeldata.HubLEdges;
 import de.fmi.searouter.hublabeldata.HubLNodes;
 import de.fmi.searouter.utils.DistanceHeap;
@@ -104,6 +101,13 @@ public class HubLRouter implements Router{
     @Override
     public RoutingResult route(int startNodeIdx, int destNodeIdx) {
         long startTime = System.nanoTime();
+        if(HubLNodes.getHlLevel() != 2) { //use non-optimized version
+            RoutingResult result = routeGeneral(startNodeIdx, destNodeIdx);
+            long stopTime = System.nanoTime();
+            result.setCalculationTimeInMs((double) (stopTime - startTime) / 1000000);
+            return result;
+        }
+
         reset();
         boolean startHasLabels = HubLNodes.nodeHasLabels(startNodeIdx);
         boolean destHasLabels = HubLNodes.nodeHasLabels(destNodeIdx);
@@ -729,6 +733,445 @@ public class HubLRouter implements Router{
             }
         }
         resultNodes.push(dest);
+    }
+
+    private RoutingResult routeGeneral(int startNodeIdx, int destNodeIdx) {
+        reset();
+        boolean startHasLabels = HubLNodes.nodeHasLabels(startNodeIdx);
+        boolean destHasLabels = HubLNodes.nodeHasLabels(destNodeIdx);
+
+        RoutingResult result;
+        if(startHasLabels && destHasLabels) {
+            result = route2Lbl(startNodeIdx, destNodeIdx);
+        } else if (!startHasLabels && !destHasLabels) {
+            result = route0LblGeneral(startNodeIdx, destNodeIdx);
+        } else if (startHasLabels){
+            result = routeLeftLblGeneral(startNodeIdx, destNodeIdx);
+        } else {
+            result = routeRightLblGeneral(startNodeIdx, destNodeIdx);
+        }
+
+        return result;
+    }
+
+    /**
+     * Find a route between two nodes. This function can be used if the right side node does not contain labels,
+     * but the left side node does. This function is mirrored with routeRightLbl, but they are separate to
+     * reduce total calculation time by being able to disregard some additional checks.
+     * @param startId The index of the start node
+     * @param destId The index of the destination node
+     * @return a shortest route between start and destination node
+     */
+    private RoutingResult routeLeftLblGeneral(int startId, int destId) {
+        calcTempLabelsGeneral(destId, false);
+        int leftIdx = HubLNodes.getLabelOffset(startId);
+        int leftMaxIdx = HubLNodes.getLabelOffset(startId + 1);
+        int rightIdx = 0;
+        int rightSize = labelRight.size();
+
+        if(leftIdx == leftMaxIdx || rightSize == 0) {
+            //no route
+            return new RoutingResult();
+        }
+
+        //add one dummy output to prevent early evaluation of get from causing exceptions
+        labelRight.insertTail(Integer.MAX_VALUE);
+
+        //find the best common label (if there is one)
+        int currDistance = Integer.MAX_VALUE;
+        int idxLeft = -1;
+        int idxRight = -1;
+        int highestLvlNode = -1;
+
+        int leftNode = HubLNodes.getLabelNode(leftIdx);
+        int rightNode = labelRight.get(0);
+        while(leftIdx < leftMaxIdx && rightIdx < rightSize) {
+            if(leftNode == rightNode) {
+                int tmpDist = HubLNodes.getLabelDist(leftIdx) + distRight.get(rightIdx);
+                if(tmpDist < currDistance) {
+                    highestLvlNode = leftNode;
+                    currDistance = tmpDist;
+                    idxLeft = leftIdx;
+                    idxRight = rightIdx;
+                }
+                leftIdx++;
+                rightIdx++;
+                leftNode = HubLNodes.getLabelNode(leftIdx);
+                rightNode = labelRight.get(rightIdx);
+            } else if(leftNode > rightNode) {
+                rightIdx++;
+                rightNode = labelRight.get(rightIdx);
+            } else {  //A < B
+                leftIdx++;
+                leftNode = HubLNodes.getLabelNode(leftIdx);
+            }
+        }
+
+        if(highestLvlNode == -1) {
+            //no common label, so no route
+            return new RoutingResult();
+        }
+
+        //find edges on left side
+        if(startId != highestLvlNode) {
+            int nextEdge = HubLNodes.getLabelEdge(idxLeft);
+            int nextNode = HubLEdges.getDest(nextEdge);
+            edgesLeft.push(nextEdge);
+            getEdges(nextNode, highestLvlNode, edgesLeft);
+        }
+
+        //find edges on right side
+        int info = addInfoRight.get(idxRight);
+        if(info < -1) {
+            //additional info contains a node
+            info = (info + 2) * (-1);
+            addEdgesGeneral(edgesRight, info, destId, false);
+            int firstEdge = edgeRight.get(idxRight);
+            edgesRight.push(firstEdge);
+            getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesRight);
+        } else if(info != -1) { //if this is false, the highest lvl node is the start node
+            //additional info contains an edge (or -1 if no edge relevant for this label)
+            addEdgesGeneral(edgesRight, info, destId, false);
+        }
+
+        calculateRoute(startId, destId);
+
+        //add route to path
+        List<Integer> path = new LinkedList<>();
+        while(!resultNodes.isEmpty()) {
+            path.add(resultNodes.popFifo());
+        }
+        return new RoutingResult(path, currDistance, true);
+    }
+
+    /**
+     * Find a route between two nodes. This function can be used if the left side node does not contain labels,
+     * but the right side node does. This function is mirrored with routeLeftLbl, but they are separate to
+     * reduce total calculation time by being able to disregard some additional checks.
+     * @param startId The index of the start node
+     * @param destId The index of the destination node
+     * @return a shortest route between start and destination node
+     */
+    private RoutingResult routeRightLblGeneral(int startId, int destId) {
+        calcTempLabelsGeneral(startId, true);
+        int rightIdx = HubLNodes.getLabelOffset(destId);
+        int rightMaxIdx = HubLNodes.getLabelOffset(destId + 1);
+        int leftIdx = 0;
+        int leftSize = labelLeft.size();
+
+        if(rightIdx == rightMaxIdx || leftSize == 0) {
+            //no route
+            return new RoutingResult();
+        }
+
+        //add one dummy output to prevent early evaluation of get from causing exceptions
+        labelLeft.insertTail(Integer.MAX_VALUE);
+
+        //find the best common label (if there is one)
+        int currDistance = Integer.MAX_VALUE;
+        int idxRight = -1;
+        int idxLeft = -1;
+        int highestLvlNode = -1;
+
+        int rightNode = HubLNodes.getLabelNode(rightIdx);
+        int leftNode = labelLeft.get(0);
+        while(rightIdx < rightMaxIdx && leftIdx < leftSize) {
+            if(leftNode == rightNode) {
+                int tmpDist = HubLNodes.getLabelDist(rightIdx) + distLeft.get(leftIdx);
+                if(tmpDist < currDistance) {
+                    highestLvlNode = leftNode;
+                    currDistance = tmpDist;
+                    idxLeft = leftIdx;
+                    idxRight = rightIdx;
+                }
+                leftIdx++;
+                rightIdx++;
+                rightNode = HubLNodes.getLabelNode(rightIdx);
+                leftNode = labelLeft.get(leftIdx);
+            } else if(rightNode > leftNode) {
+                leftIdx++;
+                leftNode = labelLeft.get(leftIdx);
+            } else {
+                rightIdx++;
+                rightNode = HubLNodes.getLabelNode(rightIdx);
+            }
+        }
+
+        if(highestLvlNode == -1) {
+            //no common label, so no route
+            return new RoutingResult();
+        }
+
+        //find edges on right side
+        if(destId != highestLvlNode) {
+            int nextEdge = HubLNodes.getLabelEdge(idxRight);
+            int nextNode = HubLEdges.getDest(nextEdge);
+            edgesRight.push(nextEdge);
+            getEdges(nextNode, highestLvlNode, edgesRight);
+        }
+
+        //find edges on left side
+        int info = addInfoLeft.get(idxLeft);
+        if(info < -1) {
+            //additional info contains a node
+            info = (info + 2) * (-1);
+            addEdgesGeneral(edgesLeft, info, startId, true);
+            int firstEdge = edgeLeft.get(idxLeft);
+            edgesLeft.push(firstEdge);
+            getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesLeft);
+        } else if(info != -1){ //if this is false, the highest lvl node is the start node
+            //additional info contains an edge (or -1 if no edge relevant for this label)
+            addEdgesGeneral(edgesLeft, info, startId, true);
+        }
+
+        calculateRoute(startId, destId);
+
+        //add route to path
+        List<Integer> path = new LinkedList<>();
+        while(!resultNodes.isEmpty()) {
+            path.add(resultNodes.popFifo());
+        }
+        return new RoutingResult(path, currDistance, true);
+    }
+
+    /**
+     * Find a route between two nodes. This function can be used if neither side nodes contain labels.
+     * @param startId The index of the start node
+     * @param destId The index of the destination node
+     * @return a shortest route between start and destination node
+     */
+    private RoutingResult route0LblGeneral(int startId, int destId) {
+        calcTempLabelsGeneral(startId, true);
+        calcTempLabelsGeneral(destId, false);
+
+        //compare labels
+        int leftSize = labelLeft.size();
+        int rightSize = labelRight.size();
+        if(leftSize == 0 || rightSize == 0) {
+            return new RoutingResult();
+        }
+        //add one dummy output to prevent early evaluation of get from causing exceptions
+        labelLeft.insertTail(Integer.MAX_VALUE);
+        labelRight.insertTail(Integer.MAX_VALUE);
+
+        //find the best common label (if there is one)
+        int leftIdx = 0;
+        int rightIdx = 0;
+        int currDistance = Integer.MAX_VALUE;
+        int idxLeft = -1;
+        int idxRight = -1;
+        int highestLvlNode = -1;
+
+        int leftNode = labelLeft.get(0);
+        int rightNode = labelRight.get(0);
+        while(leftIdx < leftSize && rightIdx < rightSize) {
+            if(leftNode == rightNode) {
+                int tmpDist = distLeft.get(leftIdx) + distRight.get(rightIdx);
+                if(tmpDist < currDistance) {
+                    highestLvlNode = leftNode;
+                    currDistance = tmpDist;
+                    idxLeft = leftIdx;
+                    idxRight = rightIdx;
+                }
+                leftIdx++;
+                rightIdx++;
+                leftNode = labelLeft.get(leftIdx);
+                rightNode = labelRight.get(rightIdx);
+            } else if(leftNode > rightNode) {
+                rightIdx++;
+                rightNode = labelRight.get(rightIdx);
+            } else {  //A < B
+                leftIdx++;
+                leftNode = labelLeft.get(leftIdx);
+            }
+        }
+
+        if(highestLvlNode == -1) {
+            //no common label, so no route
+            return new RoutingResult();
+        }
+
+        //find edges on left side
+        int info = addInfoLeft.get(idxLeft);
+        if(info < -1) {
+            //additional info contains a node
+            info = (info + 2) * (-1);
+            addEdgesGeneral(edgesLeft, info, startId, true);
+            int firstEdge = edgeLeft.get(idxLeft);
+            edgesLeft.push(firstEdge);
+            getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesLeft);
+        } else if(info != -1){ //if this is false, the highest lvl node is the start node
+            //additional info contains an edge (or -1 if no edge relevant for this label)
+            addEdgesGeneral(edgesLeft, info, startId, true);
+        }
+
+        //find edges on right side
+        info = addInfoRight.get(idxRight);
+        if(info < -1) {
+            //additional info contains a node
+            info = (info + 2) * (-1);
+            addEdgesGeneral(edgesRight, info, destId, false);
+            int firstEdge = edgeRight.get(idxRight);
+            edgesRight.push(firstEdge);
+            getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesRight);
+        } else if(info != -1) { //if this is false, the highest lvl node is the start node
+            //additional info contains an edge (or -1 if no edge relevant for this label)
+            addEdgesGeneral(edgesRight, info, destId, false);
+        }
+
+        calculateRoute(startId, destId);
+
+        //add route to path
+        List<Integer> path = new LinkedList<>();
+        while(!resultNodes.isEmpty()) {
+            path.add(resultNodes.popFifo());
+        }
+        return new RoutingResult(path, currDistance, true);
+    }
+
+    private void addEdgesGeneral(IntStack resultStack, int nodeId, int stopId, boolean isLeftNode) {
+        //make sure we only have to check this once --> assign structures based on first check
+        OrderedIntSet label;
+        OrderedIntSet dist;
+        OrderedIntSet edge;
+        OrderedIntSet addInfo;
+        if(isLeftNode) {
+            label = labelLeft;
+            edge = edgeLeft;
+            addInfo = addInfoLeft;
+        } else {
+            label = labelRight;
+            edge = edgeRight;
+            addInfo = addInfoRight;
+        }
+
+        IntStack tmpStack = new IntStack(20);
+
+        while(nodeId != stopId) {
+            int nodeIdx = label.getIdx(nodeId);
+            tmpStack.push(edge.get(nodeIdx));
+            nodeId = addInfo.get(nodeIdx);
+        }
+
+        //we added the edges in the wrong order, now turn them around
+        while(!tmpStack.isEmpty()) {
+            resultStack.push(tmpStack.popFifo());
+        }
+    }
+
+    /**
+     * Calculate temporary labels for a node which does not contains labels. The results will
+     * be stored in the appropriate data structures of the router (either left or right side structures).
+     * @param nodeId the node to calculate the labels for
+     * @param isLeftNode if true, data is stored for left side, else for right side
+     */
+    private void calcTempLabelsGeneral(int nodeId, boolean isLeftNode) {
+        labelHeap.reset();
+        heap.reset();
+        //make sure we only have to check this once --> assign structures based on first check
+        OrderedIntSet label;
+        OrderedIntSet dist;
+        OrderedIntSet edge;
+        OrderedIntSet addInfo;
+        if(isLeftNode) {
+            label = labelLeft;
+            dist = distLeft;
+            edge = edgeLeft;
+            addInfo = addInfoLeft;
+        } else {
+            label = labelRight;
+            dist = distRight;
+            edge = edgeRight;
+            addInfo = addInfoRight;
+        }
+
+        int maxNumOfLabels = 0; //track how many labels have to be added in worst case (most temp labels)
+        //first step outside of loop --> fewer calls to heap
+        //add initial node with a distance of 0 and no edges which lead to it
+        label.insertTail(nodeId);
+        dist.insertTail(0);
+        edge.insertTail(-1);
+        addInfo.insertTail(-1);
+        heap.add(nodeId, 0);
+
+        while(!heap.isEmpty()) {
+            int currNode = heap.getNext();
+            int currNodeIdx = label.getIdx(currNode);
+            int currNodeDist = dist.get(currNodeIdx);
+            int edgesStart = HubLNodes.getEdgeOffset(currNode);
+            int edgesStop = HubLNodes.getEdgeOffset(currNode + 1);
+            for (int i = edgesStart; i < edgesStop; i++) {
+                int edgeId = HubLNodes.getEdge(i);
+                int destNode = HubLEdges.getDest(edgeId);
+                int edgeDist = HubLEdges.getDist(edgeId);
+
+                int insertIdx = label.getIdx(destNode);
+                if(insertIdx < 0) {
+                    //new node found
+                    int initialDist = currNodeDist + edgeDist;
+                    if(HubLNodes.nodeHasLabels(destNode)) {
+                        labelHeap.add(destNode, initialDist);
+                        maxNumOfLabels +=
+                                HubLNodes.getLabelOffset(destNode + 1) - HubLNodes.getLabelOffset(destNode);
+                    } else {
+                        heap.add(destNode, initialDist);
+                    }
+                    insertIdx = (insertIdx + 1) * (-1);
+                    label.insertAtIdx(destNode, insertIdx);
+                    dist.insertAtIdx(initialDist, insertIdx);
+                    edge.insertAtIdx(edgeId, insertIdx);
+                    addInfo.insertAtIdx(currNode, insertIdx);
+                } else {
+                    int prevDist = dist.get(insertIdx);
+                    int newDist = currNodeDist + edgeDist;
+                    if(prevDist > newDist) {
+                        if(HubLNodes.nodeHasLabels(destNode)) {
+                            labelHeap.add(destNode, newDist);
+                        } else {
+                            heap.add(destNode, newDist);
+                        }
+                        dist.updateValue(newDist, insertIdx);
+                        edge.updateValue(edgeId, insertIdx);
+                        addInfo.updateValue(currNode, insertIdx);
+                    }
+                }
+            }
+        }
+
+        //insert all labels
+        label.makeSpace(maxNumOfLabels);
+        dist.makeSpace(maxNumOfLabels);
+        edge.makeSpace(maxNumOfLabels);
+        addInfo.makeSpace(maxNumOfLabels);
+
+        while(!labelHeap.isEmpty()) {
+            int labelNode = labelHeap.getNext();
+            int nodeDist = dist.get(label.getIdx(labelNode));
+            int endIdx = HubLNodes.getLabelOffset(labelNode + 1);
+
+            for (int currIdx = HubLNodes.getLabelOffset(labelNode); currIdx < endIdx; currIdx++) {
+                int currLabelNode = HubLNodes.getLabelNode(currIdx);
+                int currLabelIdx = label.getIdx(currLabelNode);
+
+                if(currLabelIdx < 0) {
+                    currLabelIdx = (currLabelIdx + 1) * (-1);
+                    int distance = nodeDist + HubLNodes.getLabelDist(currIdx);
+                    label.insertAtIdx(currLabelNode, currLabelIdx);
+                    dist.insertAtIdx(distance, currLabelIdx);
+                    edge.insertAtIdx(HubLNodes.getLabelEdge(currIdx), currLabelIdx);
+                    //Make label negative to show this is a node
+                    addInfo.insertAtIdx((labelNode * (-1)) - 2, currLabelIdx);
+                } else {
+                    int newDistance = nodeDist + HubLNodes.getLabelDist(currIdx);
+                    int oldDistance = dist.get(currLabelIdx);
+                    if(oldDistance > newDistance) {
+                        dist.updateValue(newDistance, currLabelIdx);
+                        edge.updateValue(HubLNodes.getLabelEdge(currIdx), currLabelIdx);
+                        addInfo.updateValue((labelNode * (-1)) - 2, currLabelIdx);
+                    }
+                }
+            }
+        }
     }
 
 }

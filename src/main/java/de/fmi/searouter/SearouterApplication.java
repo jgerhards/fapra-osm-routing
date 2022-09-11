@@ -1,7 +1,6 @@
 package de.fmi.searouter;
 
 import de.fmi.searouter.dijkstragrid.Grid;
-import de.fmi.searouter.hublabeldata.HubLNodes;
 import de.fmi.searouter.hublabeldata.HubLStore;
 import de.fmi.searouter.importdata.LatLong;
 import de.fmi.searouter.rest.RoutingController;
@@ -12,7 +11,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -35,6 +33,20 @@ public class SearouterApplication {
 				e.printStackTrace();
 			}
 		}
+
+		/*RoutingController controller = new RoutingController();
+		RoutingRequest rq = new RoutingRequest();
+		LatLong start = new LatLong();
+		start.setLatitude(0.6441010607369009);
+		start.setLongitude(-47.063169198655146);
+		LatLong dest = new LatLong();
+		dest.setLatitude(10.872261259116698);
+		dest.setLongitude(-16.410233275905227);
+		rq.setStartPoint(start);
+		rq.setEndPoint(dest);
+		RoutingResult res = controller.getRoutingResult(rq);
+		System.exit(123);*/
+
 
 		if(IS_TEST_RUN) {
 			test();

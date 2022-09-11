@@ -18,7 +18,7 @@ public class LabelCreator {
     private static final String FMI_FILE_NAME = "exported_grid.fmi";
     private static final String HUB_LABEL_FILE_NAME = "hub_label_data";
     private static final int NUM_OF_THREADS = 32;
-    private static final int NO_OF_NO_LABEL_LVLS = 2;
+    private static final int NUM_OF_NO_LABEL_LVLS = 2;
 
     //used to keep track of which nodes were contracted using contraction hierarchies
     private static boolean[] contracted;
@@ -153,7 +153,7 @@ public class LabelCreator {
         int indicesCount = changeIndices.size();
         List<Thread> threadList = new ArrayList<>();
 
-        int maxCalcIdx = indicesCount - (NO_OF_NO_LABEL_LVLS + 1);
+        int maxCalcIdx = indicesCount - (NUM_OF_NO_LABEL_LVLS + 1);
         for (int i = 0; i < maxCalcIdx; i++) {  //note: not all levels receive labels in order to save memory
             System.out.println("Label calculation processing iteration " + i + " time: " + new Date());
             threadList.clear();
@@ -236,7 +236,7 @@ public class LabelCreator {
      */
     private static void serializeHubLData() {
         HubLEdges.initialize();
-        HubLNodes.initHlLvl(2);
+        HubLNodes.initHlLvl(NUM_OF_NO_LABEL_LVLS);
         HubLNodes.initNodeData();
         HubLNodes.initEdgeInfo();
         try {
