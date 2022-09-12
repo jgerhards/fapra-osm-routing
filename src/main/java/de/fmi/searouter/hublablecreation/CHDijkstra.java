@@ -131,6 +131,12 @@ public class CHDijkstra extends Thread{
      */
     private void addShortcuts(int nodeId) {
         int nodeIdx = Arrays.binarySearch(foundIds, nodeId);
+        if(nodeIdx < 0) {
+            //nodeId was not found, so it is not on any path --> no shortcuts
+            //however, still notify user as this should only occur seldom
+            System.out.println("weird node: " + nodeId);
+            return;
+        }
         if(previousNodes[nodeIdx] != initialNode) {
             //in this case, no shortcut from the initial node
             return;

@@ -17,7 +17,7 @@ import java.util.Random;
 @SpringBootApplication
 public class SearouterApplication {
 	private static boolean USE_HUB_LABEL_ROUTER = true;
-	private static boolean IS_TEST_RUN = true;
+	private static boolean IS_TEST_RUN = false;
 	private static int TEST_NUM_OF_ROUTES = 100000;
 	private static String HUB_LABEL_DATA_FILENAME = "hub_label_data";
 
@@ -29,7 +29,8 @@ public class SearouterApplication {
 			HubLStore.readData(HUB_LABEL_DATA_FILENAME);
 		} else {
 			try {
-				Grid.importFmiFile("exported_grid.fmi");
+				Grid.importFmiFile("oceanfmi.sec");
+				//Grid.importFmiFile("exported_grid.fmi");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
