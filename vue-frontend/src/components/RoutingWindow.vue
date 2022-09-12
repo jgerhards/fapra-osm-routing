@@ -152,11 +152,17 @@ export default {
         .then((response) => {
           this.responseData = response.data;
 
-          // This is what gets displayed in the browser when the result is finished
-          alert(
-              "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
-          );
-
+          if (response.data.routeFound === true) {
+                // This is what gets displayed in the browser when the result is finished
+                alert(
+                "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
+                );
+              } else {
+                alert(
+                "No route found"
+                );
+                return;
+              }
 
           this.startPoint = response.data.pathCoordinates[0][0] + " " + response.data.pathCoordinates[0][1];
           console.log(this.startPoint);

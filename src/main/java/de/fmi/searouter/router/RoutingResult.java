@@ -130,6 +130,10 @@ public class RoutingResult {
 
     //getters and setters
 
+    public boolean isRouteFound() {
+        return routeFound;
+    }
+
     public List<Integer> getPath() {
         return path;
     }
