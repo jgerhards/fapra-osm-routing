@@ -19,7 +19,7 @@ public class LabelCreator {
     //private static final String FMI_FILE_NAME = "exported_grid.fmi";
     private static final String HUB_LABEL_FILE_NAME = "hub_label_data";
     private static final int NUM_OF_THREADS = 32;
-    private static final int NUM_OF_NO_LABEL_LVLS = 3;
+    private static final int NUM_OF_NO_LABEL_LVLS = 4;
 
     //used to keep track of which nodes were contracted using contraction hierarchies
     private static boolean[] contracted;

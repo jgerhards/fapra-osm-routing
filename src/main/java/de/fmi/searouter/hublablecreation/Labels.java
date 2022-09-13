@@ -25,6 +25,18 @@ public class Labels {
         labelDist = new int[nodeCount][];
     }
 
+    public static int[] getLabels(int nodeId) {
+        return labelNodes[nodeId];
+    }
+
+    public static int[] getEdges(int nodeId) { //todo: prolly remove
+        return labelEdges[nodeId];
+    }
+
+    public static int[] getDist(int nodeId) {
+        return labelDist[nodeId];
+    }
+
     /**
      * Add labels for a node with a given id. This includes all data relevant for the label.
      * @param nodeId id of the node the labels are for

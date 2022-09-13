@@ -609,6 +609,7 @@ public class HubLRouter implements Router{
             int currNodeDist = dist.get(currNodeIdx);
             int edgesStart = HubLNodes.getEdgeOffset(currNode);
             int edgesStop = HubLNodes.getEdgeOffset(currNode + 1);
+            //look at all edges as only the ones to higher lvl nodes are stored
             for (int i = edgesStart; i < edgesStop; i++) {
                 int edgeId = HubLNodes.getEdge(i);
                 int destNode = HubLEdges.getDest(edgeId);

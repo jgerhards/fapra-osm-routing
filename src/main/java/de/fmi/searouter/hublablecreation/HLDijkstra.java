@@ -14,14 +14,9 @@ public class HLDijkstra extends Thread{
     private final int startNodeIdx;
     private final int endNodeIdx;
 
-    //heap used during dijkstra part of calculation
-    private final DistanceHeap heap;
-
     //list of ids found so far. if an id is found at a certain index in this list, associated data can be found in other
     //lists at the same index.
     private final OrderedIntSet foundIds;
-    //tracks if the distance to an id is final
-    private final OrderedBoolSet idDistanceFinal;
     //distances from the initial node to other nodes
     private final OrderedIntSet distances;
     //first edge used when navigating from the initial node to a different one
@@ -37,11 +32,9 @@ public class HLDijkstra extends Thread{
         this.startNodeIdx = startNodeIdx;
         this.endNodeIdx = endNodeIdx;
         this.calcOrder = calcOrder;
-        heap = new DistanceHeap();
         foundIds = new OrderedIntSet(true, 1000, 2000);
         distances = new OrderedIntSet(false, 1000, 2000);
         firstEdgeId = new OrderedIntSet(false, 1000, 2000);
-        idDistanceFinal = new OrderedBoolSet(1000, 2000);
     }
 
     /**
@@ -50,64 +43,72 @@ public class HLDijkstra extends Thread{
      */
     private void calcLabels(int nodeId) {
         foundIds.clear();
-        idDistanceFinal.clear();
         distances.clear();
         firstEdgeId.clear();
-        heap.reset();
 
         foundIds.insertSorted(nodeId);
-        idDistanceFinal.insertTail(true);
         distances.insertTail(0);
         firstEdgeId.insertTail(-1);
-        heap.add(nodeId, 0);
-        while(!heap.isEmpty()) {
-            int currNode = heap.getNext();
-            int currNodeIdx = foundIds.getIdx(currNode);
-            idDistanceFinal.updateValue(true, currNodeIdx); //once popped from the heap, the distance is final
-            int edgeCount = DynamicGrid.getAllEdgeCount(currNode);
-            int[] edgeIds = DynamicGrid.getAllEdges(currNode);
-            int nodeLvl = Nodes.getNodeLvl(currNode);
-            int currDistance = distances.get(foundIds.getIdx(currNode));
 
-            for (int i = 0; i < edgeCount; i++) { //consider all edges of the current node
-                int edgeId = edgeIds[i];
-                int destNode = Edges.getDest(edgeId);
-                if(nodeLvl > Nodes.getNodeLvl(destNode)) { //ignore lower lvl nodes
-                    continue;
-                }
+        int edgeCount = DynamicGrid.getAllEdgeCount(nodeId);
+        int[] edgeIds = DynamicGrid.getAllEdges(nodeId);
+        int nodeLvl = Nodes.getNodeLvl(nodeId);
+        int[] neighbourIds = new int[edgeCount]; //list of direct neighbours, relevant later
+        int realNeighbourCount = 0;
+        //look at all edges as only the ones to higher lvl nodes are stored
+        for (int i = 0; i < edgeCount; i++) {
+            int edgeId = edgeIds[i];
+            int destNode = Edges.getDest(edgeId);
+            if(Nodes.getNodeLvl(destNode) < nodeLvl) { //ignore lower lvl nodes
+                continue;
+            }
+            int edgeDist = Edges.getDist(edgeId);
+            neighbourIds[realNeighbourCount] = destNode;
+            realNeighbourCount++;
 
-                int destNodeIdx = foundIds.getIdx(destNode);
-                if(destNodeIdx >= 0) { // contained in foundIds
-                    if(idDistanceFinal.get(destNodeIdx)) {
-                        continue;
-                    } else {
-                        int oldDistance = distances.get(destNodeIdx);
-                        int newDistance = currDistance + Edges.getDist(edgeId);
-                        if(oldDistance > newDistance) {
-                            //update to new values
-                            distances.updateValue(newDistance, destNodeIdx);
-                            firstEdgeId.updateValue(firstEdgeId.get(currNodeIdx), destNodeIdx);
-                            heap.add(destNode, newDistance);
-                        }
+            int insertIdx = foundIds.getIdx(destNode);
+            if(insertIdx < 0) {
+                insertIdx = (insertIdx + 1) * (-1);
+                foundIds.insertAtIdx(destNode, insertIdx);
+                distances.insertAtIdx(edgeDist, insertIdx);
+                firstEdgeId.insertAtIdx(edgeId, insertIdx);
+            } else {
+                System.out.println("error: this code should not be reached");
+            }
+        }
+
+        for(int j = 0; j < realNeighbourCount; j++) {
+            int baseNodeId = neighbourIds[j];
+            int baseIdx = foundIds.getIdx(baseNodeId);
+            int baseDist = distances.get(baseIdx);
+            int baseEdge = firstEdgeId.get(baseIdx);
+
+            int[] labels = Labels.getLabels(baseNodeId);
+            int labelCount = labels.length;
+            int[] dist = Labels.getDist(baseNodeId);
+
+            for (int i = 0; i < labelCount; i++) {
+                int currLabelNode = labels[i];
+                int currLabelIdx = foundIds.getIdx(currLabelNode);
+
+                if(currLabelIdx < 0) {
+                    //new node found
+                    currLabelIdx = (currLabelIdx + 1) * (-1);
+                    int distance = baseDist + dist[i];
+                    foundIds.insertAtIdx(currLabelNode, currLabelIdx);
+                    distances.insertAtIdx(distance, currLabelIdx);
+                    firstEdgeId.insertAtIdx(baseEdge, currLabelIdx);
+                } else {
+                    int newDistance = baseDist + dist[i];
+                    int oldDistance = distances.get(currLabelIdx);
+                    if(oldDistance > newDistance) {
+                        distances.updateValue(newDistance, currLabelIdx);
+                        firstEdgeId.updateValue(baseEdge, currLabelIdx);
                     }
-                } else { //not contained in foundIds --> new node found
-                    destNodeIdx = foundIds.insertSorted(destNode);
-                    int distance = currDistance + Edges.getDist(edgeId);
-                    distances.insertAtIdx(distance, destNodeIdx);
-                    idDistanceFinal.insertAtIdx(false, destNodeIdx);
-                    if(currNode == nodeId) {
-                        //if this is true, we look at the initial node --> first edge id is the current edge
-                        firstEdgeId.insertAtIdx(edgeId, destNodeIdx);
-                    } else {
-                        //use old currNodeIdx on purpose here since nothing has been inserted into this structure so far
-                        firstEdgeId.insertAtIdx(firstEdgeId.get(currNodeIdx), destNodeIdx);
-                    }
-                    //currNodeIdx has to be updated as we added an element --> this may have moved currNode
-                    currNodeIdx = foundIds.getIdx(currNode);
-                    heap.add(destNode, distance);
                 }
             }
         }
+
         addLabels(nodeId);
     }
 
