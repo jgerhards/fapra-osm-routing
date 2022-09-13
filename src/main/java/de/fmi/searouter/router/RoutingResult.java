@@ -85,6 +85,7 @@ public class RoutingResult {
      */
     public RoutingResult() {
         this.routeFound = false;
+        this.calculationTimeInMs = -1.0;
     }
 
     /**
@@ -139,6 +140,9 @@ public class RoutingResult {
     }
 
     public int getOverallDistance() {
+        if(!routeFound) {
+            return -1;
+        }
         return overallDistance;
     }
 
