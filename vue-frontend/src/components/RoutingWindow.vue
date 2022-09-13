@@ -152,14 +152,14 @@ export default {
         .then((response) => {
           this.responseData = response.data;
 
-          if (response.data.routeFound === true) {
+           if (response.data.routeFound === true) {
                 // This is what gets displayed in the browser when the result is finished
                 alert(
                 "Distance of route (m): " + response.data.overallDistance + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
                 );
               } else {
                 alert(
-                "No route found"
+                "No route found" + "\nDijkstra calc time (ms): " + response.data.calculationTimeInMs
                 );
                 return;
               }

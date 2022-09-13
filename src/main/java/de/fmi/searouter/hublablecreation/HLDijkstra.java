@@ -53,9 +53,8 @@ public class HLDijkstra extends Thread{
         int edgeCount = DynamicGrid.getAllEdgeCount(nodeId);
         int[] edgeIds = DynamicGrid.getAllEdges(nodeId);
         int nodeLvl = Nodes.getNodeLvl(nodeId);
-        int[] neighbourIds = new int[edgeCount]; //list of direct neighbours, relevant later
+        int[] neighbourIds = new int[edgeCount]; //list of direct neighbours, used later
         int realNeighbourCount = 0;
-        //look at all edges as only the ones to higher lvl nodes are stored
         for (int i = 0; i < edgeCount; i++) {
             int edgeId = edgeIds[i];
             int destNode = Edges.getDest(edgeId);
