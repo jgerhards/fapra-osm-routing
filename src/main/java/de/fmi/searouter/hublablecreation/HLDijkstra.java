@@ -1,7 +1,5 @@
 package de.fmi.searouter.hublablecreation;
 
-import de.fmi.searouter.utils.DistanceHeap;
-import de.fmi.searouter.utils.OrderedBoolSet;
 import de.fmi.searouter.utils.OrderedIntSet;
 
 /**
@@ -72,10 +70,12 @@ public class HLDijkstra extends Thread{
                 distances.insertAtIdx(edgeDist, insertIdx);
                 firstEdgeId.insertAtIdx(edgeId, insertIdx);
             } else {
-                System.out.println("error: this code should not be reached");
+                System.out.println("error: this code should not be reached, the graph may have problems");
             }
         }
 
+        //for any neighbour, labels are already available, as they have a higher level
+        //(and are therefore calculated first)
         for(int j = 0; j < realNeighbourCount; j++) {
             int baseNodeId = neighbourIds[j];
             int baseIdx = foundIds.getIdx(baseNodeId);

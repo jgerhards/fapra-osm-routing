@@ -25,14 +25,20 @@ public class Labels {
         labelDist = new int[nodeCount][];
     }
 
+    /**
+     * Get labels for a node with a given id.
+     * @param nodeId the id of the node
+     * @return the array of labels
+     */
     public static int[] getLabels(int nodeId) {
         return labelNodes[nodeId];
     }
 
-    public static int[] getEdges(int nodeId) { //todo: prolly remove
-        return labelEdges[nodeId];
-    }
-
+    /**
+     * Get distances array for a node with a given id.
+     * @param nodeId the id of the node
+     * @return the array of distances
+     */
     public static int[] getDist(int nodeId) {
         return labelDist[nodeId];
     }

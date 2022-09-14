@@ -94,15 +94,15 @@ public class HubLRouter implements Router{
     /**
      * Calculate the shortest path from one start node to a destination node. In order to find this route,
      * an implementation using hub labels with two levels of contraction hierarchies is used.
-     * @param startNodeIdx The index of the start node
-     * @param destNodeIdx The index of the destination node
+     * @param startNodeId The id of the start node
+     * @param destNodeId The id of the destination node
      * @return a shortest route between start and destination node
      */
     @Override
-    public RoutingResult route(int startNodeIdx, int destNodeIdx) {
+    public RoutingResult route(int startNodeId, int destNodeId) {
         long startTime = System.nanoTime();
 
-        RoutingResult result = routeGeneral(startNodeIdx, destNodeIdx);
+        RoutingResult result = routeGeneral(startNodeId, destNodeId);
 
         //set calculation time in result
         long stopTime = System.nanoTime();
@@ -244,6 +244,14 @@ public class HubLRouter implements Router{
         resultNodes.push(dest);
     }
 
+    /**
+     * Calculate a shortest route between two points. Can support different levels at which
+     * hub labels are available. Note that the calculation time will not be set
+     * in teh returned result.
+     * @param startNodeIdx id of the start node
+     * @param destNodeIdx id of the destination node
+     * @return a result containing a shortest route
+     */
     private RoutingResult routeGeneral(int startNodeIdx, int destNodeIdx) {
         reset();
         boolean startHasLabels = HubLNodes.nodeHasLabels(startNodeIdx);
@@ -253,11 +261,11 @@ public class HubLRouter implements Router{
         if(startHasLabels && destHasLabels) {
             result = route2Lbl(startNodeIdx, destNodeIdx);
         } else if (!startHasLabels && !destHasLabels) {
-            result = route0LblGeneral(startNodeIdx, destNodeIdx);
+            result = route0Lbl(startNodeIdx, destNodeIdx);
         } else if (startHasLabels){
-            result = routeLeftLblGeneral(startNodeIdx, destNodeIdx);
+            result = routeLeftLbl(startNodeIdx, destNodeIdx);
         } else {
-            result = routeRightLblGeneral(startNodeIdx, destNodeIdx);
+            result = routeRightLbl(startNodeIdx, destNodeIdx);
         }
 
         return result;
@@ -271,8 +279,8 @@ public class HubLRouter implements Router{
      * @param destId The index of the destination node
      * @return a shortest route between start and destination node
      */
-    private RoutingResult routeLeftLblGeneral(int startId, int destId) {
-        calcTempLabelsGeneral(destId, false);
+    private RoutingResult routeLeftLbl(int startId, int destId) {
+        calcTempLabels(destId, false);
         int leftIdx = HubLNodes.getLabelOffset(startId);
         int leftMaxIdx = HubLNodes.getLabelOffset(startId + 1);
         int rightIdx = 0;
@@ -334,13 +342,13 @@ public class HubLRouter implements Router{
         if(info < -1) {
             //additional info contains a node
             info = (info + 2) * (-1);
-            addEdgesGeneral(edgesRight, info, destId, false);
+            addEdges(edgesRight, info, destId, false);
             int firstEdge = edgeRight.get(idxRight);
             edgesRight.push(firstEdge);
             getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesRight);
         } else if(info != -1) { //if this is false, the highest lvl node is the start node
             //additional info contains an edge (or -1 if no edge relevant for this label)
-            addEdgesGeneral(edgesRight, info, destId, false);
+            addEdges(edgesRight, info, destId, false);
         }
 
         calculateRoute(startId, destId);
@@ -361,8 +369,8 @@ public class HubLRouter implements Router{
      * @param destId The index of the destination node
      * @return a shortest route between start and destination node
      */
-    private RoutingResult routeRightLblGeneral(int startId, int destId) {
-        calcTempLabelsGeneral(startId, true);
+    private RoutingResult routeRightLbl(int startId, int destId) {
+        calcTempLabels(startId, true);
         int rightIdx = HubLNodes.getLabelOffset(destId);
         int rightMaxIdx = HubLNodes.getLabelOffset(destId + 1);
         int leftIdx = 0;
@@ -424,13 +432,13 @@ public class HubLRouter implements Router{
         if(info < -1) {
             //additional info contains a node
             info = (info + 2) * (-1);
-            addEdgesGeneral(edgesLeft, info, startId, true);
+            addEdges(edgesLeft, info, startId, true);
             int firstEdge = edgeLeft.get(idxLeft);
             edgesLeft.push(firstEdge);
             getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesLeft);
         } else if(info != -1){ //if this is false, the highest lvl node is the start node
             //additional info contains an edge (or -1 if no edge relevant for this label)
-            addEdgesGeneral(edgesLeft, info, startId, true);
+            addEdges(edgesLeft, info, startId, true);
         }
 
         calculateRoute(startId, destId);
@@ -449,9 +457,9 @@ public class HubLRouter implements Router{
      * @param destId The index of the destination node
      * @return a shortest route between start and destination node
      */
-    private RoutingResult route0LblGeneral(int startId, int destId) {
-        calcTempLabelsGeneral(startId, true);
-        calcTempLabelsGeneral(destId, false);
+    private RoutingResult route0Lbl(int startId, int destId) {
+        calcTempLabels(startId, true);
+        calcTempLabels(destId, false);
 
         //compare labels
         int leftSize = labelLeft.size();
@@ -505,13 +513,13 @@ public class HubLRouter implements Router{
         if(info < -1) {
             //additional info contains a node
             info = (info + 2) * (-1);
-            addEdgesGeneral(edgesLeft, info, startId, true);
+            addEdges(edgesLeft, info, startId, true);
             int firstEdge = edgeLeft.get(idxLeft);
             edgesLeft.push(firstEdge);
             getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesLeft);
         } else if(info != -1){ //if this is false, the highest lvl node is the start node
             //additional info contains an edge (or -1 if no edge relevant for this label)
-            addEdgesGeneral(edgesLeft, info, startId, true);
+            addEdges(edgesLeft, info, startId, true);
         }
 
         //find edges on right side
@@ -519,13 +527,13 @@ public class HubLRouter implements Router{
         if(info < -1) {
             //additional info contains a node
             info = (info + 2) * (-1);
-            addEdgesGeneral(edgesRight, info, destId, false);
+            addEdges(edgesRight, info, destId, false);
             int firstEdge = edgeRight.get(idxRight);
             edgesRight.push(firstEdge);
             getEdges(HubLEdges.getDest(firstEdge), highestLvlNode, edgesRight);
         } else if(info != -1) { //if this is false, the highest lvl node is the start node
             //additional info contains an edge (or -1 if no edge relevant for this label)
-            addEdgesGeneral(edgesRight, info, destId, false);
+            addEdges(edgesRight, info, destId, false);
         }
 
         calculateRoute(startId, destId);
@@ -538,10 +546,17 @@ public class HubLRouter implements Router{
         return new RoutingResult(path, currDistance, true);
     }
 
-    private void addEdgesGeneral(IntStack resultStack, int nodeId, int stopId, boolean isLeftNode) {
+    /**
+     * Resolve which edges are contained in a path between two nodes and add them to a given stack.
+     * After this operation, only edges which are not shortcuts are contained on the stack.
+     * @param resultStack the stack to push the results to
+     * @param nodeId the initial node
+     * @param stopId the node to stop at
+     * @param isLeftNode true if the part of the path is left, else false
+     */
+    private void addEdges(IntStack resultStack, int nodeId, int stopId, boolean isLeftNode) {
         //make sure we only have to check this once --> assign structures based on first check
         OrderedIntSet label;
-        OrderedIntSet dist;
         OrderedIntSet edge;
         OrderedIntSet addInfo;
         if(isLeftNode) {
@@ -574,7 +589,7 @@ public class HubLRouter implements Router{
      * @param nodeId the node to calculate the labels for
      * @param isLeftNode if true, data is stored for left side, else for right side
      */
-    private void calcTempLabelsGeneral(int nodeId, boolean isLeftNode) {
+    private void calcTempLabels(int nodeId, boolean isLeftNode) {
         labelHeap.reset();
         heap.reset();
         //make sure we only have to check this once --> assign structures based on first check
@@ -669,7 +684,7 @@ public class HubLRouter implements Router{
                     label.insertAtIdx(currLabelNode, currLabelIdx);
                     dist.insertAtIdx(distance, currLabelIdx);
                     edge.insertAtIdx(HubLNodes.getLabelEdge(currIdx), currLabelIdx);
-                    //Make label negative to show this is a node
+                    //Make info negative to show this is a node
                     addInfo.insertAtIdx((labelNode * (-1)) - 2, currLabelIdx);
                 } else {
                     int newDistance = nodeDist + HubLNodes.getLabelDist(currIdx);

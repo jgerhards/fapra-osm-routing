@@ -16,11 +16,13 @@ import java.util.Random;
 
 @SpringBootApplication
 public class SearouterApplication {
+	private static String HUB_LABEL_DATA_FILENAME = "hub_label_data";
+
+	//constants used to configure application
 	private static boolean USE_HUB_LABEL_ROUTER = true;
 	private static boolean IS_TEST_RUN = false;
 	private static boolean IGNORE_RES_NO_ROUTE = false;
 	private static int TEST_NUM_OF_ROUTES = 100000;
-	private static String HUB_LABEL_DATA_FILENAME = "hub_label_data";
 
 	public static void main(String[] args) {
 		RoutingController.setHLRouterUse(USE_HUB_LABEL_ROUTER);
@@ -43,6 +45,11 @@ public class SearouterApplication {
 		}
 	}
 
+	/**
+	 * Perform a test to evaluate performance of a given routing algorithm. This test
+	 * uses pseudo-random numbers to generate routing requests. Since the seed is hardcoded,
+	 * the requests are also the same in every run.
+	 */
 	private static void test() {
 		int testNum = TEST_NUM_OF_ROUTES;
 		Random rnd = new Random(123);
