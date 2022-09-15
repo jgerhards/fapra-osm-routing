@@ -22,6 +22,11 @@ public class GridCreator {
     private static final int DIMENSION_LONGITUDE = 2000;
 
     /**
+     * The number of threads that should use to concurrently performing the point-in-water check
+     */
+    private static final int NUMBER_OF_THREADS_FOR_IN_WATER_CHECK = 15;
+
+    /**
      * The name of the file where the final calculated grid graph should be exported (created on root-level of project)
      */
     public static final String GRID_FMI_FILE_NAME = "exported_grid.fmi";
@@ -43,11 +48,6 @@ public class GridCreator {
      */
     protected static double coordinate_step_latitude;
     protected static double coordinate_step_longitude;
-
-    /**
-     * The number of threads that should use to concurrently performing the point-in-water check
-     */
-    private static final int NUMBER_OF_THREADS_FOR_IN_WATER_CHECK = 15;
 
     /**
      * Initializes the GridCreator by creating GridNodes (the vertices of the graph) for all points that

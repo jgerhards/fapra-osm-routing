@@ -15,6 +15,11 @@ import java.util.List;
 public class CoastlineWays {
 
     /**
+     * The name of the pbf file containing the coastline information from OSM.
+     */
+    private static final String PBF_FILE_PATH = "planet-coastlinespbf-cleaned.pbf";
+
+    /**
      * The name of the serialization file which is used for storing data stored in this class.
      */
     public static final String COASTLINE_WAYS_SERIALIZATION_FILE_NAME = "CoastlineWays.ser";
@@ -32,11 +37,6 @@ public class CoastlineWays {
      */
     private static float[] pointLon;
     private static float[] pointLat;
-
-    /**
-     * The name of the pbf file containing the coastline information from OSM.
-     */
-    private static final String PBF_FILE_PATH = "planet-coastlinespbf-cleaned.pbf";
 
     /**
      * Initialize the coastline ways. If no file with the serialized data is present,

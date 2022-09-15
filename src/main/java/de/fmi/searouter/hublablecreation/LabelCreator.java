@@ -15,9 +15,10 @@ import java.util.*;
  * the hub label routing algorithm.
  */
 public class LabelCreator {
-    private static final String FMI_FILE_NAME = "oceanfmi.sec";
-    //private static final String FMI_FILE_NAME = "exported_grid.fmi";
     private static final String HUB_LABEL_FILE_NAME = "hub_label_data";
+
+    //constants used to configure application
+    private static final String FMI_FILE_NAME = "exported_grid.fmi";
     private static final int NUM_OF_THREADS = 16;
     private static final int NUM_OF_NO_LABEL_LVLS = 0;
 
