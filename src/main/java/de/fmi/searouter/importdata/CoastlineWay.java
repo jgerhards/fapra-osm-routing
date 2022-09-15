@@ -28,15 +28,6 @@ public class CoastlineWay {
     }
 
     /**
-     * Creates a new {@link CoastlineWay} with an initial list of {@link Point points/nodes}.
-     *
-     * @param points All points/nodes that belong to this way.
-     */
-    public CoastlineWay(List<Point> points) {
-        this.points = points;
-    }
-
-    /**
      * @return The number of edges that make up this {@link CoastlineWay}.
      */
     public int getNumberOfEdges() {
@@ -60,10 +51,6 @@ public class CoastlineWay {
 
     public List<Point> getPoints() {
         return points;
-    }
-
-    public void setPoints(List<Point> points) {
-        this.points = points;
     }
 }
 

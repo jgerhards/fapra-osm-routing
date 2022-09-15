@@ -13,24 +13,6 @@ public class Nodes {
     private static int[] levels;
 
     /**
-     * Return the latitude of a node with a given id.
-     * @param i the id of the node
-     * @return the latitude of the node
-     */
-    public static double getLatitude(int i) {
-        return latitude[i];
-    }
-
-    /**
-     * Return the longitude of a node with a given id.
-     * @param i the id of the node
-     * @return the longitude of the node
-     */
-    public static double getLongitude(int i) {
-        return longitude[i];
-    }
-
-    /**
      * Return the level of a node with a given id.
      * @param nodeId the id of the node
      * @return the level of the node

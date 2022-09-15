@@ -40,8 +40,4 @@ public class Point {
     public float getLon() {
         return lon;
     }
-
-    public long getId() {
-        return id;
-    }
 }
