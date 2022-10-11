@@ -200,6 +200,11 @@ public class LabelCreator {
      * @return An OrderedIntSet containing indices at which the next level of nodes is reached
      */
     private static OrderedIntSet createHLCalcOrder() {
+        if(true) {
+            TmpDataStore data = TmpDataStore.readData();
+            calcOrder = data.getCalcOrder();
+            return data.getChangeIndices();
+        }
         calcOrder = new int[Nodes.getNodeCount()];
         int n = calcOrder.length;
         for (int i = 0; i < n; i++) {
@@ -231,6 +236,7 @@ public class LabelCreator {
             prevLvl = currLvl;
         }
         changeIndices.insertTail(n);
+        TmpDataStore.storeData(calcOrder, changeIndices);
         return changeIndices;
     }
 
