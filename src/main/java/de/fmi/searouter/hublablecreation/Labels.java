@@ -77,7 +77,7 @@ public class Labels {
             int labelNode = labels.get(labelIdx);
             if(checkNode == labelNode) {
                 int newDist = checkDists.get(labelIdx) + labelDist[toCheck][checkIdx];
-                if(newDist <= checkDist) {
+                if(newDist < checkDist) {
                     if(!(checkNode == toCheck)) {
                         return true;
                     }
